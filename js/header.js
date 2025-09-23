@@ -6,7 +6,7 @@ export function updateHeaderClient() {
     const selectedEl = document.getElementById('selected-client');
     if (!clientId || !selectedEl) return;
 
-    const cliente = getClientes().find(c => c.id === clientId);
-    if (cliente) selectedEl.textContent = `${cliente.id} - ${cliente.text}`;
+    const cliente = getClientes().find(c => c.nif === clientId);
+    if (cliente) selectedEl.textContent = `${cliente.nombre}`;
     else selectedEl.textContent = '';
 }

@@ -13,15 +13,18 @@
 
 <body>
 
-
-
     <div class="container mt-4">
         <div class="card">
             <div class="card-header d-flex align-items-center justify-content-between bg-white text-dark border-bottom">
                 <div class="d-flex align-items-center gap-3">
                     <img src="avatar.jpg" alt="Avatar" class="rounded-circle" width="40" height="40">
-                    <span>PACCMAN STAFF</span>
-                    <span id="selected-client" class="badge text-bg-secondary">New</span>
+                    <div class="d-flex flex-column">
+                        <span>PACCMAN STAFF</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-person-check text-secondary"></i>
+                            <span id="selected-client" class="text-secondary"></span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Menú tipo hamburguesa -->
@@ -37,8 +40,6 @@
                     </ul>
                 </div>
             </div>
-
-
 
             <div class="card-body" id="chat-box">
                 <div class="message bot">
@@ -87,7 +88,7 @@
     </div>
 
     <!-- Modal para cambiar cliente -->
-    <div class="modal fade" id="clientModal" tabindex="-1" aria-labelledby="clientModalLabel" aria-hidden="true">
+    <div class="modal fade" id="clienteModal" tabindex="-1" aria-labelledby="clienteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <form id="client-form" class="modal-content">
                 <div class="modal-header">
@@ -111,11 +112,11 @@
     </div>
 
     <!-- Modal para cambiar póliza -->
-    <div class="modal fade" id="policyModal" tabindex="-1" aria-labelledby="policyModalLabel" aria-hidden="true">
+    <div class="modal fade" id="polizaModal" tabindex="-1" aria-labelledby="polizaModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <form id="policy-form" class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Seleccionar Póliza</h5>
+                    <h5 class="modal-title">Duplicado Póliza</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
@@ -132,15 +133,67 @@
         </div>
     </div>
 
+    <!-- Modal para pre siniestro -->
+    <div class="modal fade" id="preSiniestroModal" tabindex="-1" aria-labelledby="preSiniestroModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="policy-form" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Registro PreSiniestro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Póliza -->
+                <label for="policy-select" class="form-label">Póliza</label>
+                <select id="policy-select" class="form-select" style="width: 100%">
+                    <option value="">Selecciona una póliza</option>
+                    <!-- Opciones dinámicas desde backend -->
+                </select>
+
+                <!-- Fecha de ocurrencia -->
+                <label for="fecha-ocurrencia" class="form-label mt-3">Fecha de ocurrencia</label>
+                <input type="date" id="fecha-ocurrencia" class="form-control">
+
+                <!-- Causa -->
+                <label for="causa-select" class="form-label mt-3">Causa</label>
+                <select id="causa-select" class="form-select">
+                    <option value="">Selecciona una causa</option>
+                    <option value="robo">Robo</option>
+                    <option value="accidente">Accidente</option>
+                    <option value="incendio">Incendio</option>
+                    <option value="otro">Otro</option>
+                </select>
+
+                <!-- Descripción -->
+                <label for="descripcion" class="form-label mt-3">Descripción</label>
+                <textarea id="descripcion" class="form-control" rows="3" placeholder="Detalle del siniestro"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <!-- Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Font Awesome 6 (Free) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.27/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.27/dist/sweetalert2.all.min.js"></script>
 
     <!-- Variables de entorno -->
     <script src="env.js"></script>

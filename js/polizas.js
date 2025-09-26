@@ -28,7 +28,7 @@ export function renderPolizasSelect($select, polizas) {
     $select.select2({
         theme: "bootstrap-5",
         placeholder: "Selecciona una póliza",
-        dropdownParent: $('#duplicadoPolizaModal'), // ajusta si el select está dentro de un modal
+        dropdownParent: $('#duplicadoPolizaModal'),
         allowClear: true,
         closeOnSelect: true,
         width: '100%',
@@ -37,20 +37,19 @@ export function renderPolizasSelect($select, polizas) {
             const poliza = polizas.find(p => p.poliza === data.id);
             if (!poliza) return data.text;
 
-            // Buscar icono por ramo, si no existe usar default
             const iconClass = ramoIcons[poliza.ramo] || ramoIcons["Otros"];
 
             return $(`
-                <div>
-                    <strong>${poliza.cia_poliza}</strong> ·
-                    <small class="text-muted">${poliza.compania}</small> · 
-                    <small class="text-muted">${poliza.ramo}</small>
-                    ${poliza.objeto
+            <div>
+                <strong>${poliza.cia_poliza}</strong> ·
+                <small class="text-muted">${poliza.compania}</small> · 
+                <small class="text-muted">${poliza.ramo}</small>
+                ${poliza.objeto
                     ? `<br><small class="text-muted"><i class="${iconClass} me-1"></i>${poliza.objeto}</small>`
                     : ""
                 }
-                </div>
-            `);
+            </div>
+        `);
         },
         templateSelection: function (data) {
             if (!data.id) return data.text;
@@ -58,8 +57,33 @@ export function renderPolizasSelect($select, polizas) {
             return poliza
                 ? `${poliza.poliza} - ${poliza.compania}`
                 : data.text;
+        },
+        matcher: function (params, data) {
+            // Si no hay término de búsqueda, mostrar todo
+            if ($.trim(params.term) === '') {
+                return data;
+            }
+
+            const poliza = polizas.find(p => p.poliza === data.id);
+            if (!poliza) return null;
+
+            // Concatenar todos los campos que quieras buscar
+            const text = [
+                poliza.poliza,
+                poliza.compania,
+                poliza.ramo,
+                poliza.objeto
+            ].join(' ').toLowerCase();
+
+            if (text.indexOf(params.term.toLowerCase()) > -1) {
+                return data;
+            }
+
+            // No coincide
+            return null;
         }
     });
+
 }
 
 export async function descargaPoliza(polizaId) {

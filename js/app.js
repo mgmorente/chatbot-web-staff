@@ -162,9 +162,11 @@ document.addEventListener('DOMContentLoaded', () => {
     renderClientesSelect($select_clientes);
     handleClienteSelection($select_clientes, clienteModal);
 
-    document.getElementById('change-client').addEventListener('click', (e) => {
-        e.preventDefault();
-        clienteModal.show();
+    document.querySelectorAll('.change-client').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault(); // evita que haga scroll hacia arriba por el #
+            clienteModal.show();
+        });
     });
 
     // --- Logout ---

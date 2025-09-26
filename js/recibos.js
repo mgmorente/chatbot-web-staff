@@ -11,23 +11,20 @@ export function renderRecibosCliente() {
         const textoClase = r.situacion === 'Cobrado' ? '' : 'text-danger';
 
         return `
-        <div class="col">
-            <div class="card shadow-sm h-100 border-0 p-2">
-                <div class="d-flex flex-column ${textoClase}">
-                    <!-- Línea 1: datos principales -->
-                    <strong class="small d-block">
-                        ${r.ramo} · ${r.compania} · ${r.cia_poliza}
-                    </strong>
-
-                    <!-- Línea 2: fechas, objeto y situación -->
-                    <small class="d-block">
-                        <i class="bi bi-calendar"></i> ${r.fecha_efecto} → ${r.fecha_vencimiento} ·
-                        Prima: ${r.prima_total}€ ·
-                        ${r.situacion}
-                    </small>
+            <div class="col">
+                <div class="card shadow-sm h-100 border-0 p-2">
+                    <div class="d-flex flex-column ${textoClase}">
+                        <small class="d-block">
+                            <strong>${r.recibo}</strong> · ${r.ramo} · ${r.compania} · ${r.cia_poliza}
+                        </small>
+                        <small class="d-block text-secondary">
+                            <i class="bi bi-calendar"></i> ${r.fecha_efecto} → ${r.fecha_vencimiento} ·
+                            Prima: ${r.prima_total}€ ·
+                            ${r.situacion}
+                        </small>
+                    </div>
                 </div>
             </div>
-        </div>
         `;
     });
 

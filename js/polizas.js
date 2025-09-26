@@ -28,7 +28,7 @@ export function renderPolizasSelect($select, polizas) {
     $select.select2({
         theme: "bootstrap-5",
         placeholder: "Selecciona una póliza",
-        dropdownParent: $('#polizaModal'), // ajusta si el select está dentro de un modal
+        dropdownParent: $('#duplicadoPolizaModal'), // ajusta si el select está dentro de un modal
         allowClear: true,
         closeOnSelect: true,
         width: '100%',
@@ -133,24 +133,31 @@ export function renderPolizasCliente() {
         const textoClase = situacion === 'Activa' ? '' : 'text-danger';
 
         return `
-        <div class="col">
-            <div class="card shadow-sm h-100 border-0 p-2">
-                <div class="d-flex flex-column ${textoClase}">
-                    <!-- Línea 1: datos principales -->
-                    <strong class="small d-block">
-                        ${p.tipo_producto} · ${p.compania} · ${p.cia_poliza}
-                    </strong>
+            <div class="col">
+                <div class="card shadow-sm h-100 border-0 p-2">
+                    <div class="d-flex justify-content-between align-items-start ${textoClase}">
+                        
+                        <div class="flex-grow-1 me-2">
+                            <small class="d-block">
+                                <strong>${p.cia_poliza}</strong> · ${p.tipo_producto} · ${p.compania}
+                            </small>
+                            <small class="d-block text-secondary">
+                                <i class="bi bi-calendar"></i> ${p.fecha_efecto} → ${p.fecha_vencimiento} ·
+                                Prima: ${p.prima}€ ·
+                                ${p.objeto ? ' · ' + p.objeto : ''} · 
+                                ${situacion}
+                            </small>
+                        </div>
 
-                    <!-- Línea 2: fechas, objeto y situación -->
-                    <small class="d-block text-secondary">
-                        <i class="bi bi-calendar"></i> ${p.fecha_efecto} → ${p.fecha_vencimiento} ·
-                        Prima: ${p.prima}€ ·
-                        ${p.objeto ? ' · ' + p.objeto : ''} · 
-                        ${situacion}
-                    </small>
+                        <div>
+                            <button class="btn btn-sm btn-secondary">
+                                <i class="bi bi-folder"></i>
+                            </button>
+                        </div>
+
+                    </div>
                 </div>
             </div>
-        </div>
         `;
     });
 

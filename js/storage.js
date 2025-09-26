@@ -18,6 +18,8 @@ export function storeToken(token, duration) {
 export function clearStoredToken() {
     localStorage.removeItem('userToken');
     localStorage.removeItem('userTokenExpiry');
+    localStorage.removeItem('clienteData');
+    localStorage.removeItem('clientes');
 }
 
 export function storeClientes(clientes) {
@@ -28,10 +30,6 @@ export function getClientes() {
     return JSON.parse(localStorage.getItem('clientes')) || [];
 }
 
-export function storeSelectedClient(id) {
-    localStorage.setItem('selectedClient', id);
-}
-
 export function getSelectedClient() {
-    return localStorage.getItem('selectedClient') || '';
+    return localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')).cliente.nombre : null;
 }

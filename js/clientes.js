@@ -1,5 +1,5 @@
 // clientes.js
-import { getClientes, storeSelectedClient } from './storage.js';
+import { getClientes } from './storage.js';
 import { addMessageToChat } from './chat.js';
 import { updateHeaderClient } from './header.js';
 
@@ -49,13 +49,9 @@ export function handleClienteSelection($select, clienteModal) {
         e.preventDefault();
         const selectedClient = $select.val();
         if (!selectedClient) return;
-
-        storeSelectedClient(selectedClient);
+        
         clienteModal.hide();
-        updateHeaderClient();
-
         console.log('Cliente seleccionado:', selectedClient);
-
         // Llamada a API
         await fetchCliente(selectedClient);
     });
@@ -68,7 +64,49 @@ export async function storeClientesList() {
     console.log('Clientes obtenidos:', data);
     if (data) {
         localStorage.setItem('clientes', JSON.stringify(data));
+        renderClientesSelect($('#client-select'));
     }
+}
+
+export function renderModCliente(cuentaActual, movilActual, emailActual) {
+    document.getElementById('modal-cuenta').value = cuentaActual || '';
+    document.getElementById('modal-movil').value = movilActual || '';
+    document.getElementById('modal-email').value = emailActual || '';
+    document.getElementById('error-validacion').innerText = '';
+
+    const modal = new bootstrap.Modal(document.getElementById('modClienteModal'));
+    modal.show();
+
+    // Capturar el submit
+    const form = document.getElementById('modClienteForm');
+    form.onsubmit = async function(e) {
+        e.preventDefault();
+
+        const cuenta = document.getElementById('modal-cuenta').value.trim();
+        const movil = document.getElementById('modal-movil').value.trim();
+        const email = document.getElementById('modal-email').value.trim();
+
+        // Validaciones
+        if (!cuenta || !movil || !email) {
+            document.getElementById('error-validacion').innerText = 'Todos los campos son obligatorios';
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            document.getElementById('error-validacion').innerText = 'Email no válido';
+            return;
+        }
+
+        // Datos válidos
+        const datos = { cuenta, movil, email };
+        console.log('Datos modificados:', datos);
+
+        // Aquí puedes hacer tu llamada a API para guardar los datos
+        // await guardarDatos(datos);
+
+        modal.hide();
+    };
 }
 
 // Llamada a la API para obtener los datos del cliente
@@ -112,10 +150,36 @@ async function fetchClientesList(token) {
 }
 
 // Función que combina fetch
+// Función que combina fetch con swal
 async function fetchCliente(clientId) {
     const token = localStorage.getItem('userToken');
-    const data = await fetchClienteData(clientId, token);
-    localStorage.setItem('clienteData', JSON.stringify(data));
+
+    // Mostrar el swal de cargando
+    Swal.fire({
+        title: 'Cargando datos...',
+        text: 'Por favor, espera un momento.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    try {
+        const data = await fetchClienteData(clientId, token);
+
+        localStorage.setItem('clienteData', JSON.stringify(data));
+        updateHeaderClient();
+
+        Swal.close(); // cerrar swal al terminar
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudieron obtener los datos del cliente.'
+        });
+        console.error(error);
+    }
 }
 
 export function renderFichaCliente() {
@@ -128,30 +192,61 @@ export function renderFichaCliente() {
     const siniestrosAbiertos = data.siniestros ? data.siniestros.filter(s => s.estado !== 'Cerrado').length : 0;
     const siniestrosCerrados = data.siniestros ? data.siniestros.filter(s => s.estado === 'Cerrado').length : 0;
     const html = `
-        <div class="row row-cols-1 g-2">
+        <div class="row row-cols-1 g-3">
             <div class="col">
-                <div class="card shadow-sm h-100 border-0 p-2">
-                    <div class="d-flex flex-column">
-                        <strong class="small d-block">${c.nombre} · ${c.nif}</strong>
-                        <small class="d-block text-secondary">
-                        <i class="bi bi-telephone"></i> ${c.telefono} ·
-                        <i class="bi bi-envelope"></i> ${c.email} ·
-                        <i class="bi bi-geo-alt"></i> ${c.domicilio}
-                        </small>
-                        <small class="d-block text-secondary">
-                            ${c.tipo || 'N/A'} ·
-                            ${c.cliente_fiel ? '<i class="bi bi-heart-fill text-danger"></i> Cliente fiel' : 'No fiel'} ·
-                            <i class="bi bi-star-fill"></i> ${c.cod_importancia}€
-                        </small>
-                        <small class="d-block text-secondary">
-                            <strong>Pólizas</strong> ${polizasActivas} activas / ${polizasVencidas} vencidas ·
-                            <strong>Siniestros</strong> ${siniestrosAbiertos} abiertos / ${siniestrosCerrados} cerrados
-                        </small>
+                <div class="card shadow-sm border-0 rounded-3">
+                    <div class="card-body">
+
+                        <!-- Encabezado con nombre y NIF -->
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="card-title mb-1">${c.nombre}</h6>
+                                <small class="text-muted">${c.nif}</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                ${c.cliente_fiel ? '<i class="bi bi-heart-fill text-danger" title="Cliente fiel"></i>' : ''}
+                                <i class="bi bi-star-fill text-warning" title="Importancia"></i> ${c.cod_importancia}€
+                            </div>
+                        </div>
+
+                        <!-- Contacto -->
+                        <div class="mb-2">
+                            <small class="text-secondary d-block"><i class="bi bi-telephone me-1"></i> ${c.telefono}</small>
+                            <small class="text-secondary d-block"><i class="bi bi-envelope me-1"></i> ${c.email}</small>
+                            <small class="text-secondary d-block"><i class="bi bi-geo-alt me-1"></i> ${c.domicilio}</small>
+                        </div>
+
+                        <!-- Tipo -->
+                        <div class="mb-2 d-flex gap-2 flex-wrap">
+                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-info-emphasis bg-info-subtle border border-info-subtle rounded-2">
+                                ${c.tipo || 'N/A'}
+                            </small>
+                            ${c.cliente_fiel
+                                ? '<small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-danger-emphasis bg-danger-subtle border border-danger-subtle rounded-2">Fiel</small>'
+                                : '<small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle rounded-2">No fiel</small>'}
+                        </div>
+
+                        <!-- Polizas y Siniestros con pills -->
+                        <div class="mt-2 d-flex flex-wrap gap-2">
+                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-success-emphasis bg-success-subtle border border-success-subtle rounded-2">
+                                Pólizas activas: ${polizasActivas}
+                            </small>
+                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle rounded-2">
+                                Pólizas vencidas: ${polizasVencidas}
+                            </small>
+                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-warning-emphasis bg-warning-subtle border border-warning-subtle rounded-2">
+                                Siniestros abiertos: ${siniestrosAbiertos}
+                            </small>
+                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-dark-emphasis bg-dark-subtle border border-dark-subtle rounded-2">
+                                Siniestros cerrados: ${siniestrosCerrados}
+                            </small>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </div>
-        `;
+    `;
     addMessageToChat('bot', html);
 }
 

@@ -2,11 +2,11 @@
 import { getClientes, getSelectedClient } from './storage.js';
 
 export function updateHeaderClient() {
-    const clientId = getSelectedClient();
+    const clienteNombre = getSelectedClient();
     const selectedEl = document.getElementById('selected-client');
-    if (!clientId || !selectedEl) return;
+    
+    if (!clienteNombre || !selectedEl) return;
 
-    const cliente = getClientes().find(c => c.nif === clientId);
-    if (cliente) selectedEl.textContent = `${cliente.nombre}`;
+    if (clienteNombre) selectedEl.textContent = clienteNombre;
     else selectedEl.textContent = '';
 }

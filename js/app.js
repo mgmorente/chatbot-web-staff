@@ -1,13 +1,14 @@
 // app.js
-import { getStoredToken, storeToken, clearStoredToken, storeClientes } from './storage.js';
+import { getStoredToken, storeToken, clearStoredToken, getSelectedClient } from './storage.js';
 import { login } from './auth.js';
 import { addMessageToChat, addThinkingMessage, removeThinkingMessage, showApiError, clearApiError } from './chat.js';
-import { renderClientesSelect, handleClienteSelection, storeClientesList, renderFichaCliente } from './clientes.js';
+import { renderClientesSelect, handleClienteSelection, storeClientesList, renderFichaCliente, renderModCliente } from './clientes.js';
 import { renderPolizasSelect, descargaPoliza, renderPolizasCliente } from './polizas.js';
 import { renderRecibosCliente } from './recibos.js';
-import { renderSiniestrosCliente } from './siniestros.js';
+import { renderSiniestrosCliente, renderSiniestrosTramites } from './siniestros.js';
 import { renderTelefonosCompanias } from './companias.js';
 import { renderAgenda } from './agenda.js';
+import { renderSubirDocumentacion } from './docs.js';
 import { updateHeaderClient } from './header.js';
 
 const apiUrl = ENV.API_URL;
@@ -20,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Modales ---
     const userModal = new bootstrap.Modal(document.getElementById('userModal'), { backdrop: 'static', keyboard: false });
     const clienteModal = new bootstrap.Modal(document.getElementById('clienteModal'));
-    const polizaModal = new bootstrap.Modal(document.getElementById('polizaModal'));
+    const duplicadoPolizaModal = new bootstrap.Modal(document.getElementById('duplicadoPolizaModal'));
     const preSiniestroModal = new bootstrap.Modal(document.getElementById('preSiniestroModal'));
 
     // --- Comprobar sesión ---
@@ -47,6 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.disabled = true;
 
         try {
+            // Limpiar sesión previa
+            clearStoredToken();
+
             const data = await login(apiUrl, usuario_pacc, password);
 
             if (data.access_token) {
@@ -68,41 +72,50 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Función para manejar comandos especiales ---
-    function handleCommand(data) {
+    function handleCommand(d) {
         const polizas = localStorage.getItem('clienteData')
             ? JSON.parse(localStorage.getItem('clienteData')).polizas
             : [];
 
-        switch (data.command) {
+        switch (d.command) {
             case 'duplicado_poliza':
                 renderPolizasSelect($select_polizas, polizas);
-                polizaModal.show();
+                duplicadoPolizaModal.show();
                 break;
-            case 'ficha_cliente':
+            case 'ver_cliente':
                 renderFichaCliente();
                 break;
-            case 'polizas_cliente':
+            case 'mod_cliente':
+                renderModCliente();
+                break;
+            case 'ver_cliente_polizas':
                 renderPolizasCliente();
                 break;
-            case 'recibos_cliente':
+            case 'ver_cliente_recibos':
                 renderRecibosCliente();
                 break;    
-            case 'siniestros_cliente':
+            case 'ver_cliente_siniestros':
                 renderSiniestrosCliente();
+                break;
+            case 'ver_siniestro_tramites':
+                renderSiniestrosTramites();
                 break;
             case 'pre_siniestro':
                 renderPolizasSelect($select_polizas, polizas);
                 preSiniestroModal.show();
                 break;
             case 'telefonos_companias':
-                renderTelefonosCompanias(data.data);
+                renderTelefonosCompanias(d.data);
                 break;
             case 'agenda_hoy':
-                renderAgenda(data.data);
+                renderAgenda(d);
+                break;
+            case 'subir_documentacion':
+                renderSubirDocumentacion(d);
                 break;
             default:
-                if (data.message) addMessageToChat('bot', data.message);
-                else addMessageToChat('bot', data.error || 'Error en la respuesta del servidor');
+                if (d.message) addMessageToChat('bot', d.message);
+                else addMessageToChat('bot', d.error || 'Error en la respuesta del servidor');
         }
     }
 
@@ -128,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({
                     consulta: message,
-                    cliente: localStorage.getItem('selectedClient') || ''
+                    cliente: getSelectedClient(),
                 }),
             });
 
@@ -143,93 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
             messageInput.value = '';
         }
     });
-
-    //     // --- Chat ---
-    //     document.getElementById('chat-form').addEventListener('submit', async (e) => {
-    //         e.preventDefault();
-
-    //         const messageInput = document.getElementById('chat-message');
-    //         const message = messageInput.value.trim();
-    //         if (!message) return;
-
-    //         addMessageToChat('user', message);
-    //         addThinkingMessage();
-
-    //         try {
-    //             const response = await fetch(`${apiUrl}/consulta`, {
-    //                 method: 'POST',
-    //                 headers: {
-    //                     'Content-Type': 'application/json',
-    //                     'Authorization': `Bearer ${userToken}`,
-    //                     'Empresa': 'pacc',
-    //                     'Device': 'web'
-    //                 },
-    //                 body: JSON.stringify({ consulta: message, cliente: localStorage.getItem('selectedClient') || '' }),
-    //             });
-
-    //             const data = await response.json();
-    //             removeThinkingMessage();
-
-    //             // Manejo de comandos especiales
-    //             if (data.command === 'duplicado_poliza') {
-    //                 renderPolizasSelect($select_polizas, localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')).polizas : []);
-    //                 polizaModal.show();
-    //                 return;
-    //             } else if (data.command === 'ficha_cliente') {
-    //                 let data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
-
-    // if (data && data.cliente) {
-    //     let c = data.cliente;
-
-    //     // Clase opcional para destacar algo
-    //     let textoClase = ''; // o 'text-danger' si quieres resaltar
-
-    //     let html = `
-    //     <div class="row row-cols-1 g-2">
-    //         <div class="col">
-    //             <div class="card shadow-sm h-100 border-0 p-2">
-    //                 <div class="d-flex flex-column ${textoClase}">
-    //                     <strong class="small d-block">
-    //                         ${c.nombre} · ${c.nif}
-    //                     </strong>
-
-    //                     <small class="d-block text-secondary mb-1">
-    //                         <i class="bi bi-geo-alt"></i> ${c.domicilio} ·
-    //                         <i class="bi bi-telephone"></i> ${c.telefono} ·
-    //                         <i class="bi bi-envelope"></i> ${c.email}
-    //                     </small>
-
-    //                     <small class="d-block text-secondary">
-    //                         ${c.tipo || 'N/A'} ·
-    //                         ${c.cliente_fiel ? '<i class="bi bi-heart-fill text-danger"></i> Cliente fiel' : 'No fiel'} ·
-    //                         <i class="bi bi-star-fill"></i> ${c.cod_importancia}€
-    //                     </small>
-    //                 </div>
-    //             </div>
-    //         </div>
-    //     </div>
-    //     `;
-
-    //     addMessageToChat('bot', html);
-
-    // } 
-
-    //                 return;
-    //             }
-
-    //             if (response.ok && data.message) {
-    //                 addMessageToChat('bot', data.message);
-    //             } else {
-    //                 addMessageToChat('bot', data.error || 'Error en la respuesta del servidor');
-    //             }
-    //         } catch (err) {
-    //             removeThinkingMessage();
-    //             addMessageToChat('bot', 'Error de conexión con el servidor');
-    //             console.error(err);
-    //         } finally {
-    //             messageInput.value = '';
-    //         }
-    //     });
 
     // --- Clientes ---
     const $select_clientes = $('#client-select');
@@ -251,12 +177,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Pólizas ---
     const $select_polizas = $('#policy-select');
 
-    document.getElementById('policy-form').addEventListener('submit', function (e) {
+    document.getElementById('duplicadoPolizaForm').addEventListener('submit', function (e) {
         e.preventDefault();
-        const selectedPolicy = $select_polizas.val();
-        if (selectedPolicy) {
-            polizaModal.hide();
-            descargaPoliza(selectedPolicy);
+        const selectPolizas = $select_polizas.val();
+        if (selectPolizas) {
+            duplicadoPolizaModal.hide();
+            descargaPoliza(selectPolizas);
         }
     });
 });

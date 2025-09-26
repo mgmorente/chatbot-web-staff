@@ -7,8 +7,7 @@
 }
 
 #chat-box {
-    /* background-image: url('wallpaper.png'); */
-    background-color: gainsboro;
+    background: linear-gradient(135deg, #f0f4f8, #d9e2f3);
     padding: 10px;
     height: 550px;
     overflow-y: scroll;
@@ -57,4 +56,12 @@
 @keyframes bounce {
     0%, 80%, 100% { transform: scale(0); }
     40% { transform: scale(1); }
+}
+
+#selected-client {
+    white-space: nowrap;       /* Evita que el texto haga salto de línea */
+    overflow: hidden;          /* Oculta el texto que se salga del contenedor */
+    text-overflow: ellipsis;   /* Muestra "..." si el texto es muy largo */
+    max-width: 150px;          /* Ajusta según tu diseño */
+    display: inline-block;     /* Necesario para que text-overflow funcione */
 }

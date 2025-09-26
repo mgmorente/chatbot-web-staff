@@ -17,7 +17,7 @@ export function renderClientesSelect($select) {
 
     // Inicializar Select2
     $select.select2({
-        theme: "bootstrap-5", // o "default"
+        theme: "bootstrap-5",
         placeholder: "Selecciona un cliente",
         dropdownParent: $('#clienteModal'),
         allowClear: true,
@@ -39,8 +39,26 @@ export function renderClientesSelect($select) {
             if (!data.id) return data.text;
             const cliente = clientes.find(c => c.nif === data.id);
             return cliente ? `${cliente.nombre} (${cliente.nif})` : data.text;
+        },
+        matcher: function (params, data) {
+            if ($.trim(params.term) === '') return data;
+
+            const cliente = clientes.find(c => c.nif === data.id);
+            if (!cliente) return null;
+
+            const term = params.term.toLowerCase();
+            // Busca en varios campos
+            if (
+                cliente.nombre.toLowerCase().includes(term) ||
+                cliente.nif.toLowerCase().includes(term)
+            ) {
+                return data;
+            }
+
+            return null;
         }
     });
+
 }
 
 // Función principal para manejar la selección de cliente
@@ -49,7 +67,7 @@ export function handleClienteSelection($select, clienteModal) {
         e.preventDefault();
         const selectedClient = $select.val();
         if (!selectedClient) return;
-        
+
         clienteModal.hide();
         console.log('Cliente seleccionado:', selectedClient);
         // Llamada a API
@@ -79,7 +97,7 @@ export function renderModCliente(cuentaActual, movilActual, emailActual) {
 
     // Capturar el submit
     const form = document.getElementById('modClienteForm');
-    form.onsubmit = async function(e) {
+    form.onsubmit = async function (e) {
         e.preventDefault();
 
         const cuenta = document.getElementById('modal-cuenta').value.trim();
@@ -222,8 +240,8 @@ export function renderFichaCliente() {
                                 ${c.tipo || 'N/A'}
                             </small>
                             ${c.cliente_fiel
-                                ? '<small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-danger-emphasis bg-danger-subtle border border-danger-subtle rounded-2">Fiel</small>'
-                                : '<small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle rounded-2">No fiel</small>'}
+            ? '<small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-danger-emphasis bg-danger-subtle border border-danger-subtle rounded-2">Fiel</small>'
+            : '<small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle rounded-2">No fiel</small>'}
                         </div>
 
                         <!-- Polizas y Siniestros con pills -->

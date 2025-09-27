@@ -43,7 +43,8 @@
 
             <div class="card-body" id="chat-box">
                 <div class="message bot">
-                    <div class="text">¡Hola! Soy tu asistente virtual, <a href="#" class="change-client">selecciona un cliente</a> y preguntame lo que necesites.</div>
+                    <div class="text">¡Hola! Soy tu asistente virtual, <a href="#" class="change-client">selecciona un
+                            cliente</a> y preguntame lo que necesites.</div>
                 </div>
             </div>
             <div class="card-footer">
@@ -203,6 +204,39 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para enviar email -->
+    <div class="modal fade" id="emailClienteModal" tabindex="-1" aria-labelledby="emailClienteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="emailClienteForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Enviar Email</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="email_to" class="form-label">Para</label>
+                        <input type="email" class="form-control" id="email_to" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email_subject" class="form-label">Asunto</label>
+                        <input type="text" class="form-control" id="email_subject" maxlength="100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email_body" class="form-label">Mensaje</label>
+                        <textarea class="form-control" id="email_body" rows="4" required></textarea>
+                    </div>
+                    <div id="email-errors" class="alert alert-danger d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button id="sendEmailButton" type="submit" class="btn btn-primary">
+                        <span id="emailButtonText">Enviar</span>
+                        <span id="emailSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"
+                            aria-hidden="true"></span>
+                    </button>
                 </div>
             </form>
         </div>

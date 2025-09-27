@@ -222,26 +222,27 @@ export function renderFichaCliente() {
                                 <small class="text-muted">${c.nif}</small>
                             </div>
                             <div class="d-flex align-items-center gap-1">
-                                ${c.cliente_fiel ? '<i class="bi bi-heart-fill text-danger" title="Cliente fiel"></i>' : ''}
                                 <i class="bi bi-star-fill text-warning" title="Importancia"></i> ${c.cod_importancia}€
                             </div>
                         </div>
 
                         <!-- Contacto -->
                         <div class="mb-2">
-                            <small class="text-secondary d-block"><i class="bi bi-telephone me-1"></i> ${c.telefono}</small>
-                            <small class="text-secondary d-block"><i class="bi bi-envelope me-1"></i> ${c.email}</small>
+                            <small class="text-secondary d-block"><i class="bi bi-telephone me-1"></i> <a href="#">${c.telefono}</a></small>
+                            ${c.email 
+                                ? `<small class="text-secondary d-block"><i class="bi bi-envelope me-1"></i> <a href="#" class="email-cliente">${c.email}</a></small>`
+                                : ''}
                             <small class="text-secondary d-block"><i class="bi bi-geo-alt me-1"></i> ${c.domicilio}</small>
                         </div>
 
                         <!-- Tipo -->
                         <div class="mb-2 d-flex gap-2 flex-wrap">
+                            ${c.cliente_fiel
+                                ? '<small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-danger-emphasis bg-danger-subtle border border-danger-subtle rounded-2">FIEL</small>'
+                                : ''}
                             <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-info-emphasis bg-info-subtle border border-info-subtle rounded-2">
                                 ${c.tipo || 'N/A'}
                             </small>
-                            ${c.cliente_fiel
-            ? '<small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-danger-emphasis bg-danger-subtle border border-danger-subtle rounded-2">Fiel</small>'
-            : '<small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle rounded-2">No fiel</small>'}
                         </div>
 
                         <!-- Polizas y Siniestros con pills -->
@@ -255,7 +256,7 @@ export function renderFichaCliente() {
                             <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-warning-emphasis bg-warning-subtle border border-warning-subtle rounded-2">
                                 Siniestros abiertos: ${siniestrosAbiertos}
                             </small>
-                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-dark-emphasis bg-dark-subtle border border-dark-subtle rounded-2">
+                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle rounded-2">
                                 Siniestros cerrados: ${siniestrosCerrados}
                             </small>
                         </div>
@@ -267,4 +268,5 @@ export function renderFichaCliente() {
     `;
     addMessageToChat('bot', html);
 }
+
 

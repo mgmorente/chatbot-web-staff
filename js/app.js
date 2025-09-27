@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tokenData = getStoredToken();
     let userToken = tokenData?.token || '';
     if (!tokenData || !tokenData.token || tokenData.expiry < Date.now()) {
+        document.getElementById('selected-client').textContent = '';
         clearStoredToken();
         userModal.show(); // <<--- abrir login si no hay sesión
     }
@@ -93,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'ver_cliente_recibos':
                 renderRecibosCliente();
-                break;    
+                break;
             case 'ver_cliente_siniestros':
                 renderSiniestrosCliente();
                 break;
@@ -157,24 +158,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Clientes ---
-    const $select_clientes = $('#client-select');
-    renderClientesSelect($select_clientes);
-    handleClienteSelection($select_clientes, clienteModal);
-
+    // --- Menu: cambiar cliente ---
     document.querySelectorAll('.change-client').forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function (e) {
             e.preventDefault(); // evita que haga scroll hacia arriba por el #
             clienteModal.show();
         });
     });
 
-    // --- Logout ---
+    // --- Menu: logout ---
     document.getElementById('logout').addEventListener('click', (e) => {
         e.preventDefault();
         clearStoredToken();
         location.reload();
     });
+
+    // --- Clientes ---
+    const $select_clientes = $('#client-select');
+    renderClientesSelect($select_clientes);
+    handleClienteSelection($select_clientes, clienteModal);
 
     // --- Pólizas ---
     const $select_polizas = $('#policy-select');
@@ -185,6 +187,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectPolizas) {
             duplicadoPolizaModal.hide();
             descargaPoliza(selectPolizas);
+        }
+    });
+
+    // --- Email cliente ---
+    document.addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('email-cliente')) {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('emailClienteModal'));
+            modal.show();
         }
     });
 });

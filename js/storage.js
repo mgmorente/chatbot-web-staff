@@ -20,6 +20,7 @@ export function clearStoredToken() {
     localStorage.removeItem('userTokenExpiry');
     localStorage.removeItem('clienteData');
     localStorage.removeItem('clientes');
+    localStorage.removeItem('user');
 }
 
 export function storeClientes(clientes) {
@@ -32,4 +33,8 @@ export function getClientes() {
 
 export function getSelectedClient() {
     return localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')).cliente.nombre : null;
+}
+
+export function getUser() {
+    return localStorage.getItem('user') ? localStorage.getItem('user') : null;
 }

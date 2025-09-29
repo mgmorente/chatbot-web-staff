@@ -1,6 +1,6 @@
 // app.js
 import { getStoredToken, storeToken, clearStoredToken, getSelectedClient } from './storage.js';
-import { login } from './auth.js';
+import { login, storeUser } from './auth.js';
 import { addMessageToChat, addThinkingMessage, removeThinkingMessage, showApiError, clearApiError } from './chat.js';
 import { renderClientesSelect, handleClienteSelection, storeClientesList, renderFichaCliente, renderModCliente } from './clientes.js';
 import { renderPolizasSelect, descargaPoliza, renderPolizasCliente } from './polizas.js';
@@ -58,7 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 userToken = data.access_token;
                 storeToken(userToken, SESSION_DURATION);
                 storeClientesList();
-                userModal.hide();
+                storeUser(data.user);
+                userModal.hide();                 
             } else {
                 showApiError(data.error || 'Error al autenticar');
             }

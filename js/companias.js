@@ -12,23 +12,20 @@ export function renderTelefonosCompanias(data) {
     // Construir HTML por grupo
     const htmlParts = Object.entries(groupedData).map(([nombre, items]) => {
         const itemsHtml = items.map(i => `
-        <div class="small text-secondary mb-1">
-            ${i.area} · ${i.telefono}
-        </div>
-    `).join('');
+            <div class="small text-secondary mb-1">
+                ${i.area} · <a href="tel:${i.telefono}">${i.telefono}</a>
+            </div>
+        `).join('');
 
         return `
-    <div class="col">
-        <div class="card shadow-sm h-100 border-0 p-2">
-            <div class="d-flex flex-column">
+            <li class="list-group-item">
                 <strong class="small d-block mb-1">${nombre}</strong>
                 ${itemsHtml}
-            </div>
-        </div>
-    </div>
-    `;
+            </li>
+        `;
     });
 
-    const html = `<div class="row row-cols-1 g-2">${htmlParts.join('')}</div>`;
+    const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
     addMessageToChat('bot', html);
+
 }

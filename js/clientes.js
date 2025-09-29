@@ -212,66 +212,60 @@ export function renderFichaCliente() {
     const html = `
         <div class="row row-cols-1 g-3">
             <div class="col">
-                <div class="card shadow-sm border-0 rounded-3">
-                    <div class="card-body">
+                <div class="card-body">
 
-                        <!-- Encabezado con nombre y NIF -->
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                                <h6 class="card-title mb-1">${c.nombre}</h6>
-                                <small class="text-muted">${c.nif}</small>
-                            </div>
-                            <div class="d-flex align-items-center gap-1">
-                                <i class="bi bi-star-fill text-warning" title="Importancia"></i> ${c.cod_importancia}€
-                            </div>
-                        </div>
-
-                        <!-- Contacto -->
-                        <div class="mb-2">
-                            <small class="text-secondary d-block">
-                                <i class="bi bi-telephone me-1"></i> <a href="#">${c.telefono}</a>
-                            </small>
-                            ${c.email 
-                                ? `<small class="text-secondary d-block"><i class="bi bi-envelope me-1"></i> <a href="#" class="email-cliente">${c.email}</a></small>` 
-                                : ''}
-                            <small class="text-secondary d-block">
-                                <i class="bi bi-geo-alt me-1"></i> ${c.domicilio}
-                            </small>
-                        </div>    
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="card-title mb-1">${c.nombre}<small class="text-muted"> - ${c.nif}</small></h6>
                         
-                        <div class="mb-2">
-                            <small class="d-block"><i class="bi bi-building me-1"></i> ${c.sucursal}</small>
-                            <small class="d-block"><i class="bi bi-people me-1"></i> Colaborador: ${c.colaborador}</small>
-                            <small class="d-block"><i class="bi bi-person-badge me-1"></i> ECuentas: ${c.ecuentas}</small>
-                        </div>
-
-                        <div class="mb-2 d-flex gap-2 flex-wrap">
-                            ${c.cliente_fiel
-                                ? '<small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-danger-emphasis bg-danger-subtle border border-danger-subtle rounded-2">FIEL</small>'
-                                : ''}
-                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-info-emphasis bg-info-subtle border border-info-subtle rounded-2">
-                                ${c.tipo || 'N/A'}
-                            </small>
-                        </div>
-
-                        <!-- Polizas y Siniestros con pills -->
-                        <div class="mt-2 d-flex flex-wrap gap-2">
-                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-success-emphasis bg-success-subtle border border-success-subtle rounded-2">
-                                Pólizas activas: ${polizasActivas}
-                            </small>
-                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle rounded-2">
-                                Pólizas vencidas: ${polizasVencidas}
-                            </small>
-                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-warning-emphasis bg-warning-subtle border border-warning-subtle rounded-2">
-                                Siniestros abiertos: ${siniestrosAbiertos}
-                            </small>
-                            <small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle rounded-2">
-                                Siniestros cerrados: ${siniestrosCerrados}
-                            </small>
-                        </div>
-
                     </div>
+                    <div class="d-flex align-items-center gap-1">
+                        <i class="bi bi-star-fill text-warning" title="Importancia"></i> ${c.cod_importancia}€
+                    </div>
+                    </div>
+
+                    <ul class="list-group list-group-flush">
+
+                    <li class="list-group-item">
+                        <i class="bi bi-telephone me-1"></i>
+                        <a href="tel:${c.telefono}">${c.telefono}</a>
+                        ${c.email
+                            ? `<br><i class="bi bi-envelope me-1"></i> <a href="#" class="email-cliente">${c.email}</a>`
+                            : ''}
+                        <br><i class="bi bi-geo-alt me-1"></i> ${c.domicilio}
+                    </li>
+
+                    <li class="list-group-item text-secondary">
+                        <i class="bi bi-building me-1"></i> ${c.sucursal}<br>
+                        <i class="bi bi-people me-1"></i> Colaborador: ${c.colaborador}<br>
+                        <i class="bi bi-person-badge me-1"></i> ECuentas: ${c.ecuentas}
+                    </li>
+
+                    <li class="list-group-item">
+                        ${c.cliente_fiel
+                            ? '<span class="badge text-danger-emphasis bg-danger-subtle border border-danger-subtle me-1">FIEL</span>'
+                            : ''}
+                        <span class="badge text-info-emphasis bg-info-subtle border border-info-subtle">
+                        ${c.tipo || 'N/A'}
+                        </span>
+                    
+                        <span class="badge text-success-emphasis bg-success-subtle border border-success-subtle me-1">
+                        Pólizas activas: ${polizasActivas}
+                        </span>
+                        <span class="badge text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle me-1">
+                        Pólizas vencidas: ${polizasVencidas}
+                        </span>
+                        <span class="badge text-warning-emphasis bg-warning-subtle border border-warning-subtle me-1">
+                        Siniestros abiertos: ${siniestrosAbiertos}
+                        </span>
+                        <span class="badge text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle">
+                        Siniestros cerrados: ${siniestrosCerrados}
+                        </span>
+                    </li>
+
+                    </ul>
                 </div>
+
             </div>
         </div>
     `;

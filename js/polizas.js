@@ -153,38 +153,27 @@ export function renderPolizasCliente() {
     }
 
     const htmlParts = data.polizas.map(p => {
-        const situacion = p.situacion === 1 ? 'Activa' : 'No activa';
-        const textoClase = situacion === 'Activa' ? '' : 'text-danger';
+    const situacion = p.situacion === 1 ? 'Activa' : 'No activa';
+    const textoClase = situacion === 'Activa' ? '' : 'text-danger';
 
-        return `
-            <div class="col">
-                <div class="card shadow-sm h-100 border-0 p-2">
-                    <div class="d-flex justify-content-between align-items-start ${textoClase}">
-                        
-                        <div class="flex-grow-1 me-2">
-                            <small class="d-block">
-                                <strong>${p.cia_poliza}</strong> · ${p.tipo_producto} · ${p.compania}
-                            </small>
-                            <small class="d-block text-secondary">
-                                <i class="bi bi-calendar"></i> ${p.fecha_efecto} → ${p.fecha_vencimiento} ·
-                                Prima: ${p.prima}€ ·
-                                ${p.objeto ? ' · ' + p.objeto : ''} · 
-                                ${situacion}
-                            </small>
-                        </div>
+    return `
+        <li class="list-group-item d-flex justify-content-between align-items-start ${textoClase}">
+            <div class="flex-grow-1 me-2">
+                <small class="d-block">
+                    <strong>${p.cia_poliza}</strong> · ${p.tipo_producto} · ${p.compania}
+                </small>
+                <small class="d-block text-secondary">
+                    <i class="bi bi-calendar"></i> ${p.fecha_efecto} → ${p.fecha_vencimiento} ·
+                    Prima: ${p.prima}€ 
+                    ${p.objeto ? ' · ' + p.objeto : ''} · 
+                    ${situacion}
+                </small>
+            </div>            
+        </li>
+    `;
+});
 
-                        <div>
-                            <button class="btn btn-sm btn-secondary">
-                                <i class="bi bi-folder"></i>
-                            </button>
-                        </div>
+const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
+addMessageToChat('bot', html);
 
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-
-    const html = `<div class="row row-cols-1 g-2">${htmlParts.join('')}</div>`;
-    addMessageToChat('bot', html);
 }

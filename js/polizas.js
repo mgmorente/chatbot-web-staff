@@ -37,7 +37,7 @@ export function renderPolizasSelect($select, polizas) {
             const poliza = polizas.find(p => p.poliza === data.id);
             if (!poliza) return data.text;
 
-            const iconClass = ramoIcons[poliza.ramo] || ramoIcons["Otros"];
+            const iconClass = ramoIcons[poliza.tipo_producto.toUpperCase()] || ramoIcons["Otros"];
 
             return $(`
             <div>
@@ -145,35 +145,50 @@ export async function descargaPoliza(polizaId) {
     }
 }
 
-export function renderPolizasCliente() {
-    const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
+export function renderPolizasCliente(d) {
+    const data = localStorage.getItem('clienteData')
+        ? JSON.parse(localStorage.getItem('clienteData'))
+        : null;
+
     if (!data || !data.polizas || !data.polizas.length) {
         addMessageToChat('bot', '<div class="text-danger">No hay pólizas disponibles.</div>');
         return;
     }
 
-    const htmlParts = data.polizas.map(p => {
-    const situacion = p.situacion === 1 ? 'Activa' : 'No activa';
-    const textoClase = situacion === 'Activa' ? '' : 'text-danger';
+    const ramoFiltrado = d.args.ramo;
 
-    return `
-        <li class="list-group-item d-flex justify-content-between align-items-start ${textoClase}">
-            <div class="flex-grow-1 me-2">
-                <small class="d-block">
-                    <strong>${p.cia_poliza}</strong> · ${p.tipo_producto} · ${p.compania}
-                </small>
-                <small class="d-block text-secondary">
-                    <i class="bi bi-calendar"></i> ${p.fecha_efecto} → ${p.fecha_vencimiento} ·
-                    Prima: ${p.prima}€ 
-                    ${p.objeto ? ' · ' + p.objeto : ''} · 
-                    ${situacion}
-                </small>
-            </div>            
-        </li>
-    `;
-});
+    // Filtrar solo si ramoFiltrado tiene valor y no está vacío
+    const polizasFiltradas = ramoFiltrado
+        ? data.polizas.filter(p => p.tipo_producto.toLowerCase() === ramoFiltrado.toLowerCase())
+        : data.polizas;
 
-const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
-addMessageToChat('bot', html);
+    if (!polizasFiltradas.length) {
+        addMessageToChat('bot', `<div class="text-danger">No hay pólizas disponibles${ramoFiltrado ? ' para el ramo ' + ramoFiltrado : ''}.</div>`);
+        return;
+    }
+
+    const htmlParts = polizasFiltradas.map(p => {
+        const situacion = p.situacion === 1 ? 'activa' : 'anulada';
+        const textoClase = situacion === 'Activa' ? '' : 'text-danger';
+
+        return `
+    <li class="list-group-item d-flex justify-content-between align-items-start ${textoClase}">
+        <div class="flex-grow-1 me-2">
+            <small class="d-block">
+                <strong>${p.cia_poliza}</strong> · ${p.tipo_producto} · ${p.compania}
+            </small>
+            <small class="d-block text-secondary">
+                <i class="bi bi-calendar"></i> ${p.fecha_efecto} → ${p.fecha_vencimiento} ·
+                Prima: ${p.prima}€ 
+                ${p.objeto ? ' · ' + p.objeto : ''} · 
+                ${situacion}
+            </small>
+        </div>            
+    </li>
+`;
+    });
+
+    const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
+    addMessageToChat('bot', html);
 
 }

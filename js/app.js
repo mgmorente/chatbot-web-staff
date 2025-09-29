@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderModCliente();
                 break;
             case 'ver_cliente_polizas':
-                renderPolizasCliente();
+                renderPolizasCliente(d);
                 break;
             case 'ver_cliente_recibos':
                 renderRecibosCliente();

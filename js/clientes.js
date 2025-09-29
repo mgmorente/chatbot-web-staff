@@ -228,14 +228,23 @@ export function renderFichaCliente() {
 
                         <!-- Contacto -->
                         <div class="mb-2">
-                            <small class="text-secondary d-block"><i class="bi bi-telephone me-1"></i> <a href="#">${c.telefono}</a></small>
+                            <small class="text-secondary d-block">
+                                <i class="bi bi-telephone me-1"></i> <a href="#">${c.telefono}</a>
+                            </small>
                             ${c.email 
-                                ? `<small class="text-secondary d-block"><i class="bi bi-envelope me-1"></i> <a href="#" class="email-cliente">${c.email}</a></small>`
+                                ? `<small class="text-secondary d-block"><i class="bi bi-envelope me-1"></i> <a href="#" class="email-cliente">${c.email}</a></small>` 
                                 : ''}
-                            <small class="text-secondary d-block"><i class="bi bi-geo-alt me-1"></i> ${c.domicilio}</small>
+                            <small class="text-secondary d-block">
+                                <i class="bi bi-geo-alt me-1"></i> ${c.domicilio}
+                            </small>
+                        </div>    
+                        
+                        <div class="mb-2">
+                            <small class="d-block"><i class="bi bi-building me-1"></i> ${c.sucursal}</small>
+                            <small class="d-block"><i class="bi bi-people me-1"></i> Colaborador: ${c.colaborador}</small>
+                            <small class="d-block"><i class="bi bi-person-badge me-1"></i> ECuentas: ${c.ecuentas}</small>
                         </div>
 
-                        <!-- Tipo -->
                         <div class="mb-2 d-flex gap-2 flex-wrap">
                             ${c.cliente_fiel
                                 ? '<small class="d-inline-flex align-items-center px-2 py-1 fw-semibold text-danger-emphasis bg-danger-subtle border border-danger-subtle rounded-2">FIEL</small>'

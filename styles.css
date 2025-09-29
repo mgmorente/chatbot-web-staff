@@ -62,6 +62,6 @@
     white-space: nowrap;       /* Evita que el texto haga salto de línea */
     overflow: hidden;          /* Oculta el texto que se salga del contenedor */
     text-overflow: ellipsis;   /* Muestra "..." si el texto es muy largo */
-    max-width: 150px;          /* Ajusta según tu diseño */
+    max-width: 190px;          /* Ajusta según tu diseño */
     display: inline-block;     /* Necesario para que text-overflow funcione */
 }

@@ -155,40 +155,61 @@ export function renderPolizasCliente(d) {
         return;
     }
 
-    const ramoFiltrado = d.args.ramo;
+    // Filtros recibidos desde la IA (pueden ser varios)
+    const filtros = d.args;
 
-    // Filtrar solo si ramoFiltrado tiene valor y no está vacío
-    const polizasFiltradas = ramoFiltrado
-        ? data.polizas.filter(p => p.tipo_producto.toLowerCase() === ramoFiltrado.toLowerCase())
-        : data.polizas;
+    const polizasFiltradas = data.polizas.filter(p => {
+        // Para cada filtro, comprobamos si se cumple en la póliza
+        return Object.entries(filtros).every(([key, value]) => {
+            if (!value) return true; // si el filtro no tiene valor, lo ignoramos
+
+            // Mapeamos los campos de la póliza a las posibles claves
+            switch (key) {
+                case "ramo":
+                    return p.tipo_producto?.toLowerCase().includes(value.toLowerCase());
+                case "compania":
+                    return p.compania?.toLowerCase().includes(value.toLowerCase());
+                case "fecha_efecto":
+                    return p.fecha_efecto?.toLowerCase().includes(value.toLowerCase());
+                case "estado":
+                    const estado = p.situacion === 1 ? "activa" : "anulada";
+                    return estado === value.toLowerCase();
+                default:
+                    return true; // si llega un filtro que no mapeamos, lo ignoramos
+            }
+        });
+    });
 
     if (!polizasFiltradas.length) {
-        addMessageToChat('bot', `<div class="text-danger">No hay pólizas disponibles${ramoFiltrado ? ' para el ramo ' + ramoFiltrado : ''}.</div>`);
+        addMessageToChat(
+            'bot',
+            `<div class="text-danger">No hay pólizas que cumplan las condiciones indicadas.</div>`
+        );
         return;
     }
 
     const htmlParts = polizasFiltradas.map(p => {
         const situacion = p.situacion === 1 ? 'activa' : 'anulada';
-        const textoClase = situacion === 'Activa' ? '' : 'text-danger';
+        const textoClase = situacion === 'activa' ? '' : 'text-danger';
 
         return `
-    <li class="list-group-item d-flex justify-content-between align-items-start ${textoClase}">
-        <div class="flex-grow-1 me-2">
-            <small class="d-block">
-                <strong>${p.cia_poliza}</strong> · ${p.tipo_producto} · ${p.compania}
-            </small>
-            <small class="d-block text-secondary">
-                <i class="bi bi-calendar"></i> ${p.fecha_efecto} → ${p.fecha_vencimiento} ·
-                Prima: ${p.prima}€ 
-                ${p.objeto ? ' · ' + p.objeto : ''} · 
-                ${situacion}
-            </small>
-        </div>            
-    </li>
-`;
+            <li class="list-group-item d-flex justify-content-between align-items-start ${textoClase}">
+                <div class="flex-grow-1 me-2">
+                    <small class="d-block">
+                        <strong>${p.cia_poliza}</strong> · ${p.tipo_producto.toUpperCase()} · ${p.compania}
+                    </small>
+                    <small class="d-block text-secondary">
+                        <i class="bi bi-calendar"></i> ${p.fecha_efecto} → ${p.fecha_vencimiento} ·
+                        Prima: ${p.prima}€ 
+                        ${p.objeto ? ' · ' + p.objeto : ''} · 
+                        ${situacion.toUpperCase()}
+                    </small>
+                </div>            
+            </li>
+        `;
     });
 
     const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
     addMessageToChat('bot', html);
-
 }
+

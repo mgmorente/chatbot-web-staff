@@ -21,8 +21,7 @@
                     <div class="d-flex flex-column">
                         <span>PACCMAN STAFF</span>
                         <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-person-check text-primary"></i>
-                            <span id="selected-client" class="text-primary"></span>
+                            <span id="selected-client" class="text-success"></span>
                         </div>
                     </div>
                 </div>
@@ -111,7 +110,8 @@
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Aceptar</button>
                 </div>
             </form>
         </div>
@@ -133,7 +133,31 @@
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Descargar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Wallet de poliza -->
+    <div class="modal fade" id="walletPolizaModal" tabindex="-1" aria-labelledby="walletPolizaModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="walletPolizaForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Descargar Wallet</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="policy-select" class="form-label">Póliza</label>
+                    <select id="policy-select-1" class="form-select" style="width: 100%">
+                        <option value="">Selecciona una póliza</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Descargar</button>
                 </div>
             </form>
         </div>

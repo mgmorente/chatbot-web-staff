@@ -38,7 +38,7 @@ export function renderSiniestrosTramites() {
         return;
     }
 
-    const htmlParts = data.siniestros.map(s => {
+    const htmlParts = data.tramites.map(s => {
     const adjuntosJson = s.adjuntos ? JSON.parse(s.adjuntos) : null;
 
         return `

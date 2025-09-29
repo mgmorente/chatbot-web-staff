@@ -1,5 +1,7 @@
+import { addMessageToChat } from './chat.js';
+
 // Función para abrir el modal
-export function renderSubirDocumentacion() {
+export function renderSubirDocumento() {
 
     const modalElement = document.getElementById('modalSubirDoc');
     const modal = new bootstrap.Modal(modalElement);
@@ -56,3 +58,27 @@ export function renderSubirDocumentacion() {
     };
 }
 
+// documentos
+export function renderDocumentos() {
+    const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
+    if (!data || !data.documentos || !data.documentos.length) {
+        addMessageToChat('bot', '<div class="text-danger">No hay documentos disponibles.</div>');
+        return;
+    }
+
+    const htmlParts = data.documentos.map(s => {
+
+        return `
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between w-100">
+                    <strong class="small">${s.entidad.toUpperCase()} ${s.documento}</strong>
+                    <span class="small text-muted">${s.fecha}</span>
+                </div>
+                <small class="d-block"><a href="#">${s.descripcion}</a></small>
+            </li>
+        `;
+    });
+
+    const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
+    addMessageToChat('bot', html);
+}

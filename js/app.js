@@ -8,7 +8,7 @@ import { renderRecibosCliente } from './recibos.js';
 import { renderSiniestrosCliente, renderSiniestrosTramites } from './siniestros.js';
 import { renderTelefonosCompanias } from './companias.js';
 import { renderAgenda } from './agenda.js';
-import { renderSubirDocumentacion } from './docs.js';
+import { renderSubirDocumento, renderDocumentos } from './docs.js';
 import { updateHeaderClient } from './header.js';
 
 const apiUrl = ENV.API_URL;
@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const userModal = new bootstrap.Modal(document.getElementById('userModal'), { backdrop: 'static', keyboard: false });
     const clienteModal = new bootstrap.Modal(document.getElementById('clienteModal'));
     const duplicadoPolizaModal = new bootstrap.Modal(document.getElementById('duplicadoPolizaModal'));
+    const walletPolizaModal = new bootstrap.Modal(document.getElementById('walletPolizaModal'));
     const preSiniestroModal = new bootstrap.Modal(document.getElementById('preSiniestroModal'));
 
     // --- Comprobar sesión ---
@@ -59,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 storeToken(userToken, SESSION_DURATION);
                 storeClientesList();
                 storeUser(data.user);
-                userModal.hide();                 
+                userModal.hide();
             } else {
                 showApiError(data.error || 'Error al autenticar');
             }
@@ -80,29 +81,28 @@ document.addEventListener('DOMContentLoaded', () => {
             : [];
 
         switch (d.command) {
-            case 'duplicado_poliza':
-                renderPolizasSelect($select_polizas, polizas);
-                duplicadoPolizaModal.show();
-                break;
-            case 'ver_cliente':
+            case 'consultar_cliente':
                 renderFichaCliente();
                 break;
-            case 'mod_cliente':
+            case 'actualizar_cliente':
                 renderModCliente();
                 break;
-            case 'ver_cliente_polizas':
+            case 'consultar_poliza':
                 renderPolizasCliente(d);
                 break;
-            case 'ver_cliente_recibos':
+            case 'consultar_recibo':
                 renderRecibosCliente();
                 break;
-            case 'ver_cliente_siniestros':
+            case 'consultar_siniestro':
                 renderSiniestrosCliente();
                 break;
-            case 'ver_siniestro_tramites':
+            case 'consultar_tramite':
                 renderSiniestrosTramites();
                 break;
-            case 'pre_siniestro':
+            case 'consultar_documento':
+                renderDocumentos();
+                break;
+            case 'registrar_siniestro':
                 renderPolizasSelect($select_polizas, polizas);
                 preSiniestroModal.show();
                 break;
@@ -112,13 +112,40 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'agenda_hoy':
                 renderAgenda(d);
                 break;
-            case 'subir_documentacion':
-                renderSubirDocumentacion(d);
+            case 'registrar_documento':
+            case 'registrar_documento_cliente':
+            case 'registrar_documento_poliza':
+                renderSubirDocumento();
+                break;
+            case 'enviar_email':
+            case 'enviar_email_cliente':
+                enviarEmail();
+                break;
+            case 'duplicado':
+            case 'duplicado_poliza':
+                renderPolizasSelect($select_polizas, polizas);
+                duplicadoPolizaModal.show();
+                break;
+            case 'wallet':
+            case 'wallet_poliza':
+                renderPolizasSelect($select_polizas, polizas);
+                walletPolizaModal.show();
                 break;
             default:
                 if (d.message) addMessageToChat('bot', d.message);
                 else addMessageToChat('bot', d.error || 'Error en la respuesta del servidor');
         }
+    }
+
+    function enviarEmail() {
+        const modal = new bootstrap.Modal(document.getElementById('emailClienteModal'));
+        modal.show();
+
+        const data = localStorage.getItem('clienteData')
+            ? JSON.parse(localStorage.getItem('clienteData'))
+            : null;
+
+        document.getElementById('email_to').value = data.cliente.email;
     }
 
     // --- Función principal de envío de mensaje ---
@@ -195,8 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', function (e) {
         if (e.target && e.target.classList.contains('email-cliente')) {
             e.preventDefault();
-            const modal = new bootstrap.Modal(document.getElementById('emailClienteModal'));
-            modal.show();
+            enviarEmail();
         }
     });
 });

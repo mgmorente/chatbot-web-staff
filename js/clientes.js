@@ -86,10 +86,14 @@ export async function storeClientesList() {
     }
 }
 
-export function renderModCliente(cuentaActual, movilActual, emailActual) {
-    document.getElementById('modal-cuenta').value = cuentaActual || '';
-    document.getElementById('modal-movil').value = movilActual || '';
-    document.getElementById('modal-email').value = emailActual || '';
+export function renderModCliente() {
+    const data = localStorage.getItem('clienteData')
+        ? JSON.parse(localStorage.getItem('clienteData'))
+        : null;
+
+    document.getElementById('modal-cuenta').placeholder = 'XXXX XXXX XXXX XXXX XXXX';
+    document.getElementById('modal-movil').placeholder = data.cliente.telefono || '';
+    document.getElementById('modal-email').placeholder = data.cliente.email || '';
     document.getElementById('error-validacion').innerText = '';
 
     const modal = new bootstrap.Modal(document.getElementById('modClienteModal'));

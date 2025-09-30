@@ -273,12 +273,12 @@
     </div>
 
     <!-- Modal de Bootstrap para subir documentación -->
-    <div class="modal fade" id="modalSubirDoc" tabindex="-1" aria-labelledby="modalSubirDocLabel" aria-hidden="true">
+    <div class="modal fade" id="subirDocModal" tabindex="-1" aria-labelledby="subirDocModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form id="formSubirDoc" enctype="multipart/form-data">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="modalSubirDocLabel">Subir documentación</h5>
+                        <h5 class="modal-title" id="subirDocModalLabel">Subir documentación</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
@@ -310,6 +310,38 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal de Bootstrap para agregar agenda -->
+    <div class="modal fade" id="agendaModal" tabindex="-1" aria-labelledby="agendaModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="formAgregarAgenda">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="agendaModalLabel">Nueva cita cliente</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="agenda-datetime" class="form-label">Fecha y Hora</label>
+                            <input type="datetime-local" class="form-control" id="agenda-datetime" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="agenda-asunto" class="form-label">Asunto</label>
+                            <input type="text" class="form-control" id="agenda-asunto" placeholder="Escribe el asunto"
+                                required>
+                        </div>
+                        <div id="error-agenda" class="text-danger small"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

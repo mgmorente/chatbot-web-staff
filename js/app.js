@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const duplicadoPolizaModal = new bootstrap.Modal(document.getElementById('duplicadoPolizaModal'));
     const walletPolizaModal = new bootstrap.Modal(document.getElementById('walletPolizaModal'));
     const preSiniestroModal = new bootstrap.Modal(document.getElementById('preSiniestroModal'));
+    const agendaModal = new bootstrap.Modal(document.getElementById('agendaModal'));
 
     // --- Comprobar sesión ---
     const tokenData = getStoredToken();
@@ -96,9 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'consultar_siniestro':
                 renderSiniestrosCliente();
                 break;
-            case 'consultar_tramite':
-                renderSiniestrosTramites();
-                break;
             case 'consultar_documento':
                 renderDocumentos();
                 break;
@@ -112,6 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'agenda_hoy':
                 renderAgenda(d);
                 break;
+            case 'registrar_agenda':
+                agendaModal.show();
+                break;    
             case 'registrar_documento':
             case 'registrar_documento_cliente':
             case 'registrar_documento_poliza':

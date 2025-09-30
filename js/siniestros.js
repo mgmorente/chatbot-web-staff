@@ -1,5 +1,6 @@
-import { addMessageToChat } from './chat.js';
 // js/siniestros.js
+import { addMessageToChat } from './chat.js';
+import { renderDocumentos } from './docs.js'; // importa tu función
 
 // Renderiza la lista de siniestros con botón para ver trámites
 export function renderSiniestrosCliente() {
@@ -13,37 +14,56 @@ export function renderSiniestrosCliente() {
         const estado = s.estado || 'Desconocido';
         const textoClase = estado === 'Cerrado' ? 'text-danger' : '';
 
+        // comprobar si hay trámites o documentos para este siniestro
+        const tieneTramites = data.tramites && data.tramites.some(t => t.siniestro == s.id);
+        const tieneDocs = data.documentos && data.documentos.some(d => d.entidad.toLowerCase() === 'siniestro' && d.documento == s.id);
+
         return `
             <li class="list-group-item ${textoClase}">
                 <div class="d-flex justify-content-between align-items-center">
                     <small>
                         <strong>${s.id || 'N/D'}</strong> · ${estado} · ${s.compania || 'N/D'}
                     </small>
-                    <button class="btn btn-sm btn-outline-primary ver-tramites-btn" data-siniestro="${s.id}">
-                        Ver trámites
-                    </button>
+                    <div>
+                        ${tieneTramites ? `
+                            <span class="badge text-bg-primary ver-tramites-btn" role="button" data-siniestro="${s.id}">Trámites</span>` : ''}
+                        ${tieneDocs ? `
+                            <span class="badge text-bg-secondary ver-documentos-btn" role="button" data-siniestro="${s.id}">Docs</button>` : ''}
+                    </div>
                 </div>
                 <small class="d-block text-secondary mt-1">
                     <i class="bi bi-calendar me-2"></i>Apertura: ${s.fecha_apertura || 'N/D'} 
                     ${s.causa ? ' · Causa: ' + s.causa : ''} · 
                     Póliza: ${s.cia_poliza || 'N/D'}
                 </small>
-                <div class="tramites-container mt-2" id="tramites-${s.id}"></div>
+                <div class="tramites-container" id="tramites-${s.id}"></div>
+                <div class="documentos-container" id="documentos-${s.id}"></div>
             </li>
         `;
     });
 
-    const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
+    const html = `
+        <div><small class="text-muted fst-italic">Siniestros</small></div>
+        <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
+    `;
     addMessageToChat('bot', html);
 
-    // Listener para los botones de trámites
+    // Listeners
     document.querySelectorAll('.ver-tramites-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const siniestroId = e.currentTarget.getAttribute('data-siniestro');
             renderSiniestrosTramites(siniestroId);
         });
     });
+
+    document.querySelectorAll('.ver-documentos-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const siniestroId = e.currentTarget.getAttribute('data-siniestro');console.log(siniestroId)
+            renderDocumentos(siniestroId); // le pasas el ID si quieres filtrar
+        });
+    });
 }
+
 
 // Renderiza los trámites, opcionalmente por siniestro
 export function renderSiniestrosTramites(siniestroId = null) {
@@ -71,7 +91,7 @@ export function renderSiniestrosTramites(siniestroId = null) {
     }, {});
 
     // Construir todo el HTML en una sola cadena
-    let html = '';
+    let html = '<div><small class="text-muted fst-italic">Trámites</small></div>'; // texto encima de todo
 
     Object.entries(grouped).forEach(([siniestro, tramites]) => {
         const tramitesHtml = tramites.map(t => {
@@ -85,7 +105,7 @@ export function renderSiniestrosTramites(siniestroId = null) {
                         <div class="p-2 rounded bg-light">
                             ${t.mensaje}
                             ${adjuntosJson && adjuntosJson.descripcion
-                                ? `<div class="mt-1">
+                                ? `<div>
                                         <a href="#" class="ver-adjuntos" title="Ver adjuntos">
                                             <i class="bi bi-paperclip"></i> ${adjuntosJson.descripcion}
                                         </a>
@@ -99,7 +119,7 @@ export function renderSiniestrosTramites(siniestroId = null) {
 
         html += `
             <div>
-                <div><small class="fw-bold">Siniestro ${siniestro}</small></div>
+                <div><small class="fw-bold">SINIESTRO ${siniestro}</small></div>
                 <ul class="list-group list-group-flush">${tramitesHtml}</ul>
             </div>
         `;

@@ -4,11 +4,14 @@ import { addMessageToChat } from './chat.js';
 export function renderPolizasSelect($select, polizas) {
     $select.empty();
 
+    // Filtrar solo pólizas con situacion = 1
+    const polizasActivas = polizas.filter(p => p.situacion == 1);
+
     // Opción inicial
     $select.append('<option value="">Selecciona una póliza</option>');
 
-    // Añadir pólizas (valor = número de póliza)
-    polizas.forEach(p => {
+    // Añadir pólizas activas
+    polizasActivas.forEach(p => {
         $select.append(new Option(p.poliza, p.poliza, false, false));
     });
 
@@ -34,57 +37,47 @@ export function renderPolizasSelect($select, polizas) {
         width: '100%',
         templateResult: function (data) {
             if (!data.id) return data.text;
-            const poliza = polizas.find(p => p.poliza === data.id);
+            const poliza = polizasActivas.find(p => p.poliza === data.id);
             if (!poliza) return data.text;
 
             const iconClass = ramoIcons[poliza.tipo_producto.toUpperCase()] || ramoIcons["Otros"];
 
             return $(`
-            <div>
-                <strong>${poliza.cia_poliza}</strong> ·
-                <small class="text-muted">${poliza.compania}</small> · 
-                <small class="text-muted">${poliza.ramo}</small>
-                ${poliza.objeto
-                    ? `<br><small class="text-muted"><i class="${iconClass} me-1"></i>${poliza.objeto}</small>`
-                    : ""
-                }
-            </div>
-        `);
+                <div>
+                    <strong>${poliza.cia_poliza}</strong> ·
+                    <small class="text-muted">${poliza.compania}</small> · 
+                    <small class="text-muted">${poliza.ramo}</small>
+                    ${poliza.objeto ? `<br><small class="text-muted"><i class="${iconClass} me-1"></i>${poliza.objeto} ${poliza.matricula}</small>` : ""}
+                </div>
+            `);
         },
         templateSelection: function (data) {
             if (!data.id) return data.text;
-            const poliza = polizas.find(p => p.poliza === data.id);
+            const poliza = polizasActivas.find(p => p.poliza === data.id);
             return poliza
-                ? `${poliza.poliza} - ${poliza.compania}`
+                ? `${poliza.poliza} - ${poliza.compania}${poliza.matricula ? ' - ' + poliza.matricula : ''}`
                 : data.text;
         },
         matcher: function (params, data) {
-            // Si no hay término de búsqueda, mostrar todo
-            if ($.trim(params.term) === '') {
-                return data;
-            }
+            if ($.trim(params.term) === '') return data;
 
-            const poliza = polizas.find(p => p.poliza === data.id);
+            const poliza = polizasActivas.find(p => p.poliza === data.id);
             if (!poliza) return null;
 
-            // Concatenar todos los campos que quieras buscar
+            // Concatenar campos para búsqueda, incluyendo matrícula
             const text = [
                 poliza.poliza,
                 poliza.compania,
                 poliza.ramo,
-                poliza.objeto
+                poliza.objeto,
+                poliza.matricula || ''
             ].join(' ').toLowerCase();
 
-            if (text.indexOf(params.term.toLowerCase()) > -1) {
-                return data;
-            }
-
-            // No coincide
-            return null;
+            return text.indexOf(params.term.toLowerCase()) > -1 ? data : null;
         }
     });
-
 }
+
 
 export async function descargaPoliza(polizaId) {
     try {
@@ -209,7 +202,10 @@ export function renderPolizasCliente(d) {
         `;
     });
 
-    const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
+    const html = `
+        <div><small class="text-muted fst-italic">Pólizas</small></div>
+        <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
+    `;
     addMessageToChat('bot', html);
 }
 

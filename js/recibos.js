@@ -24,6 +24,9 @@ export function renderRecibosCliente() {
         `;
     });
 
-    const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
+    const html = `
+        <div><small class="text-muted fst-italic">Recibos</small></div>
+        <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
+    `;
     addMessageToChat('bot', html);
 }

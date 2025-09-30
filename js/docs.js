@@ -1,9 +1,11 @@
+// js/docs.js
+// documentos
 import { addMessageToChat } from './chat.js';
 
 // Función para abrir el modal
 export function renderSubirDocumento() {
 
-    const modalElement = document.getElementById('modalSubirDoc');
+    const modalElement = document.getElementById('subirDocModal');
     const modal = new bootstrap.Modal(modalElement);
 
     // Inicializar inputs vacíos
@@ -58,27 +60,54 @@ export function renderSubirDocumento() {
     };
 }
 
-// documentos
-export function renderDocumentos() {
+export function renderDocumentos(siniestroId = null) {
     const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
     if (!data || !data.documentos || !data.documentos.length) {
         addMessageToChat('bot', '<div class="text-danger">No hay documentos disponibles.</div>');
         return;
     }
 
-    const htmlParts = data.documentos.map(s => {
+    // filtrar por siniestro si corresponde
+    const docsFiltrados = siniestroId
+        ? data.documentos.filter(d => d.entidad.toLowerCase() === 'siniestro' && d.documento == siniestroId)
+        : data.documentos;
 
-        return `
+    if (!docsFiltrados.length) {
+        addMessageToChat('bot', `<div class="text-warning">No hay documentos disponibles${siniestroId ? ' para el siniestro ' + siniestroId : ''}.</div>`);
+        return;
+    }
+
+    // Agrupar por entidad+documento
+    const grouped = docsFiltrados.reduce((acc, d) => {
+        const key = `${d.entidad}-${d.documento}`;
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(d);
+        return acc;
+    }, {});
+
+    // Construir HTML
+    let html = '<div><small class="text-muted fst-italic">Documentos</small></div>'; // texto encima de todo
+
+    Object.entries(grouped).forEach(([key, docs]) => {
+        const [entidad, documento] = key.split('-');
+
+        const itemsHtml = docs.map(s => `
             <li class="list-group-item">
                 <div class="d-flex justify-content-between w-100">
-                    <strong class="small">${s.entidad.toUpperCase()} ${s.documento}</strong>
+                    <small><a href="#">${s.descripcion}</a></small>
                     <span class="small text-muted">${s.fecha}</span>
                 </div>
-                <small class="d-block"><a href="#">${s.descripcion}</a></small>
             </li>
+        `).join('');
+
+        html += `
+            <div>
+                <div><small class="fw-bold">${entidad.toUpperCase()} ${documento}</small></div>
+                <ul class="list-group list-group-flush">${itemsHtml}</ul>
+            </div>
         `;
     });
 
-    const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
     addMessageToChat('bot', html);
 }
+

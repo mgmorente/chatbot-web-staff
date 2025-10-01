@@ -31,12 +31,16 @@ async function fetchCompaniasList(token) {
     }
 }
 
-export function renderTelefonosCompanias() {
-
+export function renderTelefonosCompanias(d = []) {
     const data = getCompanias();
 
+    // Filtrar por d.args.compania si existe (coincidencia parcial, case-insensitive)
+    const filteredData = (d?.args?.compania)
+        ? data.filter(c => c.nombre.toLowerCase().includes(d.args.compania.toLowerCase()))
+        : data;
+
     // Agrupar por nombre
-    const groupedData = data.reduce((acc, s) => {
+    const groupedData = filteredData.reduce((acc, s) => {
         if (!acc[s.nombre]) acc[s.nombre] = [];
         acc[s.nombre].push(s);
         return acc;
@@ -59,6 +63,13 @@ export function renderTelefonosCompanias() {
     });
 
     const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
-    addMessageToChat('bot', html);
+
+    if (htmlParts.length === 0) {
+        addMessageToChat('bot', `<div class="text-muted small">No se encontraron compañías que coincidan con "${d.args.compania}"</div>`);
+    } else {
+        addMessageToChat('bot', html);
+    }
 }
+
+
 

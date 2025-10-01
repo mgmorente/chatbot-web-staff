@@ -1,4 +1,5 @@
 import { addMessageToChat } from './chat.js';
+import { renderDocumentos } from './docs.js'; // importa tu función
 
 // polizas.js
 export function renderPolizasSelect($select, polizas) {
@@ -184,18 +185,23 @@ export function renderPolizasCliente(d) {
     const htmlParts = polizasFiltradas.map(p => {
         const situacion = p.situacion === 1 ? 'activa' : 'anulada';
         const textoClase = situacion === 'activa' ? '' : 'text-danger';
+        const tieneDocs = data.documentos && data.documentos.some(d => d.entidad.toLowerCase() === 'poliza' && d.documento == p.poliza);
 
         return `
             <li class="list-group-item d-flex justify-content-between align-items-start ${textoClase}">
                 <div class="flex-grow-1 me-2">
-                    <small class="d-block">
-                        <strong>${p.cia_poliza}</strong> · ${p.tipo_producto.toUpperCase()} · ${p.compania}
-                    </small>
-                    <small class="d-block text-secondary">
-                        <i class="bi bi-calendar"></i> ${p.fecha_efecto} → ${p.fecha_vencimiento} ·
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="d-block">
+                            <strong>${p.cia_poliza}</strong> · ${p.tipo_producto.toUpperCase()} · ${p.compania}
+                        </small>
+                        <div>
+                            ${tieneDocs ? `<span class="badge text-bg-secondary ver-documentos-btn" role="button" data-poliza="${p.poliza}">Docs</span>` : ''}
+                        </div>
+                    </div>
+                    <small class="d-block mt-1">
+                        <i class="bi bi-calendar"></i> Vence: ${p.fecha_vencimiento} ·
                         Prima: ${p.prima}€ 
-                        ${p.objeto ? ' · ' + p.objeto : ''} · 
-                        ${situacion.toUpperCase()}
+                        ${p.objeto ? ' · ' + p.objeto : ''}
                     </small>
                 </div>            
             </li>
@@ -203,9 +209,16 @@ export function renderPolizasCliente(d) {
     });
 
     const html = `
-        <div><small class="text-muted fst-italic">Pólizas</small></div>
+        <div><small class="text-success fst-italic">Pólizas</small></div>
         <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
     `;
     addMessageToChat('bot', html);
+
+    document.querySelectorAll('.ver-documentos-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const poliza = e.currentTarget.getAttribute('data-poliza');
+                renderDocumentos(poliza);
+            });
+        });
 }
 

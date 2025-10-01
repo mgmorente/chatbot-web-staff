@@ -91,7 +91,6 @@ export function renderModCliente() {
         ? JSON.parse(localStorage.getItem('clienteData'))
         : null;
 
-    document.getElementById('modal-cuenta').placeholder = 'XXXX XXXX XXXX XXXX XXXX';
     document.getElementById('modal-movil').placeholder = data.cliente.telefono || '';
     document.getElementById('modal-email').placeholder = data.cliente.email || '';
     document.getElementById('error-validacion').innerText = '';
@@ -104,12 +103,11 @@ export function renderModCliente() {
     form.onsubmit = async function (e) {
         e.preventDefault();
 
-        const cuenta = document.getElementById('modal-cuenta').value.trim();
         const movil = document.getElementById('modal-movil').value.trim();
         const email = document.getElementById('modal-email').value.trim();
 
         // Validaciones
-        if (!cuenta || !movil || !email) {
+        if (!movil || !email) {
             document.getElementById('error-validacion').innerText = 'Todos los campos son obligatorios';
             return;
         }
@@ -121,7 +119,7 @@ export function renderModCliente() {
         }
 
         // Datos válidos
-        const datos = { cuenta, movil, email };
+        const datos = { movil, email };
         console.log('Datos modificados:', datos);
 
         // Aquí puedes hacer tu llamada a API para guardar los datos

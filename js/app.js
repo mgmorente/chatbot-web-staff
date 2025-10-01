@@ -100,13 +100,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderRecibosCliente();
                 break;
             case 'consultar_siniestro':
-                renderSiniestrosCliente();
+                renderSiniestrosCliente(d);
                 break;
             case 'consultar_documento':
                 renderDocumentos();
                 break;
             case 'consultar_compania':
-                renderTelefonosCompanias();
+                renderTelefonosCompanias(d);
                 break;
             case 'registrar_siniestro':
                 renderPolizasSelect($select_polizas, polizas);
@@ -237,8 +237,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = e.target.closest('button[data-command]');
         if (btn) {
             const command = btn.getAttribute('data-command');
-            // aquí llamas a tu función que envía el comando
-            handleCommand({ "command": command });
+            // argumentos
+            let args = {};
+            if (command == "consultar_poliza") {
+                args = {"estado": "activa"};
+            } else if (command == "consultar_siniestro") {
+                args = {"estado": "abierto"};
+            }
+            handleCommand({ "command": command, "args": args });
             $("#offcanvasRespuestas").offcanvas('hide'); // cerrar panel
         }
     });

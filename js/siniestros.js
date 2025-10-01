@@ -3,16 +3,28 @@ import { addMessageToChat } from './chat.js';
 import { renderDocumentos } from './docs.js'; // importa tu función
 
 // Renderiza la lista de siniestros con botón para ver trámites
-export function renderSiniestrosCliente() {
+export function renderSiniestrosCliente(d = {}) {
     const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
     if (!data || !data.siniestros || !data.siniestros.length) {
         addMessageToChat('bot', '<div class="text-danger">No hay siniestros disponibles.</div>');
         return;
     }
 
-    const htmlParts = data.siniestros.map(s => {
+    // Filtrar por estado si existe d.args.estado
+    let siniestros = data.siniestros;
+    if (d?.args?.estado) {
+        const estadoBuscado = d.args.estado.toLowerCase();
+        siniestros = siniestros.filter(s => (s.estado || '').toLowerCase() === estadoBuscado);
+    }
+
+    if (!siniestros.length) {
+        addMessageToChat('bot', `<div>No hay siniestros con estado "${d.args.estado}".</div>`);
+        return;
+    }
+
+    const htmlParts = siniestros.map(s => {
         const estado = s.estado || 'Desconocido';
-        const textoClase = estado === 'Cerrado' ? 'text-danger' : '';
+        const textoClase = estado.toLowerCase() === 'cerrado' ? 'text-secondary' : '';
 
         // comprobar si hay trámites o documentos para este siniestro
         const tieneTramites = data.tramites && data.tramites.some(t => t.siniestro == s.id);
@@ -22,16 +34,15 @@ export function renderSiniestrosCliente() {
             <li class="list-group-item ${textoClase}">
                 <div class="d-flex justify-content-between align-items-center">
                     <small>
-                        <strong>${s.id || 'N/D'}</strong> · ${estado} · ${s.compania || 'N/D'}
+                        <strong>${s.id || 'N/D'}</strong> · ${s.compania || 'N/D'}
                     </small>
                     <div>
-                        ${tieneTramites ? `
-                            <span class="badge text-bg-primary ver-tramites-btn" role="button" data-siniestro="${s.id}">Trámites</span>` : ''}
-                        ${tieneDocs ? `
-                            <span class="badge text-bg-secondary ver-documentos-btn" role="button" data-siniestro="${s.id}">Docs</button>` : ''}
+                        ${tieneTramites ? `<span class="badge text-bg-primary ver-tramites-btn" role="button" data-siniestro="${s.id}">Trámites</span>` : ''}
+                        ${tieneDocs ? `<span class="badge text-bg-secondary ver-documentos-btn" role="button" data-siniestro="${s.id}">Docs</span>` : ''}
+                        ${textoClase ? `<span class="badge text-bg-danger"><i class="bi bi-lock"></i></span>` : ''}  
                     </div>
                 </div>
-                <small class="d-block text-secondary mt-1">
+                <small class="d-block mt-1">
                     <i class="bi bi-calendar me-2"></i>Apertura: ${s.fecha_apertura || 'N/D'} 
                     ${s.causa ? ' · Causa: ' + s.causa : ''} · 
                     Póliza: ${s.cia_poliza || 'N/D'}
@@ -43,7 +54,7 @@ export function renderSiniestrosCliente() {
     });
 
     const html = `
-        <div><small class="text-muted fst-italic">Siniestros</small></div>
+        <div><small class="text-success fst-italic">Siniestros</small></div>
         <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
     `;
     addMessageToChat('bot', html);
@@ -58,11 +69,12 @@ export function renderSiniestrosCliente() {
 
     document.querySelectorAll('.ver-documentos-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const siniestroId = e.currentTarget.getAttribute('data-siniestro');console.log(siniestroId)
-            renderDocumentos(siniestroId); // le pasas el ID si quieres filtrar
+            const siniestroId = e.currentTarget.getAttribute('data-siniestro');
+            renderDocumentos(siniestroId);
         });
     });
 }
+
 
 
 // Renderiza los trámites, opcionalmente por siniestro
@@ -79,7 +91,7 @@ export function renderSiniestrosTramites(siniestroId = null) {
         : data.tramites;
 
     if (!tramitesFiltrados.length) {
-        addMessageToChat('bot', `<div class="text-warning">No hay trámites disponibles${siniestroId ? ' para el siniestro ' + siniestroId : ''}.</div>`);
+        addMessageToChat('bot', `<div>No hay trámites disponibles${siniestroId ? ' para el siniestro ' + siniestroId : ''}.</div>`);
         return;
     }
 
@@ -91,7 +103,7 @@ export function renderSiniestrosTramites(siniestroId = null) {
     }, {});
 
     // Construir todo el HTML en una sola cadena
-    let html = '<div><small class="text-muted fst-italic">Trámites</small></div>'; // texto encima de todo
+    let html = '<div><small class="text-success fst-italic">Trámites</small></div>'; // texto encima de todo
 
     Object.entries(grouped).forEach(([siniestro, tramites]) => {
         const tramitesHtml = tramites.map(t => {

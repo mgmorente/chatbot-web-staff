@@ -15,7 +15,7 @@ export function renderRecibosCliente() {
                 <small class="d-block">
                     <strong>${r.recibo}</strong> · ${r.ramo} · ${r.compania} · ${r.cia_poliza}
                 </small>
-                <small class="d-block text-secondary">
+                <small class="d-block">
                     <i class="bi bi-calendar"></i> ${r.fecha_efecto} → ${r.fecha_vencimiento} ·
                     Prima: ${r.prima_total}€ ·
                     ${r.situacion}
@@ -25,7 +25,7 @@ export function renderRecibosCliente() {
     });
 
     const html = `
-        <div><small class="text-muted fst-italic">Recibos</small></div>
+        <div><small class="text-success fst-italic">Recibos</small></div>
         <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
     `;
     addMessageToChat('bot', html);

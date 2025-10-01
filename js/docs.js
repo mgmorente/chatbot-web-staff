@@ -60,7 +60,7 @@ export function renderSubirDocumento() {
     };
 }
 
-export function renderDocumentos(siniestroId = null) {
+export function renderDocumentos(id = null) {
     const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
     if (!data || !data.documentos || !data.documentos.length) {
         addMessageToChat('bot', '<div class="text-danger">No hay documentos disponibles.</div>');
@@ -68,12 +68,12 @@ export function renderDocumentos(siniestroId = null) {
     }
 
     // filtrar por siniestro si corresponde
-    const docsFiltrados = siniestroId
-        ? data.documentos.filter(d => d.entidad.toLowerCase() === 'siniestro' && d.documento == siniestroId)
+    const docsFiltrados = id
+        ? data.documentos.filter(d => d.documento == id)
         : data.documentos;
 
     if (!docsFiltrados.length) {
-        addMessageToChat('bot', `<div class="text-warning">No hay documentos disponibles${siniestroId ? ' para el siniestro ' + siniestroId : ''}.</div>`);
+        addMessageToChat('bot', `<div>No hay documentos disponibles.</div>`);
         return;
     }
 
@@ -86,7 +86,7 @@ export function renderDocumentos(siniestroId = null) {
     }, {});
 
     // Construir HTML
-    let html = '<div><small class="text-muted fst-italic">Documentos</small></div>'; // texto encima de todo
+    let html = '<div><small class="text-success fst-italic">Documentos</small></div>'; // texto encima de todo
 
     Object.entries(grouped).forEach(([key, docs]) => {
         const [entidad, documento] = key.split('-');

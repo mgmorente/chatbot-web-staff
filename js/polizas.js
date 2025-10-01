@@ -149,7 +149,7 @@ export function renderPolizasCliente(d) {
     }
 
     // Filtros recibidos desde la IA (pueden ser varios)
-    const filtros = d.args;
+    const filtros = d.args || {};
 
     const polizasFiltradas = data.polizas.filter(p => {
         // Para cada filtro, comprobamos si se cumple en la póliza

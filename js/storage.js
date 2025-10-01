@@ -31,6 +31,10 @@ export function getClientes() {
     return JSON.parse(localStorage.getItem('clientes')) || [];
 }
 
+export function getCompanias() {
+    return JSON.parse(localStorage.getItem('companias')) || [];
+}
+
 export function getSelectedClient() {
     return localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')).cliente.nombre : null;
 }

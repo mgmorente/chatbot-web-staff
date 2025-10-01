@@ -5,8 +5,8 @@ import { addMessageToChat, addThinkingMessage, removeThinkingMessage, showApiErr
 import { renderClientesSelect, handleClienteSelection, storeClientesList, renderFichaCliente, renderModCliente } from './clientes.js';
 import { renderPolizasSelect, descargaPoliza, renderPolizasCliente } from './polizas.js';
 import { renderRecibosCliente } from './recibos.js';
-import { renderSiniestrosCliente, renderSiniestrosTramites } from './siniestros.js';
-import { renderTelefonosCompanias } from './companias.js';
+import { renderSiniestrosCliente } from './siniestros.js';
+import { renderTelefonosCompanias, storeCompaniasList } from './companias.js';
 import { renderAgenda } from './agenda.js';
 import { renderSubirDocumento, renderDocumentos } from './docs.js';
 import { updateHeaderClient } from './header.js';
@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const preSiniestroModal = new bootstrap.Modal(document.getElementById('preSiniestroModal'));
     const agendaModal = new bootstrap.Modal(document.getElementById('agendaModal'));
 
+    const offcanvasEl = document.getElementById('offcanvasRespuestas');
+    const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+
     // --- Comprobar sesión ---
     const tokenData = getStoredToken();
     let userToken = tokenData?.token || '';
@@ -37,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Login ---
     document.getElementById('user-data-form').addEventListener('submit', async (e) => {
+
         e.preventDefault();
         clearApiError();
 
@@ -60,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 userToken = data.access_token;
                 storeToken(userToken, SESSION_DURATION);
                 storeClientesList();
+                storeCompaniasList();
                 storeUser(data.user);
                 userModal.hide();
             } else {
@@ -105,14 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 preSiniestroModal.show();
                 break;
             case 'telefonos_companias':
-                renderTelefonosCompanias(d.data);
+                renderTelefonosCompanias();
                 break;
             case 'agenda_hoy':
                 renderAgenda(d);
                 break;
             case 'registrar_agenda':
                 agendaModal.show();
-                break;    
+                break;
             case 'registrar_documento':
             case 'registrar_documento_cliente':
             case 'registrar_documento_poliza':
@@ -226,4 +231,27 @@ document.addEventListener('DOMContentLoaded', () => {
             enviarEmail();
         }
     });
+
+    // --- Menu herramientas offcanvas
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('button[data-command]');
+        if (btn) {
+            const command = btn.getAttribute('data-command');
+            // aquí llamas a tu función que envía el comando
+            handleCommand({ "command": command });
+            $("#offcanvasRespuestas").offcanvas('hide'); // cerrar panel
+        }
+    });
+
+    // --- Boton abrir opciones rapidas
+    document.getElementById('btnOffcanvas').addEventListener('click', function (e) {
+        if (!getSelectedClient()) {
+            e.preventDefault();  // evita el toggle del offcanvas
+            clienteModal.show();
+            return;
+        }
+        // Si hay cliente, abrir el offcanvas
+        offcanvas.show();
+    });
+
 });

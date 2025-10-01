@@ -1,6 +1,39 @@
 import { addMessageToChat } from './chat.js';
+import { getCompanias } from './storage.js';
 
-export function renderTelefonosCompanias(data) {
+// Función para obtener y almacenar companias desde la API
+export async function storeCompaniasList() {
+    const token = localStorage.getItem('userToken');
+    const data = await fetchCompaniasList(token); // <-- await aquí
+    console.log('Cias obtenidas:', data);
+    if (data) {
+        localStorage.setItem('companias', JSON.stringify(data));
+    }
+}
+
+// Llamada a la API para obtener la lista de companias
+async function fetchCompaniasList(token) {
+    try {
+        const response = await fetch(`${ENV.API_URL}/companias`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'Empresa': 'pacc',
+                'Device': 'web'
+            }
+        });
+        if (!response.ok) throw new Error('Error al obtener datos de companias');
+        return await response.json();
+    } catch (err) {
+        console.error(err);
+        return null;
+    }
+}
+
+export function renderTelefonosCompanias() {
+
+    const data = getCompanias();
 
     // Agrupar por nombre
     const groupedData = data.reduce((acc, s) => {
@@ -27,5 +60,5 @@ export function renderTelefonosCompanias(data) {
 
     const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
     addMessageToChat('bot', html);
-
 }
+

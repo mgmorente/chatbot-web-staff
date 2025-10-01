@@ -1,20 +1,26 @@
 import { addMessageToChat } from './chat.js';
+import { getAgenda } from './storage.js';
 
-export function renderAgenda(agenda) {
-    const data = agenda.data;
+export function renderAgenda() {
+    const data = getAgenda();
+    const agenda = data.value;
 
-    if (!data || data.length === 0) {
+    if (!agenda || agenda.length === 0) {
         addMessageToChat('bot', "No hay eventos en la agenda");
         return;
     }
 
     // Si hay datos
-    const htmlParts = data.map(r => {
+    const htmlParts = agenda.map(r => {
+
+        const start = new Date(r.start.dateTime + "Z").toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+        const end = new Date(r.end.dateTime + "Z").toLocaleString("es-ES", { timeZone: "Europe/Madrid" });
+
         return `
             <li class="list-group-item">
-                <strong class="small d-block mb-1">${r.titulo}</strong>
+                <strong class="small d-block mb-1">${r.subject}</strong>
                 <small class="text-secondary d-block">
-                    <i class="bi bi-calendar me-1"></i>${r.inicio} · Organizador: ${r.organizador}
+                    <i class="bi bi-calendar me-1"></i>${start}
                 </small>
             </li>
         `;

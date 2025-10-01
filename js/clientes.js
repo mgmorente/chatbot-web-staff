@@ -149,6 +149,27 @@ async function fetchClienteData(clientId, token) {
     }
 }
 
+async function fetchClienteAgenda(clientId, token) {
+    try {
+        const response = await fetch(`${ENV.API_URL}/agenda?nif=${clientId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'Empresa': 'pacc',
+                'Device': 'web'
+            }
+        });
+
+        if (!response.ok) throw new Error('Error al obtener la agenda del cliente');
+
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        return null; // o lanzar el error si quieres manejarlo afuera
+    }
+}
+
 // Llamada a la API para obtener la lista de clientes
 async function fetchClientesList(token) {
     try {
@@ -187,10 +208,11 @@ async function fetchCliente(clientId) {
 
     try {
         const data = await fetchClienteData(clientId, token);
-
         localStorage.setItem('clienteData', JSON.stringify(data));
-        updateHeaderClient();
+        const agenda = await fetchClienteAgenda(clientId, token);
+        localStorage.setItem('clienteAgenda', JSON.stringify(agenda));
 
+        updateHeaderClient();
         Swal.close(); // cerrar swal al terminar
     } catch (error) {
         Swal.fire({

@@ -1,18 +1,18 @@
 // app.js
-import { getStoredToken, storeToken, clearStoredToken, getSelectedClient } from './storage.js';
-import { login, storeUser } from './auth.js';
+import { getStoredToken, clearStoredToken, getSelectedClient } from './storage.js';
+import { handleLogin } from './auth.js';
 import { addMessageToChat, addThinkingMessage, removeThinkingMessage, showApiError, clearApiError } from './chat.js';
 import { renderClientesSelect, handleClienteSelection, storeClientesList, renderFichaCliente, renderModCliente } from './clientes.js';
 import { renderPolizasSelect, descargaPoliza, renderPolizasCliente } from './polizas.js';
 import { renderRecibosCliente } from './recibos.js';
 import { renderSiniestrosCliente } from './siniestros.js';
-import { renderTelefonosCompanias, storeCompaniasList } from './companias.js';
+import { renderTelefonosCompanias } from './companias.js';
 import { renderAgenda } from './agenda.js';
 import { renderSubirDocumento, renderDocumentos } from './docs.js';
 import { updateHeaderClient } from './header.js';
 
 const apiUrl = ENV.API_URL;
-const SESSION_DURATION = 2 * 60 * 60 * 1000;
+
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -50,29 +50,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const submitButton = document.getElementById('submitButton');
         const spinner = document.getElementById('spinner');
         const buttonText = document.getElementById('buttonText');
+
         spinner.classList.remove('d-none');
         buttonText.textContent = "Procesando...";
         submitButton.disabled = true;
 
         try {
-            // Limpiar sesión previa
-            clearStoredToken();
+            Swal.fire({
+                title: 'Cargando datos...',
+                html: 'Por favor espera mientras se cargan los datos del usuario.',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
 
-            const data = await login(apiUrl, usuario_pacc, password);
+            await handleLogin(usuario_pacc, password);
 
-            if (data.access_token) {
-                userToken = data.access_token;
-                storeToken(userToken, SESSION_DURATION);
-                storeClientesList();
-                storeCompaniasList();
-                storeUser(data.user);
-                userModal.hide();
-            } else {
-                showApiError(data.error || 'Error al autenticar');
-            }
+            Swal.close();
+            userModal.hide();
         } catch (err) {
-            showApiError('Error de conexión');
-            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: err.message || 'Error de conexión'
+            });
         } finally {
             spinner.classList.add('d-none');
             buttonText.textContent = "Entrar";
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Función para manejar comandos especiales ---
+    // --- Handle Menu ---
     function handleCommand(d) {
         const polizas = localStorage.getItem('clienteData')
             ? JSON.parse(localStorage.getItem('clienteData')).polizas
@@ -112,8 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderPolizasSelect($select_polizas, polizas);
                 preSiniestroModal.show();
                 break;
-            case 'agenda_hoy':
-                renderAgenda(d);
+            case 'consultar_agenda':
+                renderAgenda();
                 break;
             case 'registrar_agenda':
                 agendaModal.show();
@@ -143,6 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Modal enviar email ---
     function enviarEmail() {
         const modal = new bootstrap.Modal(document.getElementById('emailClienteModal'));
         modal.show();
@@ -154,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('email_to').value = data.cliente.email;
     }
 
-    // --- Función principal de envío de mensaje ---
+    // --- Enviar email ---
     document.getElementById('chat-form').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -232,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Menu herramientas offcanvas
+    // --- Menu offcanvas
     document.addEventListener('click', function (e) {
         const btn = e.target.closest('button[data-command]');
         if (btn) {
@@ -240,9 +241,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // argumentos
             let args = {};
             if (command == "consultar_poliza") {
-                args = {"estado": "activa"};
+                args = { "estado": "activa" };
             } else if (command == "consultar_siniestro") {
-                args = {"estado": "abierto"};
+                args = { "estado": "abierto" };
             }
             handleCommand({ "command": command, "args": args });
             $("#offcanvasRespuestas").offcanvas('hide'); // cerrar panel
@@ -259,5 +260,70 @@ document.addEventListener('DOMContentLoaded', () => {
         // Si hay cliente, abrir el offcanvas
         offcanvas.show();
     });
+
+    // --- Boton enviar email
+    $('#sendEmailButton').on('click', function () {
+        let form = document.getElementById("emailClienteForm");
+        if (!form.checkValidity()) {
+            form.classList.add("was-validated");
+            return;
+        }
+        const to = $('#email_to').val().trim();
+        const subject = $('#subject').val().trim();
+        const body = $('#body').val().trim();
+        const $alertBox = $('#sendMailAlert');
+
+        $alertBox.addClass('d-none').text('');
+
+        if (!to || !subject || !body) {
+            $alertBox.text('❌ Por favor, complete todos los campos obligatorios.').removeClass('d-none');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(to)) {
+            $alertBox.text('❌ El correo electrónico no tiene un formato válido.').removeClass('d-none');
+            return;
+        }
+
+        // 🔹 Mostrar alerta de "Enviando..."
+        Swal.fire({
+            title: 'Enviando...',
+            text: 'Por favor espere mientras se envía el correo.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch(`${apiUrl}/send-email`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${userToken}`,
+                'empresa': 'pacc',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ to, subject, body })
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Error en el envío');
+                return response.json();
+            })
+            .then(() => {
+                Swal.close(); // 🔹 Cerrar el "Enviando..."
+                $('#emailClienteModal').modal('hide');
+                $('#subject, #body').val('');
+                $alertBox.removeClass('alert-danger d-none').addClass('alert-success')
+                    .text('✅ Correo enviado correctamente.');
+                Swal.fire('✅ Enviado', 'El correo se envió correctamente.', 'success');
+            })
+            .catch(err => {
+                Swal.close(); // 🔹 Cerrar el "Enviando..."
+                $alertBox.text('❌ No se pudo enviar el correo.').removeClass('d-none');
+                Swal.fire('❌ Error', 'No se pudo enviar el correo.', 'error');
+                console.error(err);
+            });
+    });
+
 
 });

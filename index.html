@@ -169,7 +169,7 @@
                     </div>
                 </div>
 
-                <!-- Agenda
+                <!-- Agenda -->
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="headingAgenda">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
@@ -179,13 +179,13 @@
                     </h2>
                     <div id="collapseAgenda" class="accordion-collapse collapse" data-bs-parent="#menuAcciones">
                         <div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2" data-command="agenda_hoy">Agenda
-                                de hoy</button>
+                            <button class="btn btn-sm btn-outline-primary w-100 mb-2" 
+                                data-command="consultar_agenda">Consultar agenda</button>
                             <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="registrar_agenda">Registrar en agenda</button>
+                                data-command="registrar_agenda">Registrar agenda</button>
                         </div>
                     </div>
-                </div> -->
+                </div>
 
                 <!-- Compañías -->
                 <div class="accordion-item">
@@ -406,18 +406,22 @@
                     <div class="mb-3">
                         <label for="email_to" class="form-label">Para</label>
                         <input type="email" class="form-control" id="email_to" required>
+                        <div class="invalid-feedback">Debe incluir un email correcto.</div>
                     </div>
                     <div class="mb-3">
-                        <label for="email_subject" class="form-label">Asunto</label>
-                        <input type="text" class="form-control" id="email_subject" maxlength="100" required>
+                        <label for="subject" class="form-label">Asunto</label>
+                        <input type="text" class="form-control" id="subject" required>
+                        <div class="invalid-feedback">El asunto no puede estar vacío.</div>
                     </div>
                     <div class="mb-3">
-                        <label for="email_body" class="form-label">Mensaje</label>
-                        <textarea class="form-control" id="email_body" rows="4" required></textarea>
+                        <label for="body" class="form-label">Mensaje</label>
+                        <textarea class="form-control" id="body" rows="8" required></textarea>
+                        <div class="invalid-feedback">El mensaje no puede estar vacío.</div>
                     </div>
-                    <div id="email-errors" class="alert alert-danger d-none"></div>
+                    <div id="sendMailAlert" class="alert alert-danger d-none"></div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button id="sendEmailButton" type="submit" class="btn btn-primary">
                         <span id="emailButtonText">Enviar</span>
                         <span id="emailSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"

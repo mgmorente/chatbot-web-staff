@@ -105,12 +105,12 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'consultar_documento':
                 renderDocumentos();
                 break;
+            case 'consultar_compania':
+                renderTelefonosCompanias();
+                break;
             case 'registrar_siniestro':
                 renderPolizasSelect($select_polizas, polizas);
                 preSiniestroModal.show();
-                break;
-            case 'telefonos_companias':
-                renderTelefonosCompanias();
                 break;
             case 'agenda_hoy':
                 renderAgenda(d);

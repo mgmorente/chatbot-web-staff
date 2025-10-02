@@ -112,7 +112,7 @@
                             <button class="btn btn-sm btn-outline-primary w-100 mb-2"
                                 data-command="duplicado_poliza">Duplicado póliza</button>
                             <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="wallet_poliza">Wallet</button>
+                                data-command="wallet_poliza">Enviar wallet</button>
                         </div>
                     </div>
                 </div>
@@ -179,7 +179,7 @@
                     </h2>
                     <div id="collapseAgenda" class="accordion-collapse collapse" data-bs-parent="#menuAcciones">
                         <div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2" 
+                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
                                 data-command="consultar_agenda">Consultar agenda</button>
                             <button class="btn btn-sm btn-outline-primary w-100 mb-2"
                                 data-command="registrar_agenda">Registrar agenda</button>
@@ -287,8 +287,8 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <label for="policy-select" class="form-label">Póliza</label>
-                    <select id="policy-select" class="form-select" style="width: 100%">
+                    <label for="duplicado-poliza-select" class="form-label">Póliza</label>
+                    <select id="duplicado-poliza-select" class="form-select" style="width: 100%">
                         <option value="">Selecciona una póliza</option>
                     </select>
                 </div>
@@ -301,23 +301,22 @@
     </div>
 
     <!-- Modal Wallet de poliza -->
-    <div class="modal fade" id="walletPolizaModal" tabindex="-1" aria-labelledby="walletPolizaModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="walletPolizaModal" tabindex="-1" aria-labelledby="walletPolizaModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <form id="walletPolizaForm" class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Descargar Wallet</h5>
+                    <h5 class="modal-title">Enviar wallet</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <label for="policy-select" class="form-label">Póliza</label>
-                    <select id="policy-select-1" class="form-select" style="width: 100%">
+                    <label for="wallet-poliza-select" class="form-label">Póliza</label>
+                    <select id="wallet-poliza-select" class="form-select" style="width: 100%">
                         <option value="">Selecciona una póliza</option>
                     </select>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Descargar</button>
+                    <button type="submit" class="btn btn-primary">Enviar</button>
                 </div>
             </form>
         </div>
@@ -334,8 +333,8 @@
                 </div>
                 <div class="modal-body">
                     <!-- Póliza -->
-                    <label for="policy-select" class="form-label">Póliza</label>
-                    <select id="policy-select" class="form-select" style="width: 100%">
+                    <label for="XXX" class="form-label">Póliza</label>
+                    <select id="XXX" class="form-select" style="width: 100%">
                         <option value="">Selecciona una póliza</option>
                     </select>
 
@@ -394,44 +393,6 @@
         </div>
     </div>
 
-    <!-- Modal para enviar email -->
-    <div class="modal fade" id="emailClienteModal" tabindex="-1" aria-labelledby="emailClienteModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <form id="emailClienteForm" class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Enviar Email</h5>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="email_to" class="form-label">Para</label>
-                        <input type="email" class="form-control" id="email_to" required>
-                        <div class="invalid-feedback">Debe incluir un email correcto.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="subject" class="form-label">Asunto</label>
-                        <input type="text" class="form-control" id="subject" required>
-                        <div class="invalid-feedback">El asunto no puede estar vacío.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="body" class="form-label">Mensaje</label>
-                        <textarea class="form-control" id="body" rows="8" required></textarea>
-                        <div class="invalid-feedback">El mensaje no puede estar vacío.</div>
-                    </div>
-                    <div id="sendMailAlert" class="alert alert-danger d-none"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button id="sendEmailButton" type="submit" class="btn btn-primary">
-                        <span id="emailButtonText">Enviar</span>
-                        <span id="emailSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"
-                            aria-hidden="true"></span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Modal de Bootstrap para subir documentación -->
     <div class="modal fade" id="subirDocModal" tabindex="-1" aria-labelledby="subirDocModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -471,33 +432,65 @@
         </div>
     </div>
 
+    <!-- Modal para enviar email -->
+    <div class="modal fade" id="emailClienteModal" tabindex="-1" aria-labelledby="emailClienteModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="emailClienteForm" class="modal-content" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title">Enviar Email</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="email_to" class="form-label">Para</label>
+                        <input type="email" class="form-control" id="email_to" required>
+                        <div class="invalid-feedback">Debe incluir un email correcto.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Asunto</label>
+                        <input type="text" class="form-control" id="subject" required>
+                        <div class="invalid-feedback">El asunto no puede estar vacío.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="body" class="form-label">Mensaje</label>
+                        <textarea class="form-control" id="body" rows="8" required></textarea>
+                        <div class="invalid-feedback">El mensaje no puede estar vacío.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal de Bootstrap para agregar agenda -->
     <div class="modal fade" id="agendaModal" tabindex="-1" aria-labelledby="agendaModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="formAgregarAgenda">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="agendaModalLabel">Nueva cita cliente</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <form id="nuevaAgendaForm" class="modal-content" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="agendaModalLabel">Nueva cita cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="agenda-datetime" class="form-label">Fecha y Hora</label>
+                        <input type="datetime-local" class="form-control" id="agenda-datetime" required>
+                        <div class="invalid-feedback">La fecha y hora no puede estar vacia.</div>
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="agenda-datetime" class="form-label">Fecha y Hora</label>
-                            <input type="datetime-local" class="form-control" id="agenda-datetime" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="agenda-asunto" class="form-label">Asunto</label>
-                            <input type="text" class="form-control" id="agenda-asunto" placeholder="Escribe el asunto"
-                                required>
-                        </div>
-                        <div id="error-agenda" class="text-danger small"></div>
+                    <div class="mb-3">
+                        <label for="agenda-asunto" class="form-label">Asunto</label>
+                        <input type="text" class="form-control" id="agenda-asunto" placeholder="Escribe el asunto"
+                            required>
+                        <div class="invalid-feedback">El asunto no puede estar vacio.</div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
 

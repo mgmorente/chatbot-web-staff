@@ -3,16 +3,14 @@ import { getStoredToken, clearStoredToken, getSelectedClient } from './storage.j
 import { handleLogin } from './auth.js';
 import { addMessageToChat, addThinkingMessage, removeThinkingMessage, showApiError, clearApiError } from './chat.js';
 import { renderClientesSelect, handleClienteSelection, storeClientesList, renderFichaCliente, renderModCliente } from './clientes.js';
-import { renderPolizasSelect, descargaPoliza, renderPolizasCliente } from './polizas.js';
+import { renderPolizasSelect, descargaPoliza, walletPoliza, renderPolizasCliente } from './polizas.js';
 import { renderRecibosCliente } from './recibos.js';
 import { renderSiniestrosCliente } from './siniestros.js';
 import { renderTelefonosCompanias } from './companias.js';
 import { renderAgenda } from './agenda.js';
 import { renderSubirDocumento, renderDocumentos } from './docs.js';
 import { updateHeaderClient } from './header.js';
-
-const apiUrl = ENV.API_URL;
-
+import { showLoading } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -109,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderTelefonosCompanias(d);
                 break;
             case 'registrar_siniestro':
-                renderPolizasSelect($select_polizas, polizas);
+                // renderPolizasSelect($duplicado_poliza_select, polizas);
                 preSiniestroModal.show();
                 break;
             case 'consultar_agenda':
@@ -129,12 +127,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'duplicado':
             case 'duplicado_poliza':
-                renderPolizasSelect($select_polizas, polizas);
+                renderPolizasSelect($duplicado_poliza_select, '#duplicadoPolizaModal', polizas);
                 duplicadoPolizaModal.show();
                 break;
             case 'wallet':
             case 'wallet_poliza':
-                renderPolizasSelect($select_polizas, polizas);
+                renderPolizasSelect($wallet_poliza_select, '#walletPolizaModal', polizas);
                 walletPolizaModal.show();
                 break;
             default:
@@ -167,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addThinkingMessage();
 
         try {
-            const response = await fetch(`${apiUrl}/consulta`, {
+            const response = await fetch(`${ENV.API_URL}/consulta`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -214,14 +212,24 @@ document.addEventListener('DOMContentLoaded', () => {
     handleClienteSelection($select_clientes, clienteModal);
 
     // --- Pólizas ---
-    const $select_polizas = $('#policy-select');
+    const $duplicado_poliza_select = $('#duplicado-poliza-select');
+    const $wallet_poliza_select = $('#wallet-poliza-select');
 
     document.getElementById('duplicadoPolizaForm').addEventListener('submit', function (e) {
         e.preventDefault();
-        const selectPolizas = $select_polizas.val();
+        const selectPolizas = $duplicado_poliza_select.val();
         if (selectPolizas) {
             duplicadoPolizaModal.hide();
             descargaPoliza(selectPolizas);
+        }
+    });
+
+    document.getElementById('walletPolizaForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const selectPolizas = $wallet_poliza_select.val();
+        if (selectPolizas) {
+            walletPolizaModal.hide();
+            walletPoliza(selectPolizas);
         }
     });
 
@@ -262,8 +270,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Boton enviar email
-    $('#sendEmailButton').on('click', function () {
-        let form = document.getElementById("emailClienteForm");
+    document.getElementById('emailClienteForm').addEventListener('submit', function (e) {
+
+        let form = this; // referencia al form
         if (!form.checkValidity()) {
             form.classList.add("was-validated");
             return;
@@ -271,32 +280,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const to = $('#email_to').val().trim();
         const subject = $('#subject').val().trim();
         const body = $('#body').val().trim();
-        const $alertBox = $('#sendMailAlert');
 
-        $alertBox.addClass('d-none').text('');
+        showLoading();
 
-        if (!to || !subject || !body) {
-            $alertBox.text('❌ Por favor, complete todos los campos obligatorios.').removeClass('d-none');
-            return;
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(to)) {
-            $alertBox.text('❌ El correo electrónico no tiene un formato válido.').removeClass('d-none');
-            return;
-        }
-
-        // 🔹 Mostrar alerta de "Enviando..."
-        Swal.fire({
-            title: 'Enviando...',
-            text: 'Por favor espere mientras se envía el correo.',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        fetch(`${apiUrl}/send-email`, {
+        fetch(`${ENV.API_URL}/send-email`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${userToken}`,
@@ -313,17 +300,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 Swal.close(); // 🔹 Cerrar el "Enviando..."
                 $('#emailClienteModal').modal('hide');
                 $('#subject, #body').val('');
-                $alertBox.removeClass('alert-danger d-none').addClass('alert-success')
-                    .text('✅ Correo enviado correctamente.');
-                Swal.fire('✅ Enviado', 'El correo se envió correctamente.', 'success');
+                Swal.fire('Enviado', 'El correo se envió correctamente.', 'success');
             })
             .catch(err => {
                 Swal.close(); // 🔹 Cerrar el "Enviando..."
-                $alertBox.text('❌ No se pudo enviar el correo.').removeClass('d-none');
                 Swal.fire('❌ Error', 'No se pudo enviar el correo.', 'error');
                 console.error(err);
             });
     });
 
+    // --- Boton nueva agenda
+    document.getElementById('nuevaAgendaForm').addEventListener('submit', function (e) {
+        let form = this; // referencia al form
+        if (!form.checkValidity()) {
+            form.classList.add("was-validated");
+            return;
+        }
+
+        const data = {
+            nif: JSON.parse(localStorage.getItem('clienteData')).cliente.nif,
+            subject: $("#agenda-asunto").val(),
+            start: $("#agenda-datetime").val(),
+            tipo: 'cita',
+        };
+
+        showLoading();
+
+        fetch(`${ENV.API_URL}/agenda`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${userToken}`,
+                'empresa': 'pacc',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Error en el envío');
+                return response.json();
+            })
+            .then(() => {
+                Swal.close();
+                $('#agendaModal').modal('hide');
+                $('#agenda-datetime, #agenda-asunto').val('');
+                Swal.fire('Grabado', 'La agenda se registro correctamente.', 'success');
+            })
+            .catch(err => {
+                Swal.close();
+                Swal.fire('❌ Error', 'No se pudo registrar la agenda.', 'error');
+                console.error(err);
+            });
+    });
+   
 
 });

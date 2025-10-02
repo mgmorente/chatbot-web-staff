@@ -1,8 +1,9 @@
 import { addMessageToChat } from './chat.js';
 import { renderDocumentos } from './docs.js'; // importa tu función
+import { showLoading } from './utils.js';
 
 // polizas.js
-export function renderPolizasSelect($select, polizas) {
+export function renderPolizasSelect($select, dropdownParent, polizas) {
     $select.empty();
 
     // Filtrar solo pólizas con situacion = 1
@@ -32,7 +33,7 @@ export function renderPolizasSelect($select, polizas) {
     $select.select2({
         theme: "bootstrap-5",
         placeholder: "Selecciona una póliza",
-        dropdownParent: $('#duplicadoPolizaModal'),
+        dropdownParent: $(dropdownParent),
         allowClear: true,
         closeOnSelect: true,
         width: '100%',
@@ -79,22 +80,16 @@ export function renderPolizasSelect($select, polizas) {
     });
 }
 
-
-export async function descargaPoliza(polizaId) {
+export async function descargaPoliza(poliza) {
     try {
-        // Mostrar SweetAlert2 con loading
-        Swal.fire({
-            title: 'Descargando póliza...',
-            text: 'Por favor, espera mientras se genera el PDF.',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+        showLoading();
 
         const response = await fetch(
-            `https://pacconline.grupo-pacc.es/api/api/eiac/duplicado?contrato=${polizaId}`,
-            { method: 'GET', headers: { 'Content-Type': 'application/pdf' } }
+            `${ENV.API_URL_PRODUCCION}/eiac/duplicado?contrato=${poliza}`,
+            { 
+                method: 'GET', 
+                headers: { 'Content-Type': 'application/pdf' } 
+            }
         );
 
         const contentType = response.headers.get('Content-Type');
@@ -114,20 +109,13 @@ export async function descargaPoliza(polizaId) {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `duplicado_${polizaId}.pdf`;
+        a.download = `duplicado_${poliza}.pdf`;
         document.body.appendChild(a);
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
 
-        // Cerrar loading y mostrar éxito
-        Swal.fire({
-            icon: 'success',
-            title: 'Descarga completada',
-            text: `La póliza ${polizaId} se ha descargado correctamente.`,
-            timer: 3000,
-            showConfirmButton: false
-        });
+        Swal.fire('Descarga completada', 'El duplicado se descargo correctamente', 'success');
 
     } catch (err) {
         console.error('Error descargaPoliza:', err);
@@ -135,6 +123,41 @@ export async function descargaPoliza(polizaId) {
             icon: 'error',
             title: 'Error',
             text: err.message || 'Ocurrió un problema al descargar la póliza'
+        });
+    }
+}
+
+export async function walletPoliza(poliza) {
+    try {
+        showLoading();
+
+        await fetch(
+            `${ENV.API_URL_PRODUCCION}/cliente/generar-pkpass?contrato=${poliza}`,
+            {
+                method: 'GET', 
+                headers: {
+                    'Content-Type': 'application/pdf',
+                    'Empresa': 'pacc',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Respuesta:', data); // Agregar log para verificar la respuesta
+                if (data.mensaje) {
+                    Swal.fire('Atención', data.mensaje, 'info');
+                } else if (data.pkpass) {
+                    Swal.fire('Envio completado', 'El wallet se envió correctamente', 'success');
+                } else {
+                    Swal.fire('❌ Error', 'No se pudo enviar el wallet.', 'error');
+                }
+            })
+
+    } catch (err) {
+        console.error('Error walletPoliza:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.message || 'Ocurrió un problema al descargar wallet'
         });
     }
 }
@@ -215,10 +238,10 @@ export function renderPolizasCliente(d) {
     addMessageToChat('bot', html);
 
     document.querySelectorAll('.ver-documentos-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const poliza = e.currentTarget.getAttribute('data-poliza');
-                renderDocumentos(poliza);
-            });
+        btn.addEventListener('click', (e) => {
+            const poliza = e.currentTarget.getAttribute('data-poliza');
+            renderDocumentos(poliza);
         });
+    });
 }
 

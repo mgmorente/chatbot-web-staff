@@ -271,7 +271,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Boton enviar email
     document.getElementById('emailClienteForm').addEventListener('submit', function (e) {
-
+        e.preventDefault();
+        
         let form = this; // referencia al form
         if (!form.checkValidity()) {
             form.classList.add("was-validated");
@@ -311,6 +312,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Boton nueva agenda
     document.getElementById('nuevaAgendaForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
         let form = this; // referencia al form
         if (!form.checkValidity()) {
             form.classList.add("was-validated");

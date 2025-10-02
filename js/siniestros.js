@@ -6,7 +6,7 @@ import { renderDocumentos } from './docs.js'; // importa tu función
 export function renderSiniestrosCliente(d = {}) {
     const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
     if (!data || !data.siniestros || !data.siniestros.length) {
-        addMessageToChat('bot', '<div class="text-danger">No hay siniestros disponibles.</div>');
+        addMessageToChat('bot', '<div>No hay siniestros disponibles.</div>');
         return;
     }
 
@@ -81,7 +81,7 @@ export function renderSiniestrosCliente(d = {}) {
 export function renderSiniestrosTramites(siniestroId = null) {
     const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
     if (!data || !data.tramites || !data.tramites.length) {
-        addMessageToChat('bot', '<div class="text-danger">No hay trámites disponibles.</div>');
+        addMessageToChat('bot', '<div>No hay trámites disponibles.</div>');
         return;
     }
 

@@ -63,7 +63,7 @@ export function renderSubirDocumento() {
 export function renderDocumentos(id = null) {
     const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
     if (!data || !data.documentos || !data.documentos.length) {
-        addMessageToChat('bot', '<div class="text-danger">No hay documentos disponibles.</div>');
+        addMessageToChat('bot', '<div>No hay documentos disponibles.</div>');
         return;
     }
 

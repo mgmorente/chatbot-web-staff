@@ -26,6 +26,9 @@ export function renderAgenda() {
         `;
     });
 
-    const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
+    const html = `
+        <div><small class="text-success fst-italic">Agenda</small></div>
+        <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
+    `;
     addMessageToChat('bot', html);
 }

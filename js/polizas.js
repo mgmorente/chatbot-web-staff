@@ -145,7 +145,7 @@ export function renderPolizasCliente(d) {
         : null;
 
     if (!data || !data.polizas || !data.polizas.length) {
-        addMessageToChat('bot', '<div class="text-danger">No hay pólizas disponibles.</div>');
+        addMessageToChat('bot', '<div>No hay pólizas disponibles.</div>');
         return;
     }
 
@@ -177,7 +177,7 @@ export function renderPolizasCliente(d) {
     if (!polizasFiltradas.length) {
         addMessageToChat(
             'bot',
-            `<div class="text-danger">No hay pólizas que cumplan las condiciones indicadas.</div>`
+            `<div>No hay pólizas que cumplan las condiciones indicadas.</div>`
         );
         return;
     }

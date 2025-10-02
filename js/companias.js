@@ -62,7 +62,10 @@ export function renderTelefonosCompanias(d = []) {
         `;
     });
 
-    const html = `<ul class="list-group list-group-flush">${htmlParts.join('')}</ul>`;
+    const html = `
+        <div><small class="text-success fst-italic">Teléfonos compañías</small></div>
+        <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
+    `;
 
     if (htmlParts.length === 0) {
         addMessageToChat('bot', `<div class="text-muted small">No se encontraron compañías que coincidan con "${d.args.compania}"</div>`);

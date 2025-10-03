@@ -21,6 +21,9 @@ export function clearStoredToken() {
     localStorage.removeItem('clienteData');
     localStorage.removeItem('clientes');
     localStorage.removeItem('user');
+    localStorage.removeItem('descriptores');
+    localStorage.removeItem('companias');
+    localStorage.removeItem('clienteAgenda');
 }
 
 export function storeClientes(clientes) {

@@ -1,6 +1,7 @@
 import { storeToken } from './storage.js';
 import { storeClientesList } from './clientes.js';
 import { storeCompaniasList } from './companias.js';
+import { storeDescriptoresList } from './descriptores.js';
 
 // auth.js
 export function storeUser(user) {
@@ -31,6 +32,7 @@ export async function handleLogin(usuario_pacc, password) {
         storeToken(data.access_token, SESSION_DURATION);
         await storeClientesList();
         await storeCompaniasList();
+        await storeDescriptoresList();
         storeUser(data.user);
         return true;
     } else {

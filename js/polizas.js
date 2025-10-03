@@ -3,7 +3,11 @@ import { renderDocumentos } from './docs.js'; // importa tu función
 import { showLoading } from './utils.js';
 
 // polizas.js
-export function renderPolizasSelect($select, dropdownParent, polizas) {
+export function renderPolizasSelect($select, dropdownParent) {
+    const polizas = localStorage.getItem('clienteData')
+            ? JSON.parse(localStorage.getItem('clienteData')).polizas
+            : [];
+
     $select.empty();
 
     // Filtrar solo pólizas con situacion = 1
@@ -57,7 +61,7 @@ export function renderPolizasSelect($select, dropdownParent, polizas) {
             if (!data.id) return data.text;
             const poliza = polizasActivas.find(p => p.poliza === data.id);
             return poliza
-                ? `${poliza.poliza} - ${poliza.compania}${poliza.matricula ? ' - ' + poliza.matricula : ''}`
+                ? `${poliza.cia_poliza} - ${poliza.compania}${poliza.matricula ? ' - ' + poliza.matricula : ''}`
                 : data.text;
         },
         matcher: function (params, data) {
@@ -148,7 +152,7 @@ export async function walletPoliza(poliza) {
                 } else if (data.pkpass) {
                     Swal.fire('Envio completado', 'El wallet se envió correctamente', 'success');
                 } else {
-                    Swal.fire('❌ Error', 'No se pudo enviar el wallet.', 'error');
+                    Swal.fire('❌ Error', 'No se pudo enviar el wallet', 'error');
                 }
             })
 

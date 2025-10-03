@@ -92,7 +92,11 @@
                             <button class="btn btn-sm btn-outline-primary w-100 mb-2"
                                 data-command="consultar_cliente">Consultar cliente</button>
                             <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="actualizar_cliente">Actualizar cliente</button>
+                                data-command="actualizar_cliente">Actualizar datos</button>
+                            <button class="btn btn-sm btn-outline-success w-100 mb-2"
+                                data-command="cambiar_cliente">Cambiar cliente</button>
+                            <button class="btn btn-sm btn-outline-success w-100 mb-2"
+                                data-command="recargar_cliente">Recargar datos</button>
                         </div>
                     </div>
                 </div>
@@ -146,7 +150,7 @@
                             <button class="btn btn-sm btn-outline-primary w-100 mb-2"
                                 data-command="consultar_siniestro">Consultar siniestros abiertos</button>
                             <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="registrar_siniestro">Registrar siniestro</button>
+                                data-command="registrar_siniestro">Registrar presiniestro</button>
                         </div>
                     </div>
                 </div>
@@ -242,11 +246,7 @@
                     <div id="api-errors" class="alert alert-danger d-none"></div>
                 </div>
                 <div class="modal-footer">
-                    <button id="submitButton" type="submit" class="btn btn-primary">
-                        <span id="buttonText">Entrar</span>
-                        <span id="spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"
-                            aria-hidden="true"></span>
-                    </button>
+                    <button id="submitButton" type="submit" class="btn btn-primary">Entrar</button>
                 </div>
             </form>
         </div>
@@ -301,7 +301,8 @@
     </div>
 
     <!-- Modal Wallet de poliza -->
-    <div class="modal fade" id="walletPolizaModal" tabindex="-1" aria-labelledby="walletPolizaModalLabel" aria-hidden="true">
+    <div class="modal fade" id="walletPolizaModal" tabindex="-1" aria-labelledby="walletPolizaModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <form id="walletPolizaForm" class="modal-content">
                 <div class="modal-header">
@@ -326,36 +327,45 @@
     <div class="modal fade" id="preSiniestroModal" tabindex="-1" aria-labelledby="preSiniestroModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
-            <form id="preSiniestroForm" class="modal-content">
+            <form id="preSiniestroForm" class="modal-content" novalidate>
                 <div class="modal-header">
-                    <h5 class="modal-title">Registro PreSiniestro</h5>
+                    <h5 class="modal-title">Registro Presiniestro</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Póliza -->
-                    <label for="XXX" class="form-label">Póliza</label>
-                    <select id="XXX" class="form-select" style="width: 100%">
-                        <option value="">Selecciona una póliza</option>
-                    </select>
-
-                    <!-- Fecha de ocurrencia -->
-                    <label for="fecha-ocurrencia" class="form-label mt-3">Fecha de ocurrencia</label>
-                    <input type="date" id="fecha-ocurrencia" class="form-control">
-
-                    <!-- Causa -->
-                    <label for="causa-select" class="form-label mt-3">Causa</label>
-                    <select id="causa-select" class="form-select">
-                        <option value="">Selecciona una causa</option>
-                        <option value="robo">Robo</option>
-                        <option value="accidente">Accidente</option>
-                        <option value="incendio">Incendio</option>
-                        <option value="otro">Otro</option>
-                    </select>
-
-                    <!-- Descripción -->
-                    <label for="descripcion" class="form-label mt-3">Descripción</label>
-                    <textarea id="descripcion" class="form-control" rows="3"
-                        placeholder="Detalle del siniestro"></textarea>
+                    <div class="mb-3">
+                        <label for="presiniestro-poliza-select" class="form-label">Póliza</label>
+                        <select id="presiniestro-poliza-select" class="form-select" style="width: 100%" required>
+                            <option value="">Selecciona una póliza</option>
+                        </select>
+                        <div class="invalid-feedback">Debe incluir una póliza</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="causa-select" class="form-label">Causa</label>
+                        <select id="causa-select" class="form-select" required>
+                            <option value="">Selecciona una causa</option>
+                        </select>
+                        <div class="invalid-feedback">Debe incluir una causa</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fecha-ocurrencia" class="form-label">Fecha</label>
+                        <input type="date" id="fecha-ocurrencia" class="form-control" required>
+                        <div class="invalid-feedback">Debe incluir una fecha</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea id="descripcion" class="form-control" rows="3" placeholder="Detalle del siniestro"
+                            required></textarea>
+                        <div class="invalid-feedback">Debe incluir una descripcion</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="doc-fichero-1" class="form-label">Seleccionar archivo</label>
+                        <input type="file" class="form-control mb-1" id="doc-fichero-1"
+                            accept=".pdf,.jpg,.png,.doc,.docx">
+                        <input type="file" class="form-control mb-1" id="doc-fichero-2"
+                            accept=".pdf,.jpg,.png,.doc,.docx">
+                        <input type="file" class="form-control" id="doc-fichero-3" accept=".pdf,.jpg,.png,.doc,.docx">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -444,17 +454,17 @@
                     <div class="mb-3">
                         <label for="email_to" class="form-label">Para</label>
                         <input type="email" class="form-control" id="email_to" required>
-                        <div class="invalid-feedback">Debe incluir un email correcto.</div>
+                        <div class="invalid-feedback">Debe incluir un email correcto</div>
                     </div>
                     <div class="mb-3">
                         <label for="subject" class="form-label">Asunto</label>
                         <input type="text" class="form-control" id="subject" required>
-                        <div class="invalid-feedback">El asunto no puede estar vacío.</div>
+                        <div class="invalid-feedback">El asunto no puede estar vacío</div>
                     </div>
                     <div class="mb-3">
                         <label for="body" class="form-label">Mensaje</label>
                         <textarea class="form-control" id="body" rows="8" required></textarea>
-                        <div class="invalid-feedback">El mensaje no puede estar vacío.</div>
+                        <div class="invalid-feedback">El mensaje no puede estar vacío</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -477,13 +487,13 @@
                     <div class="mb-3">
                         <label for="agenda-datetime" class="form-label">Fecha y Hora</label>
                         <input type="datetime-local" class="form-control" id="agenda-datetime" required>
-                        <div class="invalid-feedback">La fecha y hora no puede estar vacia.</div>
+                        <div class="invalid-feedback">La fecha y hora no puede estar vacia</div>
                     </div>
                     <div class="mb-3">
                         <label for="agenda-asunto" class="form-label">Asunto</label>
                         <input type="text" class="form-control" id="agenda-asunto" placeholder="Escribe el asunto"
                             required>
-                        <div class="invalid-feedback">El asunto no puede estar vacio.</div>
+                        <div class="invalid-feedback">El asunto no puede estar vacio</div>
                     </div>
                 </div>
                 <div class="modal-footer">

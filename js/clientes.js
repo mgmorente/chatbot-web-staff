@@ -86,6 +86,11 @@ export async function storeClientesList() {
     }
 }
 
+export async function recargarDatosCliente() {
+    const nif = JSON.parse(localStorage.getItem('clienteData')).cliente.nif;
+    await fetchCliente(nif);
+}
+
 export function renderModCliente() {
     const data = localStorage.getItem('clienteData')
         ? JSON.parse(localStorage.getItem('clienteData'))

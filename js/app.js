@@ -1,8 +1,8 @@
 // app.js
 import { getStoredToken, clearStoredToken, getSelectedClient } from './storage.js';
 import { handleLogin } from './auth.js';
-import { addMessageToChat, addThinkingMessage, removeThinkingMessage, showApiError, clearApiError } from './chat.js';
-import { renderClientesSelect, handleClienteSelection, storeClientesList, renderFichaCliente, renderModCliente } from './clientes.js';
+import { addMessageToChat, addThinkingMessage, removeThinkingMessage, clearApiError } from './chat.js';
+import { renderClientesSelect, handleClienteSelection, recargarDatosCliente, renderFichaCliente, renderModCliente } from './clientes.js';
 import { renderPolizasSelect, descargaPoliza, walletPoliza, renderPolizasCliente } from './polizas.js';
 import { renderRecibosCliente } from './recibos.js';
 import { renderSiniestrosCliente } from './siniestros.js';
@@ -46,11 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('password').value.trim();
 
         const submitButton = document.getElementById('submitButton');
-        const spinner = document.getElementById('spinner');
-        const buttonText = document.getElementById('buttonText');
-
-        spinner.classList.remove('d-none');
-        buttonText.textContent = "Procesando...";
         submitButton.disabled = true;
 
         try {
@@ -72,19 +67,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 text: err.message || 'Error de conexión'
             });
         } finally {
-            spinner.classList.add('d-none');
-            buttonText.textContent = "Entrar";
             submitButton.disabled = false;
         }
     });
 
     // --- Handle Menu ---
     function handleCommand(d) {
-        const polizas = localStorage.getItem('clienteData')
-            ? JSON.parse(localStorage.getItem('clienteData')).polizas
-            : [];
 
         switch (d.command) {
+            case 'recargar_cliente':
+                recargarDatosCliente();
+                break;
+            case 'cambiar_cliente':
+                clienteModal.show();
+                break;
             case 'consultar_cliente':
                 renderFichaCliente();
                 break;
@@ -107,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderTelefonosCompanias(d);
                 break;
             case 'registrar_siniestro':
-                // renderPolizasSelect($duplicado_poliza_select, polizas);
+                renderPolizasSelect($presiniestro_poliza_select, '#preSiniestroModal');
                 preSiniestroModal.show();
                 break;
             case 'consultar_agenda':
@@ -127,12 +123,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'duplicado':
             case 'duplicado_poliza':
-                renderPolizasSelect($duplicado_poliza_select, '#duplicadoPolizaModal', polizas);
+                renderPolizasSelect($duplicado_poliza_select, '#duplicadoPolizaModal');
                 duplicadoPolizaModal.show();
                 break;
             case 'wallet':
             case 'wallet_poliza':
-                renderPolizasSelect($wallet_poliza_select, '#walletPolizaModal', polizas);
+                renderPolizasSelect($wallet_poliza_select, '#walletPolizaModal');
                 walletPolizaModal.show();
                 break;
             default:
@@ -206,6 +202,11 @@ document.addEventListener('DOMContentLoaded', () => {
         location.reload();
     });
 
+    // --- Fecha max hoy en input fecha ocurrencia ---
+    const inputFecha = document.getElementById("fecha-ocurrencia");
+    const hoy = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    inputFecha.setAttribute("max", hoy);
+
     // --- Clientes ---
     const $select_clientes = $('#client-select');
     renderClientesSelect($select_clientes);
@@ -214,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Pólizas ---
     const $duplicado_poliza_select = $('#duplicado-poliza-select');
     const $wallet_poliza_select = $('#wallet-poliza-select');
+    const $presiniestro_poliza_select = $('#presiniestro-poliza-select');
 
     document.getElementById('duplicadoPolizaForm').addEventListener('submit', function (e) {
         e.preventDefault();
@@ -231,6 +233,90 @@ document.addEventListener('DOMContentLoaded', () => {
             walletPolizaModal.hide();
             walletPoliza(selectPolizas);
         }
+    });
+
+    // --- Presiniestro ---
+    document.getElementById('preSiniestroForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        let form = this; // referencia al form
+        if (!form.checkValidity()) {
+            form.classList.add("was-validated");
+            return;
+        }
+
+        const datos = {
+            "poliza": $presiniestro_poliza_select.val(),
+            "fecha": $('#fecha-ocurrencia').val(),
+            "causa": $('#causa-select').val(),
+            "descripcion": $('#descripcion').val().trim(),
+        };
+
+        showLoading();
+
+        fetch(`${ENV.API_URL}/presiniestro`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${userToken}`,
+                'empresa': 'pacc',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(datos)
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Error en el envío');
+                return response.json();
+            })
+            .then(() => {
+                Swal.close();
+                $('#preSiniestroModal').modal('hide');
+                // $('#subject, #body').val('');
+                Swal.fire('Grabado', 'El presiniestro se registro correctamente', 'success');
+            })
+            .catch(err => {
+                Swal.close();
+                Swal.fire('❌ Error', 'No se pudo registrar el presiniestro', 'error');
+                console.error(err);
+            });
+
+    });
+
+    // Modificar causas siniestro segun tipo poliza
+    $('#presiniestro-poliza-select').on('change', function (e) {
+        
+        let valor = $(this).val();
+
+        const polizas = localStorage.getItem('clienteData')
+            ? JSON.parse(localStorage.getItem('clienteData')).polizas
+            : [];
+
+        const poliza = polizas.find(p => p.poliza === valor);
+        if (!poliza) return;
+
+        const descriptores = localStorage.getItem('descriptores')
+            ? JSON.parse(localStorage.getItem('descriptores'))
+            : [];
+
+        const $causa_select = $('#causa-select');
+        // Destruir Select2 si ya estaba inicializado
+        if ($causa_select.hasClass("select2-hidden-accessible")) {
+            $causa_select.select2('destroy');
+        }
+        // Vaciar opciones
+        $causa_select.empty();
+        $causa_select.append('<option value="" selected disabled>Seleccione una opción</option>');
+        $causa_select.select2();
+        // agregar opciones segun tipo poliza
+        const datos = descriptores.filter(d => d.tipo.includes(poliza.ramo_tipo));
+        datos.forEach(item => {
+            $causa_select.append(new Option(item.nombre, item.codigo));
+        });
+        // reactivar select2
+        $causa_select.select2({
+            theme: 'bootstrap-5',
+            allowClear: true,
+            closeOnSelect: true,
+        });
     });
 
     // --- Email cliente ---
@@ -272,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Boton enviar email
     document.getElementById('emailClienteForm').addEventListener('submit', function (e) {
         e.preventDefault();
-        
+
         let form = this; // referencia al form
         if (!form.checkValidity()) {
             form.classList.add("was-validated");
@@ -301,11 +387,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 Swal.close(); // 🔹 Cerrar el "Enviando..."
                 $('#emailClienteModal').modal('hide');
                 $('#subject, #body').val('');
-                Swal.fire('Enviado', 'El correo se envió correctamente.', 'success');
+                Swal.fire('Enviado', 'El correo se envió correctamente', 'success');
             })
             .catch(err => {
                 Swal.close(); // 🔹 Cerrar el "Enviando..."
-                Swal.fire('❌ Error', 'No se pudo enviar el correo.', 'error');
+                Swal.fire('❌ Error', 'No se pudo enviar el correo', 'error');
                 console.error(err);
             });
     });
@@ -346,14 +432,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 Swal.close();
                 $('#agendaModal').modal('hide');
                 $('#agenda-datetime, #agenda-asunto').val('');
-                Swal.fire('Grabado', 'La agenda se registro correctamente.', 'success');
+                Swal.fire('Grabado', 'La agenda se registro correctamente', 'success');
             })
             .catch(err => {
                 Swal.close();
-                Swal.fire('❌ Error', 'No se pudo registrar la agenda.', 'error');
+                Swal.fire('❌ Error', 'No se pudo registrar la agenda', 'error');
                 console.error(err);
             });
     });
-   
+
 
 });

@@ -92,7 +92,7 @@
                             <button class="btn btn-sm btn-outline-primary w-100 mb-2"
                                 data-command="consultar_cliente">Consultar cliente</button>
                             <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="actualizar_cliente">Actualizar datos</button>
+                                data-command="actualizar_cliente">Modificar datos</button>
                             <button class="btn btn-sm btn-outline-success w-100 mb-2"
                                 data-command="cambiar_cliente">Cambiar cliente</button>
                             <button class="btn btn-sm btn-outline-success w-100 mb-2"
@@ -379,21 +379,25 @@
     <div class="modal fade" id="modClienteModal" tabindex="-1" aria-labelledby="modClienteModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
-            <form id="modClienteForm" class="modal-content">
+            <form id="modClienteForm" class="modal-content" novalidate>
                 <div class="modal-header">
                     <h5 class="modal-title">Modificar datos de contacto</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="modal-movil" class="form-label">Móvil</label>
-                        <input type="text" class="form-control" id="modal-movil" value="">
+                        <label for="movil" class="form-label">Móvil</label>
+                        <input type="text" class="form-control" id="movil" name="movil"
+                            pattern="^[67]\d{8}$"
+                            title="Debe ser un número de móvil válido (9 dígitos, empezando por 6 o 7)"
+                            required>
+                        <div class="invalid-feedback">Debe incluir un móvil válido</div>
                     </div>
                     <div class="mb-3">
-                        <label for="modal-email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="modal-email" value="">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                        <div class="invalid-feedback">Debe incluir un email válido</div>
                     </div>
-                    <div id="error-validacion" class="text-danger small"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

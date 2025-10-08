@@ -96,42 +96,13 @@ export function renderModCliente() {
         ? JSON.parse(localStorage.getItem('clienteData'))
         : null;
 
-    document.getElementById('modal-movil').placeholder = data.cliente.telefono || '';
-    document.getElementById('modal-email').placeholder = data.cliente.email || '';
-    document.getElementById('error-validacion').innerText = '';
+    document.getElementById('movil').placeholder = data.cliente.telefono || '';
+    document.getElementById('email').placeholder = data.cliente.email || '';
 
     const modal = new bootstrap.Modal(document.getElementById('modClienteModal'));
     modal.show();
 
-    // Capturar el submit
-    const form = document.getElementById('modClienteForm');
-    form.onsubmit = async function (e) {
-        e.preventDefault();
-
-        const movil = document.getElementById('modal-movil').value.trim();
-        const email = document.getElementById('modal-email').value.trim();
-
-        // Validaciones
-        if (!movil || !email) {
-            document.getElementById('error-validacion').innerText = 'Todos los campos son obligatorios';
-            return;
-        }
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            document.getElementById('error-validacion').innerText = 'Email no válido';
-            return;
-        }
-
-        // Datos válidos
-        const datos = { movil, email };
-        console.log('Datos modificados:', datos);
-
-        // Aquí puedes hacer tu llamada a API para guardar los datos
-        // await guardarDatos(datos);
-
-        modal.hide();
-    };
+    
 }
 
 // Llamada a la API para obtener los datos del cliente

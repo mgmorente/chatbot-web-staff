@@ -152,7 +152,7 @@ export async function walletPoliza(poliza) {
                 } else if (data.pkpass) {
                     Swal.fire('Envio completado', 'El wallet se envió correctamente', 'success');
                 } else {
-                    Swal.fire('❌ Error', 'No se pudo enviar el wallet', 'error');
+                    Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
                 }
             })
 

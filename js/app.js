@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => {
                 Swal.close();
-                Swal.fire('❌ Error', 'No se pudo registrar el presiniestro', 'error');
+                Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
                 console.error(err);
             });
 
@@ -283,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Modificar causas siniestro segun tipo poliza
     $('#presiniestro-poliza-select').on('change', function (e) {
-        
+
         let valor = $(this).val();
 
         const polizas = localStorage.getItem('clienteData')
@@ -355,6 +355,48 @@ document.addEventListener('DOMContentLoaded', () => {
         offcanvas.show();
     });
 
+    document.getElementById('modClienteForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        let form = this; // referencia al form
+        if (!form.checkValidity()) {
+            form.classList.add("was-validated");
+            return;
+        }
+
+        const nif = JSON.parse(localStorage.getItem('clienteData')).cliente.nif;
+        const movil = $('#movil').val().trim();
+        const email = $('#email').val().trim();
+
+        showLoading();
+
+        fetch(`${ENV.API_URL}/update-cliente`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${userToken}`,
+                'empresa': 'pacc',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nif, movil, email })
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Error en el envío');
+                return response.json();
+            })
+            .then(() => {
+                Swal.close();
+                $('#modClienteModal').modal('hide');
+                $('#movil, #email').val('');
+                Swal.fire('Grabado', 'Los datos han sido modificados', 'success');
+            })
+            .catch(err => {
+                Swal.close(); 
+                Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
+                console.error(err);
+            });
+
+    });
+
     // --- Boton enviar email
     document.getElementById('emailClienteForm').addEventListener('submit', function (e) {
         e.preventDefault();
@@ -391,7 +433,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => {
                 Swal.close(); // 🔹 Cerrar el "Enviando..."
-                Swal.fire('❌ Error', 'No se pudo enviar el correo', 'error');
+                Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
                 console.error(err);
             });
     });
@@ -436,7 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(err => {
                 Swal.close();
-                Swal.fire('❌ Error', 'No se pudo registrar la agenda', 'error');
+                Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
                 console.error(err);
             });
     });

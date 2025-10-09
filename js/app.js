@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('email_to').value = data.cliente.email;
     }
 
-    // --- Enviar email ---
+    // --- Form chat ---
     document.getElementById('chat-form').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -406,9 +406,41 @@ document.addEventListener('DOMContentLoaded', () => {
             form.classList.add("was-validated");
             return;
         }
+
+        const $alertBox = $('#sendMailAlert');
+        $alertBox.addClass('d-none').text('');
+
         const to = $('#email_to').val().trim();
         const subject = $('#subject').val().trim();
         const body = $('#body').val().trim();
+        const attachment = $('#attachment')[0].files[0] || null;
+
+        const formData = new FormData();
+        formData.append('to', to);
+        formData.append('subject', subject);
+        formData.append('body', body);
+        if (attachment) {
+            formData.append('attachment', attachment);
+        }
+
+        // Validar archivo (si existe)
+        if (attachment) {
+            const allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx'];
+            const maxSize = 5 * 1024 * 1024; // 5 MB
+
+            const extension = attachment.name.split('.').pop().toLowerCase();
+            if (!allowedExtensions.includes(extension)) {
+                $alertBox.text('Tipo de archivo no permitido. Solo JPG, PNG, PDF, DOC, XLS...').removeClass('d-none');
+                $('#attachment').val(''); // limpia el input
+                return;
+            }
+
+            if (attachment.size > maxSize) {
+                $alertBox.text('El archivo es demasiado grande. Máximo 5 MB.').removeClass('d-none');
+                $('#attachment').val('');
+                return;
+            }
+        }
 
         showLoading();
 
@@ -417,9 +449,8 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: {
                 'Authorization': `Bearer ${userToken}`,
                 'empresa': 'pacc',
-                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ to, subject, body })
+            body: formData
         })
             .then(response => {
                 if (!response.ok) throw new Error('Error en el envío');
@@ -428,7 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(() => {
                 Swal.close(); // 🔹 Cerrar el "Enviando..."
                 $('#emailClienteModal').modal('hide');
-                $('#subject, #body').val('');
+                $('#subject, #body, #attachment').val('');
                 Swal.fire('Enviado', 'El correo se envió correctamente', 'success');
             })
             .catch(err => {

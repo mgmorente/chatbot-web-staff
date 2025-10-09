@@ -450,7 +450,7 @@
     <div class="modal fade" id="emailClienteModal" tabindex="-1" aria-labelledby="emailClienteModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
-            <form id="emailClienteForm" class="modal-content" novalidate>
+            <form id="emailClienteForm" class="modal-content" enctype="multipart/form-data" novalidate>
                 <div class="modal-header">
                     <h5 class="modal-title">Enviar Email</h5>
                 </div>
@@ -466,10 +466,15 @@
                         <div class="invalid-feedback">El asunto no puede estar vacío</div>
                     </div>
                     <div class="mb-3">
+                        <label for="attachment" class="form-label">Adjunto</label>
+                        <input type="file" class="form-control" id="attachment">
+                    </div>
+                    <div class="mb-3">
                         <label for="body" class="form-label">Mensaje</label>
-                        <textarea class="form-control" id="body" rows="8" required></textarea>
+                        <textarea class="form-control" id="body" rows="4" required></textarea>
                         <div class="invalid-feedback">El mensaje no puede estar vacío</div>
                     </div>
+                    <div id="sendMailAlert" class="alert alert-danger d-none" role="alert"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

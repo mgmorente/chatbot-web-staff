@@ -448,7 +448,8 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${userToken}`,
-                'empresa': 'pacc',
+                'Empresa': 'pacc',
+                'Device': 'web'
             },
             body: formData
         })
@@ -491,9 +492,10 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(`${ENV.API_URL}/agenda`, {
             method: 'POST',
             headers: {
+                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${userToken}`,
-                'empresa': 'pacc',
-                'Content-Type': 'application/json'
+                'Empresa': 'pacc',
+                'Device': 'web'
             },
             body: JSON.stringify(data)
         })

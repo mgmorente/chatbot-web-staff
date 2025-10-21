@@ -3,7 +3,8 @@
 import { addMessageToChat } from './chat.js';
 import { renderPolizasSelect } from './polizas.js';
 import { renderSiniestrosSelect } from './siniestros.js';
-import { getStoredToken, clearStoredToken, getSelectedClient } from './storage.js';
+import { getStoredToken } from './storage.js';
+import { showLoading } from './utils.js';
 
 // Función para abrir el modal
 export function renderSubirDocumento() {
@@ -34,6 +35,16 @@ export function renderSubirDocumento() {
             return;
         }
 
+        const tokenData = getStoredToken();
+        let userToken = tokenData?.token || '';
+        if (!userToken) {
+            Swal.fire('Error', 'No se encontró el token de usuario.', 'error');
+            return;
+        }
+
+        // Mostrar Swal de "Enviando..."
+        showLoading('Enviando documento, por favor espere...');
+
         const nif = JSON.parse(localStorage.getItem('clienteData')).cliente.nif;
         const entidad = document.getElementById('doc-entidad').value;
         const descripcion = document.getElementById('doc-descripcion').value.trim();
@@ -53,47 +64,32 @@ export function renderSubirDocumento() {
             formData.append('poliza', poliza);
         } else if (entidad === 'siniestro') {
             formData.append('siniestro', siniestro);
+            formData.append('tramite', true);
         }
 
         try {
-            console.log('📤 Enviando datos:', {
-                nif,
-                entidad,
-                descripcion,
-                fichero: fichero.name,
-                poliza: entidad === 'poliza' ? poliza : null,
-                siniestro: entidad === 'siniestro' ? siniestro : null
-            });
 
-const tokenData = getStoredToken();
-    let userToken = tokenData?.token || '';
-
-
-            // Aquí iría la llamada real a tu API
             fetch(`${ENV.API_URL}/upload-doc`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${userToken}`,
-                'Empresa': 'pacc',
-                'Device': 'web'
-            },
-            body: formData
-        }) .then(response => {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                    'Empresa': 'pacc',
+                    'Device': 'web'
+                },
+                body: formData
+            }).then(response => {
                 if (!response.ok) throw new Error('Error en la subida');
                 return response.json();
             })
-            .then(() => {
-                Swal.close(); // 🔹 Cerrar el "Enviando..."
-                // $('#emailClienteModal').modal('hide');
-                // $('#subject, #body, #attachment').val('');
-                Swal.fire('Enviado', 'El documento se ha subido correctamente', 'success');
-            })
-            .catch(err => {
-                Swal.close(); // 🔹 Cerrar el "Enviando..."
-                Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
-                console.error(err);
-            });
-            // if (!resp.ok) throw new Error('Error al subir el documento');
+                .then(() => {
+                    Swal.close(); // 🔹 Cerrar el "Enviando..."
+                    Swal.fire('Enviado', 'El documento se ha subido correctamente', 'success');
+                })
+                .catch(err => {
+                    Swal.close(); // 🔹 Cerrar el "Enviando..."
+                    Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
+                    console.error(err);
+                });
 
             // Oculta el modal si todo va bien
             modal.hide();
@@ -107,8 +103,6 @@ const tokenData = getStoredToken();
                 $('#subir-doc-poliza-select').val('').trigger('change');
                 $('#subir-doc-siniestro-select').val('').trigger('change');
             }
-
-            console.log('✅ Documento subido correctamente');
         } catch (error) {
             console.error('❌ Error al subir el documento:', error);
             alert('Error al subir el documento.');

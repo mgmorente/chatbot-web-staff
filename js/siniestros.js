@@ -141,3 +141,70 @@ export function renderSiniestrosTramites(siniestroId = null) {
     addMessageToChat('bot', html);
 }
 
+export function renderSiniestrosSelect($select, dropdownParent) {
+    const siniestros = localStorage.getItem('clienteData')
+            ? JSON.parse(localStorage.getItem('clienteData')).siniestros
+            : [];
+
+    $select.empty();
+
+    // Filtrar solo siniestros abiertos
+    const siniestrosAbiertos = siniestros.filter(p => p.estado == "Abierto");
+
+    // Opción inicial
+    $select.append('<option value="">Selecciona una siniestro</option>');
+
+    // Añadir siniestros abiertos
+    siniestrosAbiertos.forEach(p => {
+        $select.append(new Option(p.id, p.id, false, false));
+    });
+
+    // Inicializar Select2
+    $select.select2({
+        theme: "bootstrap-5",
+        placeholder: "Selecciona un siniestro",
+        dropdownParent: $(dropdownParent),
+        allowClear: true,
+        closeOnSelect: true,
+        width: '100%',
+        templateResult: function (data) {
+            if (!data.id) return data.text;
+            const siniestro = siniestrosAbiertos.find(p => p.id === data.id);
+            if (!siniestro) return data.text;
+
+            return $(`
+                <div>
+                    <strong>${siniestro.id}</strong> ·
+                    <small class="text-muted">${siniestro.compania}</small> · 
+                    <small class="text-muted">${siniestro.cia_poliza}</small>
+                    ${siniestro.objeto ? `<br><small class="text-muted">${siniestro.objeto}</small>` : ""}
+                </div>
+            `);
+        },
+        templateSelection: function (data) {
+            if (!data.id) return data.text;
+            const siniestro = siniestrosAbiertos.find(p => p.id === data.id);
+            return siniestro
+                ? `${siniestro.cia_poliza} - ${siniestro.compania}${siniestro.matricula ? ' - ' + siniestro.matricula : ''}`
+                : data.text;
+        },
+        matcher: function (params, data) {
+            if ($.trim(params.term) === '') return data;
+
+            const siniestro = siniestrosAbiertos.find(p => p.id === data.id);
+            if (!siniestro) return null;
+
+            // Concatenar campos para búsqueda, incluyendo matrícula
+            const text = [
+                siniestro.id,
+                siniestro.compania,
+                siniestro.ramo,
+                siniestro.objeto,
+                siniestro.matricula || ''
+            ].join(' ').toLowerCase();
+
+            return text.indexOf(params.term.toLowerCase()) > -1 ? data : null;
+        }
+    });
+}
+

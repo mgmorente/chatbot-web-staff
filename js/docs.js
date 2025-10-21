@@ -1,6 +1,9 @@
 // js/docs.js
 // documentos
 import { addMessageToChat } from './chat.js';
+import { renderPolizasSelect } from './polizas.js';
+import { renderSiniestrosSelect } from './siniestros.js';
+import { getStoredToken, clearStoredToken, getSelectedClient } from './storage.js';
 
 // Función para abrir el modal
 export function renderSubirDocumento() {
@@ -8,55 +11,109 @@ export function renderSubirDocumento() {
     const modalElement = document.getElementById('subirDocModal');
     const modal = new bootstrap.Modal(modalElement);
 
+    const $subir_doc_poliza_select = $('#subir-doc-poliza-select');
+    renderPolizasSelect($subir_doc_poliza_select, '#subirDocModal');
+
+    const $subir_doc_siniestro_select = $('#subir-doc-siniestro-select');
+    renderSiniestrosSelect($subir_doc_siniestro_select, '#subirDocModal');
+
     // Inicializar inputs vacíos
     document.getElementById('doc-entidad').value = '';
     document.getElementById('doc-descripcion').value = '';
     document.getElementById('doc-fichero').value = '';
-    document.getElementById('error-subida').innerText = '';
 
     modal.show();
 
     const form = document.getElementById('formSubirDoc');
-    form.onsubmit = async function(e) {
+    form.onsubmit = async function (e) {
         e.preventDefault();
 
+        let form = this; // referencia al form
+        if (!form.checkValidity()) {
+            form.classList.add("was-validated");
+            return;
+        }
+
+        const nif = JSON.parse(localStorage.getItem('clienteData')).cliente.nif;
         const entidad = document.getElementById('doc-entidad').value;
         const descripcion = document.getElementById('doc-descripcion').value.trim();
         const fichero = document.getElementById('doc-fichero').files[0];
-        const errorDiv = document.getElementById('error-subida');
-        errorDiv.innerText = '';
-
-        // Validaciones
-        if (!entidad) {
-            errorDiv.innerText = 'Debes seleccionar una entidad';
-            return;
-        }
-        if (!descripcion) {
-            errorDiv.innerText = 'La descripción es obligatoria';
-            return;
-        }
-        if (!fichero) {
-            errorDiv.innerText = 'Debes seleccionar un archivo';
-            return;
-        }
+        const poliza = document.getElementById('subir-doc-poliza-select').value;
+        const siniestro = document.getElementById('subir-doc-siniestro-select').value;
 
         // Preparar FormData
         const formData = new FormData();
+        formData.append('nif', nif);
         formData.append('entidad', entidad);
         formData.append('descripcion', descripcion);
         formData.append('fichero', fichero);
 
-        try {
-            console.log('Datos a subir:', entidad, descripcion, fichero.name);
-
-            // Aquí iría la llamada a tu API
-            // await fetch('/api/subir-documento', { method: 'POST', body: formData });
-
-            modal.hide();
-        } catch (error) {
-            errorDiv.innerText = 'Error al subir el archivo';
-            console.error(error);
+        // Añadir los valores condicionalmente
+        if (entidad === 'poliza') {
+            formData.append('poliza', poliza);
+        } else if (entidad === 'siniestro') {
+            formData.append('siniestro', siniestro);
         }
+
+        try {
+            console.log('📤 Enviando datos:', {
+                nif,
+                entidad,
+                descripcion,
+                fichero: fichero.name,
+                poliza: entidad === 'poliza' ? poliza : null,
+                siniestro: entidad === 'siniestro' ? siniestro : null
+            });
+
+const tokenData = getStoredToken();
+    let userToken = tokenData?.token || '';
+
+
+            // Aquí iría la llamada real a tu API
+            fetch(`${ENV.API_URL}/upload-doc`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${userToken}`,
+                'Empresa': 'pacc',
+                'Device': 'web'
+            },
+            body: formData
+        }) .then(response => {
+                if (!response.ok) throw new Error('Error en la subida');
+                return response.json();
+            })
+            .then(() => {
+                Swal.close(); // 🔹 Cerrar el "Enviando..."
+                // $('#emailClienteModal').modal('hide');
+                // $('#subject, #body, #attachment').val('');
+                Swal.fire('Enviado', 'El documento se ha subido correctamente', 'success');
+            })
+            .catch(err => {
+                Swal.close(); // 🔹 Cerrar el "Enviando..."
+                Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
+                console.error(err);
+            });
+            // if (!resp.ok) throw new Error('Error al subir el documento');
+
+            // Oculta el modal si todo va bien
+            modal.hide();
+
+            // Limpieza del formulario
+            form.reset();
+
+            // Si usas Select2, reinicia
+            if (window.jQuery) {
+                $('#doc-entidad').val('').trigger('change');
+                $('#subir-doc-poliza-select').val('').trigger('change');
+                $('#subir-doc-siniestro-select').val('').trigger('change');
+            }
+
+            console.log('✅ Documento subido correctamente');
+        } catch (error) {
+            console.error('❌ Error al subir el documento:', error);
+            alert('Error al subir el documento.');
+        }
+
     };
 }
 
@@ -110,4 +167,54 @@ export function renderDocumentos(id = null) {
 
     addMessageToChat('bot', html);
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    // --- Form subir documento ---
+    const entidadSelect = document.getElementById('doc-entidad');
+    const polizaSelect = document.getElementById('subir-doc-poliza-select');
+    const siniestroSelect = document.getElementById('subir-doc-siniestro-select');
+
+    // Si el formulario no está presente, salimos
+    if (!entidadSelect || !polizaSelect || !siniestroSelect) return;
+
+    const polizaGroup = polizaSelect.closest('.mb-3');
+    const siniestroGroup = siniestroSelect.closest('.mb-3');
+
+    // Ocultar ambos al inicio y quitar required
+    polizaGroup.style.display = 'none';
+    siniestroGroup.style.display = 'none';
+    polizaSelect.removeAttribute('required');
+    siniestroSelect.removeAttribute('required');
+
+    entidadSelect.addEventListener('change', function () {
+        const valor = entidadSelect.value;
+
+        // Ocultamos ambos por defecto y quitamos required
+        polizaGroup.style.display = 'none';
+        siniestroGroup.style.display = 'none';
+        polizaSelect.removeAttribute('required');
+        siniestroSelect.removeAttribute('required');
+
+        // Limpiar valores
+        polizaSelect.value = '';
+        siniestroSelect.value = '';
+
+        // Si usas Select2, reinicia también el plugin
+        if (window.jQuery && $(polizaSelect).data('select2')) {
+            $(polizaSelect).val('').trigger('change');
+        }
+        if (window.jQuery && $(siniestroSelect).data('select2')) {
+            $(siniestroSelect).val('').trigger('change');
+        }
+
+        // Mostrar según selección y aplicar required
+        if (valor === 'poliza') {
+            polizaGroup.style.display = '';
+            polizaSelect.setAttribute('required', 'required');
+        } else if (valor === 'siniestro') {
+            siniestroGroup.style.display = '';
+            siniestroSelect.setAttribute('required', 'required');
+        }
+    });
+});
 

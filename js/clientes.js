@@ -96,8 +96,8 @@ export function renderModCliente() {
         ? JSON.parse(localStorage.getItem('clienteData'))
         : null;
 
-    document.getElementById('movil').placeholder = data.cliente.telefono || '';
-    document.getElementById('email').placeholder = data.cliente.email || '';
+    document.getElementById('movil_now').placeholder = data.cliente.telefono || '';
+    document.getElementById('email_now').placeholder = data.cliente.email || '';
 
     const modal = new bootstrap.Modal(document.getElementById('modClienteModal'));
     modal.show();

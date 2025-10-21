@@ -11,6 +11,7 @@ import { renderAgenda } from './agenda.js';
 import { renderSubirDocumento, renderDocumentos } from './docs.js';
 import { updateHeaderClient } from './header.js';
 import { showLoading } from './utils.js';
+import './docs.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -216,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const $duplicado_poliza_select = $('#duplicado-poliza-select');
     const $wallet_poliza_select = $('#wallet-poliza-select');
     const $presiniestro_poliza_select = $('#presiniestro-poliza-select');
-
+    
     document.getElementById('duplicadoPolizaForm').addEventListener('submit', function (e) {
         e.preventDefault();
         const selectPolizas = $duplicado_poliza_select.val();
@@ -515,6 +516,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(err);
             });
     });
+
+    
+
 
 
 });

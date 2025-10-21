@@ -72,7 +72,7 @@ export function renderPolizasSelect($select, dropdownParent) {
 
             // Concatenar campos para búsqueda, incluyendo matrícula
             const text = [
-                poliza.poliza,
+                poliza.cia_poliza,
                 poliza.compania,
                 poliza.ramo,
                 poliza.objeto,

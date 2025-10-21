@@ -385,17 +385,25 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
+                    <!-- MÓVIL -->
                     <div class="mb-3">
-                        <label for="movil" class="form-label">Móvil</label>
-                        <input type="text" class="form-control" id="movil" name="movil"
-                            pattern="^[67]\d{8}$"
-                            title="Debe ser un número de móvil válido (9 dígitos, empezando por 6 o 7)"
-                            required>
+                        <label for="movil_now" class="form-label mb-1">Móvil actual</label>
+                        <input type="text" class="form-control mb-2" id="movil_now" disabled>
+
+                        <label for="movil" class="form-label mb-1">Nuevo móvil</label>
+                        <input type="text" class="form-control" id="movil" name="movil" pattern="^[67]\d{8}$"
+                            title="Debe ser un número de móvil válido (9 dígitos, empezando por 6 o 7)" required>
+
                         <div class="invalid-feedback">Debe incluir un móvil válido</div>
                     </div>
+                    <!-- EMAIL -->
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
+                        <label for="email_now" class="form-label mb-1">Email actual</label>
+                        <input type="email" class="form-control mb-2" id="email_now" disabled>
+
+                        <label for="email" class="form-label mb-1">Nuevo email</label>
                         <input type="email" class="form-control" id="email" name="email" required>
+
                         <div class="invalid-feedback">Debe incluir un email válido</div>
                     </div>
                 </div>
@@ -411,7 +419,7 @@
     <div class="modal fade" id="subirDocModal" tabindex="-1" aria-labelledby="subirDocModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form id="formSubirDoc" enctype="multipart/form-data">
+                <form id="formSubirDoc" enctype="multipart/form-data" novalidate>
                     <div class="modal-header">
                         <h5 class="modal-title" id="subirDocModalLabel">Subir documentación</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -419,23 +427,39 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="doc-entidad" class="form-label">Entidad</label>
-                            <select class="form-select" id="doc-entidad">
+                            <select class="form-select" id="doc-entidad" required>
                                 <option value="" selected>Selecciona una entidad</option>
                                 <option value="cliente">Cliente</option>
                                 <option value="poliza">Póliza</option>
                                 <option value="siniestro">Siniestro</option>
                             </select>
+                            <div class="invalid-feedback">Debe seleccionar una entidad</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="subir-doc-poliza-select" class="form-label">Póliza</label>
+                            <select id="subir-doc-poliza-select" class="form-select" style="width: 100%" required>
+                                <option value="">Selecciona una póliza</option>
+                            </select>
+                            <div class="invalid-feedback">Debe seleccionar una póliza</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="subir-doc-siniestro-select" class="form-label">Siniestro</label>
+                            <select id="subir-doc-siniestro-select" class="form-select" style="width: 100%" required>
+                                <option value="">Selecciona una siniestro</option>
+                            </select>
+                            <div class="invalid-feedback">Debe seleccionar una siniestro</div>
                         </div>
                         <div class="mb-3">
                             <label for="doc-descripcion" class="form-label">Descripción</label>
                             <input type="text" class="form-control" id="doc-descripcion"
-                                placeholder="Ej: DNI escaneado">
+                                placeholder="Ej: DNI escaneado" required>
+                            <div class="invalid-feedback">Debe incluir una descripción</div>
                         </div>
                         <div class="mb-3">
                             <label for="doc-fichero" class="form-label">Seleccionar archivo</label>
-                            <input type="file" class="form-control" id="doc-fichero" accept=".pdf,.jpg,.png,.doc,.docx">
+                            <input type="file" class="form-control" id="doc-fichero" accept=".pdf,.jpg,.png,.doc,.docx" required>
+                            <div class="invalid-feedback">Debe seleccionar un archivo</div>
                         </div>
-                        <div id="error-subida" class="text-danger small"></div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

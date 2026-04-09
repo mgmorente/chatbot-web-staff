@@ -60,6 +60,7 @@ body {
     color: var(--staff-text);
     overflow: hidden;
     height: 100vh;
+    height: 100dvh;
 }
 
 /* ============================================
@@ -68,6 +69,7 @@ body {
 .staff-layout {
     display: flex;
     height: 100vh;
+    height: 100dvh;
 }
 
 /* ============================================
@@ -908,6 +910,7 @@ body {
         top: 0;
         left: 0;
         height: 100vh;
+        height: 100dvh;
         transform: translateX(calc(var(--sidebar-width) * -1));
         box-shadow: none;
     }

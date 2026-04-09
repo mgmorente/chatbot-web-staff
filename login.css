@@ -5,6 +5,7 @@
 
 body.login-page {
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     background: var(--staff-primary);
@@ -14,6 +15,7 @@ body.login-page {
 .login-container {
     display: flex;
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 

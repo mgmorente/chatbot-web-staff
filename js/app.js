@@ -249,6 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // --- Header: recargar página (hard refresh) ---
+    document.getElementById('refreshPage').addEventListener('click', () => {
+        location.reload(true);
+    });
+
     // --- Botón Ayuda / Funcionalidades ---
     document.getElementById('showHelp').addEventListener('click', (e) => {
         e.preventDefault();

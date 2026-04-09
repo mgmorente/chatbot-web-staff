@@ -73,8 +73,8 @@ export function renderSubirDocumento() {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
-                    'Empresa': 'pacc',
-                    'Device': 'web'
+                    'Empresa': ENV.EMPRESA,
+                    'Device': ENV.DEVICE
                 },
                 body: formData
             }).then(response => {

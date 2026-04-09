@@ -21,16 +21,16 @@ export function renderPolizasSelect($select, dropdownParent) {
         $select.append(new Option(p.poliza, p.poliza, false, false));
     });
 
-    // Mapa de iconos por ramo
+    // Mapa de iconos por ramo (Bootstrap Icons)
     const ramoIcons = {
-        "AUTOS": "fas fa-car",
-        "HOGAR": "fas fa-home",
-        "SALUD": "fas fa-briefcase-medical",
-        "VIDA": "fas fa-heartbeat",
-        "ACCIDENTES": "fas fa-user-injured",
-        "PYME": "fa-solid fa-building",
-        "COMERCIOS": "fa-solid fa-store",
-        "Otros": "fas fa-file-contract"
+        "AUTOS": "bi bi-car-front",
+        "HOGAR": "bi bi-house",
+        "SALUD": "bi bi-heart-pulse",
+        "VIDA": "bi bi-heart",
+        "ACCIDENTES": "bi bi-bandaid",
+        "PYME": "bi bi-building",
+        "COMERCIOS": "bi bi-shop",
+        "Otros": "bi bi-file-earmark-text"
     };
 
     // Inicializar Select2
@@ -90,9 +90,9 @@ export async function descargaPoliza(poliza) {
 
         const response = await fetch(
             `${ENV.API_URL_PRODUCCION}/eiac/duplicado?contrato=${poliza}`,
-            { 
-                method: 'GET', 
-                headers: { 'Content-Type': 'application/pdf' } 
+            {
+                method: 'GET',
+                headers: { 'Accept': 'application/pdf' }
             }
         );
 
@@ -140,13 +140,13 @@ export async function walletPoliza(poliza) {
             {
                 method: 'GET', 
                 headers: {
-                    'Content-Type': 'application/pdf',
-                    'Empresa': 'pacc',
+                    'Accept': 'application/json',
+                    'Empresa': ENV.EMPRESA,
+                    'Device': ENV.DEVICE,
                 }
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Respuesta:', data); // Agregar log para verificar la respuesta
                 if (data.mensaje) {
                     Swal.fire('Atención', data.mensaje, 'info');
                 } else if (data.pkpass) {

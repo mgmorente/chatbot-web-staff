@@ -1,8 +1,7 @@
 // app.js
 import { getStoredToken, clearStoredToken, getSelectedClient } from './storage.js';
-import { handleLogin } from './auth.js';
-import { addMessageToChat, addThinkingMessage, removeThinkingMessage, clearApiError } from './chat.js';
-import { renderClientesSelect, handleClienteSelection, recargarDatosCliente, renderFichaCliente, renderModCliente } from './clientes.js';
+import { addMessageToChat, addThinkingMessage, removeThinkingMessage } from './chat.js';
+import { renderClientesSelect, handleClienteSelection, recargarDatosCliente, renderFichaCliente, renderModCliente, buscarClienteEnChat, renderBusquedaClientes, renderClientesRecientes, fetchCliente } from './clientes.js';
 import { renderPolizasSelect, descargaPoliza, walletPoliza, renderPolizasCliente } from './polizas.js';
 import { renderRecibosCliente } from './recibos.js';
 import { renderSiniestrosCliente } from './siniestros.js';
@@ -11,70 +10,66 @@ import { renderAgenda } from './agenda.js';
 import { renderSubirDocumento, renderDocumentos } from './docs.js';
 import { updateHeaderClient } from './header.js';
 import { showLoading } from './utils.js';
-import './docs.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    updateHeaderClient(); // Actualiza la cabecera al cargar la página
+    // --- Tema: cargar preferencia guardada ---
+    const savedTheme = localStorage.getItem('staff-theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('staff-theme', next);
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    document.getElementById('themeToggleHeader').addEventListener('click', toggleTheme);
+
+    // --- Comprobar sesión: redirigir a login si no hay token ---
+    const tokenData = getStoredToken();
+    let userToken = tokenData?.token || '';
+    if (!tokenData || !tokenData.token || tokenData.expiry < Date.now()) {
+        clearStoredToken();
+        window.location.href = 'login.html';
+        return;
+    }
+
+    updateHeaderClient();
 
     // --- Modales ---
-    const userModal = new bootstrap.Modal(document.getElementById('userModal'), { backdrop: 'static', keyboard: false });
     const clienteModal = new bootstrap.Modal(document.getElementById('clienteModal'));
     const duplicadoPolizaModal = new bootstrap.Modal(document.getElementById('duplicadoPolizaModal'));
     const walletPolizaModal = new bootstrap.Modal(document.getElementById('walletPolizaModal'));
     const preSiniestroModal = new bootstrap.Modal(document.getElementById('preSiniestroModal'));
     const agendaModal = new bootstrap.Modal(document.getElementById('agendaModal'));
 
-    const offcanvasEl = document.getElementById('offcanvasRespuestas');
-    const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvasEl);
+    // --- Sidebar toggle (responsive) ---
+    const sidebar = document.getElementById('staffSidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
 
-    // --- Comprobar sesión ---
-    const tokenData = getStoredToken();
-    let userToken = tokenData?.token || '';
-    if (!tokenData || !tokenData.token || tokenData.expiry < Date.now()) {
-        document.getElementById('selected-client').textContent = '';
-        clearStoredToken();
-        userModal.show(); // <<--- abrir login si no hay sesión
-    }
-
-    // --- Login ---
-    document.getElementById('user-data-form').addEventListener('submit', async (e) => {
-
-        e.preventDefault();
-        clearApiError();
-
-        const usuario_pacc = document.getElementById('usuario_pacc').value.trim();
-        const password = document.getElementById('password').value.trim();
-
-        const submitButton = document.getElementById('submitButton');
-        submitButton.disabled = true;
-
-        try {
-            Swal.fire({
-                title: 'Cargando datos...',
-                html: 'Por favor espera mientras se cargan los datos del usuario.',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
-
-            await handleLogin(usuario_pacc, password);
-
-            Swal.close();
-            userModal.hide();
-        } catch (err) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: err.message || 'Error de conexión'
-            });
-        } finally {
-            submitButton.disabled = false;
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        // Crear/quitar overlay
+        let overlay = document.querySelector('.sidebar-overlay');
+        if (sidebar.classList.contains('open')) {
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.className = 'sidebar-overlay active';
+                overlay.addEventListener('click', () => {
+                    sidebar.classList.remove('open');
+                    overlay.remove();
+                });
+                document.body.appendChild(overlay);
+            }
+        } else if (overlay) {
+            overlay.remove();
         }
     });
 
-    // --- Handle Menu ---
+    // --- Handle Command ---
     function handleCommand(d) {
-
         switch (d.command) {
             case 'recargar_cliente':
                 recargarDatosCliente();
@@ -159,6 +154,27 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!message) return;
 
         addMessageToChat('user', message);
+        messageInput.value = '';
+
+        // Comandos locales del chat
+        const msgLower = message.toLowerCase().trim();
+        if (msgLower === 'recientes' || msgLower === 'clientes recientes' || msgLower === 'historial') {
+            renderClientesRecientes();
+            return;
+        }
+        if (msgLower === 'ayuda' || msgLower === 'help' || msgLower === 'funcionalidades') {
+            renderHelp();
+            return;
+        }
+
+        // Buscador global: detectar si es búsqueda de cliente
+        const busqueda = buscarClienteEnChat(message);
+        if (busqueda) {
+            renderBusquedaClientes(busqueda.resultados, busqueda.termino);
+            return;
+        }
+
+        // Flujo normal: enviar al backend
         addThinkingMessage();
 
         try {
@@ -167,8 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${userToken}`,
-                    'Empresa': 'pacc',
-                    'Device': 'web'
+                    'Empresa': ENV.EMPRESA,
+                    'Device': ENV.DEVICE
                 },
                 body: JSON.stringify({
                     consulta: message,
@@ -184,28 +200,134 @@ document.addEventListener('DOMContentLoaded', () => {
             addMessageToChat('bot', 'Error de conexión con el servidor');
         } finally {
             removeThinkingMessage();
-            messageInput.value = '';
         }
     });
 
-    // --- Menu: cambiar cliente ---
+    // --- Sidebar: nav actions (data-command buttons) ---
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('button[data-command]');
+        if (!btn) return;
+
+        const command = btn.getAttribute('data-command');
+
+        // Si no hay cliente seleccionado, pedir que seleccione primero
+        if (!getSelectedClient() && command !== 'cambiar_cliente') {
+            clienteModal.show();
+            return;
+        }
+
+        let args = {};
+        if (command === "consultar_poliza") {
+            args = { "estado": "activa" };
+        } else if (command === "consultar_siniestro") {
+            args = { "estado": "abierto" };
+        }
+        handleCommand({ "command": command, "args": args });
+
+        // Cerrar sidebar en móvil
+        if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (overlay) overlay.remove();
+        }
+    });
+
+    // --- Clic en resultado de búsqueda o cliente reciente ---
+    document.addEventListener('click', function (e) {
+        const searchItem = e.target.closest('.search-result-item, .recent-client-item');
+        if (!searchItem) return;
+        e.preventDefault();
+        const nif = searchItem.getAttribute('data-nif');
+        if (nif) fetchCliente(nif);
+    });
+
+    // --- Header: cambiar cliente ---
     document.querySelectorAll('.change-client').forEach(link => {
         link.addEventListener('click', function (e) {
-            e.preventDefault(); // evita que haga scroll hacia arriba por el #
+            e.preventDefault();
             clienteModal.show();
         });
     });
 
-    // --- Menu: logout ---
+    // --- Botón Ayuda / Funcionalidades ---
+    document.getElementById('showHelp').addEventListener('click', (e) => {
+        e.preventDefault();
+        renderHelp();
+        // Cerrar sidebar en móvil
+        if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (overlay) overlay.remove();
+        }
+    });
+
+    function renderHelp() {
+        const html = `
+            <div class="help-panel">
+                <div class="help-panel-header">
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Funcionalidades disponibles</span>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-title">Cliente</div>
+                    <div class="help-item"><i class="bi bi-search"></i> <strong>Consultar</strong> — Ficha completa del cliente</div>
+                    <div class="help-item"><i class="bi bi-pencil"></i> <strong>Modificar datos</strong> — Cambiar teléfono o email</div>
+                    <div class="help-item"><i class="bi bi-arrow-repeat"></i> <strong>Cambiar cliente</strong> — Seleccionar otro cliente</div>
+                    <div class="help-item"><i class="bi bi-arrow-clockwise"></i> <strong>Recargar datos</strong> — Actualizar info desde servidor</div>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-title">Pólizas</div>
+                    <div class="help-item"><i class="bi bi-search"></i> <strong>Pólizas activas</strong> — Listado con detalle</div>
+                    <div class="help-item"><i class="bi bi-files"></i> <strong>Duplicado</strong> — Descargar copia en PDF</div>
+                    <div class="help-item"><i class="bi bi-wallet2"></i> <strong>Wallet</strong> — Enviar tarjeta Apple/Google</div>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-title">Recibos y Siniestros</div>
+                    <div class="help-item"><i class="bi bi-receipt"></i> <strong>Recibos</strong> — Consultar estado de recibos</div>
+                    <div class="help-item"><i class="bi bi-search"></i> <strong>Siniestros</strong> — Ver siniestros abiertos</div>
+                    <div class="help-item"><i class="bi bi-plus-circle"></i> <strong>Presiniestro</strong> — Registrar nuevo parte</div>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-title">Documentos y Agenda</div>
+                    <div class="help-item"><i class="bi bi-folder"></i> <strong>Documentos</strong> — Ver y subir documentos</div>
+                    <div class="help-item"><i class="bi bi-calendar3"></i> <strong>Agenda</strong> — Consultar y crear citas</div>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-title">Comunicación</div>
+                    <div class="help-item"><i class="bi bi-envelope"></i> <strong>Email</strong> — Enviar correo al cliente</div>
+                    <div class="help-item"><i class="bi bi-telephone"></i> <strong>Compañías</strong> — Directorio telefónico</div>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-title">Atajos del chat</div>
+                    <div class="help-item"><i class="bi bi-search"></i> <strong>buscar [nombre/NIF]</strong> — Buscar cliente</div>
+                    <div class="help-item"><i class="bi bi-clock-history"></i> <strong>recientes</strong> — Clientes recientes</div>
+                    <div class="help-item"><i class="bi bi-question-circle"></i> <strong>ayuda</strong> — Mostrar este panel</div>
+                </div>
+
+                <div class="help-tip">
+                    <i class="bi bi-lightbulb"></i> También puedes escribir preguntas en lenguaje natural en el chat.
+                </div>
+            </div>
+        `;
+        addMessageToChat('bot', html);
+    }
+
+    // --- Logout ---
     document.getElementById('logout').addEventListener('click', (e) => {
         e.preventDefault();
         clearStoredToken();
-        location.reload();
+        window.location.href = 'login.html';
     });
 
     // --- Fecha max hoy en input fecha ocurrencia ---
     const inputFecha = document.getElementById("fecha-ocurrencia");
-    const hoy = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const hoy = new Date().toISOString().split("T")[0];
     inputFecha.setAttribute("max", hoy);
 
     // --- Clientes ---
@@ -217,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const $duplicado_poliza_select = $('#duplicado-poliza-select');
     const $wallet_poliza_select = $('#wallet-poliza-select');
     const $presiniestro_poliza_select = $('#presiniestro-poliza-select');
-    
+
     document.getElementById('duplicadoPolizaForm').addEventListener('submit', function (e) {
         e.preventDefault();
         const selectPolizas = $duplicado_poliza_select.val();
@@ -240,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('preSiniestroForm').addEventListener('submit', function (e) {
         e.preventDefault();
 
-        let form = this; // referencia al form
+        let form = this;
         if (!form.checkValidity()) {
             form.classList.add("was-validated");
             return;
@@ -259,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${userToken}`,
-                'empresa': 'pacc',
+                'empresa': ENV.EMPRESA,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(datos)
@@ -271,7 +393,6 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(() => {
                 Swal.close();
                 $('#preSiniestroModal').modal('hide');
-                // $('#subject, #body').val('');
                 Swal.fire('Grabado', 'El presiniestro se registro correctamente', 'success');
             })
             .catch(err => {
@@ -279,12 +400,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
                 console.error(err);
             });
-
     });
 
     // Modificar causas siniestro segun tipo poliza
     $('#presiniestro-poliza-select').on('change', function (e) {
-
         let valor = $(this).val();
 
         const polizas = localStorage.getItem('clienteData')
@@ -299,20 +418,16 @@ document.addEventListener('DOMContentLoaded', () => {
             : [];
 
         const $causa_select = $('#causa-select');
-        // Destruir Select2 si ya estaba inicializado
         if ($causa_select.hasClass("select2-hidden-accessible")) {
             $causa_select.select2('destroy');
         }
-        // Vaciar opciones
         $causa_select.empty();
         $causa_select.append('<option value="" selected disabled>Seleccione una opción</option>');
         $causa_select.select2();
-        // agregar opciones segun tipo poliza
         const datos = descriptores.filter(d => d.tipo.includes(poliza.ramo_tipo));
         datos.forEach(item => {
             $causa_select.append(new Option(item.nombre, item.codigo));
         });
-        // reactivar select2
         $causa_select.select2({
             theme: 'bootstrap-5',
             allowClear: true,
@@ -328,38 +443,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Menu offcanvas
-    document.addEventListener('click', function (e) {
-        const btn = e.target.closest('button[data-command]');
-        if (btn) {
-            const command = btn.getAttribute('data-command');
-            // argumentos
-            let args = {};
-            if (command == "consultar_poliza") {
-                args = { "estado": "activa" };
-            } else if (command == "consultar_siniestro") {
-                args = { "estado": "abierto" };
-            }
-            handleCommand({ "command": command, "args": args });
-            $("#offcanvasRespuestas").offcanvas('hide'); // cerrar panel
-        }
-    });
-
-    // --- Boton abrir opciones rapidas
-    document.getElementById('btnOffcanvas').addEventListener('click', function (e) {
-        if (!getSelectedClient()) {
-            e.preventDefault();  // evita el toggle del offcanvas
-            clienteModal.show();
-            return;
-        }
-        // Si hay cliente, abrir el offcanvas
-        offcanvas.show();
-    });
-
+    // --- Modificar cliente ---
     document.getElementById('modClienteForm').addEventListener('submit', function (e) {
         e.preventDefault();
 
-        let form = this; // referencia al form
+        let form = this;
         if (!form.checkValidity()) {
             form.classList.add("was-validated");
             return;
@@ -375,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${userToken}`,
-                'empresa': 'pacc',
+                'empresa': ENV.EMPRESA,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ nif, movil, email })
@@ -391,18 +479,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 Swal.fire('Grabado', 'Los datos han sido modificados', 'success');
             })
             .catch(err => {
-                Swal.close(); 
+                Swal.close();
                 Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
                 console.error(err);
             });
-
     });
 
-    // --- Boton enviar email
+    // --- Enviar email ---
     document.getElementById('emailClienteForm').addEventListener('submit', function (e) {
         e.preventDefault();
 
-        let form = this; // referencia al form
+        let form = this;
         if (!form.checkValidity()) {
             form.classList.add("was-validated");
             return;
@@ -424,15 +511,14 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.append('attachment', attachment);
         }
 
-        // Validar archivo (si existe)
         if (attachment) {
             const allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx'];
-            const maxSize = 5 * 1024 * 1024; // 5 MB
+            const maxSize = 5 * 1024 * 1024;
 
             const extension = attachment.name.split('.').pop().toLowerCase();
             if (!allowedExtensions.includes(extension)) {
                 $alertBox.text('Tipo de archivo no permitido. Solo JPG, PNG, PDF, DOC, XLS...').removeClass('d-none');
-                $('#attachment').val(''); // limpia el input
+                $('#attachment').val('');
                 return;
             }
 
@@ -449,8 +535,8 @@ document.addEventListener('DOMContentLoaded', () => {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${userToken}`,
-                'Empresa': 'pacc',
-                'Device': 'web'
+                'Empresa': ENV.EMPRESA,
+                'Device': ENV.DEVICE
             },
             body: formData
         })
@@ -459,23 +545,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 return response.json();
             })
             .then(() => {
-                Swal.close(); // 🔹 Cerrar el "Enviando..."
+                Swal.close();
                 $('#emailClienteModal').modal('hide');
                 $('#subject, #body, #attachment').val('');
                 Swal.fire('Enviado', 'El correo se envió correctamente', 'success');
             })
             .catch(err => {
-                Swal.close(); // 🔹 Cerrar el "Enviando..."
+                Swal.close();
                 Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
                 console.error(err);
             });
     });
 
-    // --- Boton nueva agenda
+    // --- Nueva agenda ---
     document.getElementById('nuevaAgendaForm').addEventListener('submit', function (e) {
         e.preventDefault();
 
-        let form = this; // referencia al form
+        let form = this;
         if (!form.checkValidity()) {
             form.classList.add("was-validated");
             return;
@@ -495,8 +581,8 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${userToken}`,
-                'Empresa': 'pacc',
-                'Device': 'web'
+                'Empresa': ENV.EMPRESA,
+                'Device': ENV.DEVICE
             },
             body: JSON.stringify(data)
         })
@@ -516,9 +602,5 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(err);
             });
     });
-
-    
-
-
 
 });

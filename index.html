@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="utf-8">
@@ -13,278 +13,238 @@
 
 <body>
 
-    <div class="container mt-2">
-        <div class="card">
-            <div class="card-header d-flex align-items-center justify-content-between bg-white text-dark border-bottom">
-                <div class="d-flex align-items-center gap-3">
-                    <img src="avatar.jpg" alt="Avatar" class="rounded-circle" width="40" height="40">
-                    <div class="d-flex flex-column">
-                        <span>PACCMAN STAFF</span>
-                        <div class="d-flex align-items-center gap-2">
-                            <span id="selected-client" class="text-success"></span>
-                        </div>
-                    </div>
-                </div>
+    <div class="staff-layout">
 
-                <!-- Menú tipo hamburguesa -->
-                <div class="dropdown">
-                    <button class="btn btn-light" type="button" id="menuButton" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <i class="bi bi-list" style="font-size: 1.5rem;"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="menuButton">
-                        <li>
-                            <span class="dropdown-item-text text-primary d-flex align-items-center">
-                                <i class="bi bi-person-circle me-2"></i>
-                                <span id="user-name" class="text-truncate"></span>
-                            </span>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a class="dropdown-item change-client" href="#">Cambiar cliente</a></li>
-                        <li><a class="dropdown-item" href="#" id="settings">Configuración</a></li>
-                        <li><a class="dropdown-item" href="#" id="logout">Cerrar sesión</a></li>
-                    </ul>
+        <!-- Sidebar -->
+        <aside class="staff-sidebar" id="staffSidebar">
+            <div class="sidebar-brand">
+                <img src="avatar.jpg" alt="PACCMAN" class="sidebar-logo">
+                <div>
+                    <span class="brand-name">PACCMAN</span>
+                    <span class="brand-badge">STAFF</span>
                 </div>
             </div>
 
-            <div class="card-body" id="chat-box"></div>
+            <div class="sidebar-user" id="sidebar-user">
+                <i class="bi bi-person-circle"></i>
+                <span id="user-name"></span>
+            </div>
 
-            <div class="card-footer">
-                <form id="chat-form">
-                    <div class="input-group">
-                        <button id="btnOffcanvas" class="btn btn-outline-secondary" type="button">
-                            <i class="fa-solid fa-tools"></i>
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Acciones rápidas</div>
+
+                <div class="nav-group">
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navCliente">
+                        <i class="bi bi-people"></i> Cliente
+                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    </button>
+                    <div class="collapse" id="navCliente">
+                        <button class="nav-action" data-command="consultar_cliente">
+                            <i class="bi bi-search"></i> Consultar cliente
                         </button>
+                        <button class="nav-action" data-command="actualizar_cliente">
+                            <i class="bi bi-pencil"></i> Modificar datos
+                        </button>
+                        <button class="nav-action" data-command="cambiar_cliente">
+                            <i class="bi bi-arrow-repeat"></i> Cambiar cliente
+                        </button>
+                        <button class="nav-action" data-command="recargar_cliente">
+                            <i class="bi bi-arrow-clockwise"></i> Recargar datos
+                        </button>
+                    </div>
+                </div>
 
-                        <input type="text" id="chat-message" class="form-control"
-                            placeholder="Escribe tu mensaje aquí..." required>
+                <div class="nav-group">
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navPolizas">
+                        <i class="bi bi-shield-check"></i> Pólizas
+                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    </button>
+                    <div class="collapse" id="navPolizas">
+                        <button class="nav-action" data-command="consultar_poliza">
+                            <i class="bi bi-search"></i> Pólizas activas
+                        </button>
+                        <button class="nav-action" data-command="duplicado_poliza">
+                            <i class="bi bi-files"></i> Duplicado póliza
+                        </button>
+                        <button class="nav-action" data-command="wallet_poliza">
+                            <i class="bi bi-wallet2"></i> Enviar wallet
+                        </button>
+                    </div>
+                </div>
 
-                        <button type="submit" class="btn btn-primary">Enviar</button>
+                <div class="nav-group">
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navRecibos">
+                        <i class="bi bi-receipt"></i> Recibos
+                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    </button>
+                    <div class="collapse" id="navRecibos">
+                        <button class="nav-action" data-command="consultar_recibo">
+                            <i class="bi bi-search"></i> Consultar recibos
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav-group">
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navSiniestros">
+                        <i class="bi bi-exclamation-triangle"></i> Siniestros
+                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    </button>
+                    <div class="collapse" id="navSiniestros">
+                        <button class="nav-action" data-command="consultar_siniestro">
+                            <i class="bi bi-search"></i> Siniestros abiertos
+                        </button>
+                        <button class="nav-action" data-command="registrar_siniestro">
+                            <i class="bi bi-plus-circle"></i> Registrar presiniestro
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav-group">
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navDocumentos">
+                        <i class="bi bi-folder"></i> Documentos
+                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    </button>
+                    <div class="collapse" id="navDocumentos">
+                        <button class="nav-action" data-command="consultar_documento">
+                            <i class="bi bi-search"></i> Consultar documentos
+                        </button>
+                        <button class="nav-action" data-command="registrar_documento">
+                            <i class="bi bi-upload"></i> Subir documento
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav-group">
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navAgenda">
+                        <i class="bi bi-calendar3"></i> Agenda
+                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    </button>
+                    <div class="collapse" id="navAgenda">
+                        <button class="nav-action" data-command="consultar_agenda">
+                            <i class="bi bi-search"></i> Consultar agenda
+                        </button>
+                        <button class="nav-action" data-command="registrar_agenda">
+                            <i class="bi bi-plus-circle"></i> Nueva cita
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav-group">
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navCompanias">
+                        <i class="bi bi-building"></i> Compañías
+                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    </button>
+                    <div class="collapse" id="navCompanias">
+                        <button class="nav-action" data-command="consultar_compania">
+                            <i class="bi bi-telephone"></i> Teléfonos
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav-group">
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navComunicacion">
+                        <i class="bi bi-envelope"></i> Comunicación
+                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    </button>
+                    <div class="collapse" id="navComunicacion">
+                        <button class="nav-action" data-command="enviar_email">
+                            <i class="bi bi-send"></i> Enviar email
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="themeToggle" class="sidebar-logout">
+                    <i class="bi bi-sun theme-icon-dark"></i>
+                    <i class="bi bi-moon-fill theme-icon-light"></i>
+                    <span class="theme-label-dark">Tema claro</span>
+                    <span class="theme-label-light">Tema oscuro</span>
+                </button>
+                <button id="showHelp" class="sidebar-logout">
+                    <i class="bi bi-question-circle"></i> Funcionalidades
+                </button>
+                <button id="logout" class="sidebar-logout">
+                    <i class="bi bi-box-arrow-left"></i> Cerrar sesión
+                </button>
+            </div>
+        </aside>
+
+        <!-- Contenido principal -->
+        <main class="staff-main">
+
+            <!-- Header -->
+            <header class="staff-header">
+                <div class="header-left">
+                    <button id="sidebarToggle" class="sidebar-toggle">
+                        <i class="bi bi-list"></i>
+                    </button>
+                    <div class="header-client">
+                        <span class="header-label">Cliente activo:</span>
+                        <span id="selected-client" class="header-client-name">Sin seleccionar</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn-header change-client" title="Cambiar cliente">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </button>
+                    <button class="btn-header" id="themeToggleHeader" title="Cambiar tema">
+                        <i class="bi bi-sun theme-icon-dark"></i>
+                        <i class="bi bi-moon-fill theme-icon-light"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Chat -->
+            <div class="staff-chat" id="chat-box"></div>
+
+            <!-- Input -->
+            <div class="staff-input">
+                <form id="chat-form">
+                    <div class="chat-input-group">
+                        <input type="text" id="chat-message" class="chat-input"
+                            placeholder="Escribe tu consulta..." required>
+                        <button type="submit" class="chat-send">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
                     </div>
                 </form>
             </div>
 
-        </div>
-    </div>
-
-    <!-- Panel lateral con respuestas predefinidas -->
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasRespuestas"
-        aria-labelledby="offcanvasRespuestasLabel">
-        <div class="offcanvas-header">
-            <h5 id="offcanvasRespuestasLabel">Opciones rápidas</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-        </div>
-        <div class="offcanvas-body">
-            <div class="accordion" id="menuAcciones">
-
-                <!-- Cliente -->
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingCliente">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseCliente">
-                            Cliente
-                        </button>
-                    </h2>
-                    <div id="collapseCliente" class="accordion-collapse collapse" data-bs-parent="#menuAcciones">
-                        <div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="consultar_cliente">Consultar cliente</button>
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="actualizar_cliente">Modificar datos</button>
-                            <button class="btn btn-sm btn-outline-success w-100 mb-2"
-                                data-command="cambiar_cliente">Cambiar cliente</button>
-                            <button class="btn btn-sm btn-outline-success w-100 mb-2"
-                                data-command="recargar_cliente">Recargar datos</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pólizas -->
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingPolizas">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapsePolizas">
-                            Pólizas
-                        </button>
-                    </h2>
-                    <div id="collapsePolizas" class="accordion-collapse collapse" data-bs-parent="#menuAcciones">
-                        <div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="consultar_poliza">Consultar pólizas activas</button>
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="duplicado_poliza">Duplicado póliza</button>
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="wallet_poliza">Enviar wallet</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recibos -->
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingRecibos">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseRecibos">
-                            Recibos
-                        </button>
-                    </h2>
-                    <div id="collapseRecibos" class="accordion-collapse collapse" data-bs-parent="#menuAcciones">
-                        <div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="consultar_recibo">Consultar recibos</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Siniestros -->
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingSiniestros">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseSiniestros">
-                            Siniestros
-                        </button>
-                    </h2>
-                    <div id="collapseSiniestros" class="accordion-collapse collapse" data-bs-parent="#menuAcciones">
-                        <div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="consultar_siniestro">Consultar siniestros abiertos</button>
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="registrar_siniestro">Registrar presiniestro</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Documentos -->
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingDocumentos">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseDocumentos">
-                            Documentos
-                        </button>
-                    </h2>
-                    <div id="collapseDocumentos" class="accordion-collapse collapse" data-bs-parent="#menuAcciones">
-                        <div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="consultar_documento">Consultar documentos</button>
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="registrar_documento">Subir documento</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Agenda -->
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingAgenda">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseAgenda">
-                            Agenda
-                        </button>
-                    </h2>
-                    <div id="collapseAgenda" class="accordion-collapse collapse" data-bs-parent="#menuAcciones">
-                        <div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="consultar_agenda">Consultar agenda</button>
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="registrar_agenda">Registrar agenda</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Compañías -->
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingCompanias">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseCompanias">
-                            Compañías
-                        </button>
-                    </h2>
-                    <div id="collapseCompanias" class="accordion-collapse collapse" data-bs-parent="#menuAcciones">
-                        <div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2"
-                                data-command="consultar_compania">Teléfonos de compañías</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Comunicación -->
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingComunicacion">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#collapseComunicacion">
-                            Comunicación
-                        </button>
-                    </h2>
-                    <div id="collapseComunicacion" class="accordion-collapse collapse" data-bs-parent="#menuAcciones">
-                        <div class="accordion-body">
-                            <button class="btn btn-sm btn-outline-primary w-100 mb-2" data-command="enviar_email">Enviar
-                                email</button>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para autenticación -->
-    <div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form id="user-data-form" class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Autenticación</h5>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="usuario_pacc" class="form-label">Usuario</label>
-                        <input type="text" class="form-control" id="usuario_pacc" maxlength="12" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="password" maxlength="12" required>
-                    </div>
-                    <div id="api-errors" class="alert alert-danger d-none"></div>
-                </div>
-                <div class="modal-footer">
-                    <button id="submitButton" type="submit" class="btn btn-primary">Entrar</button>
-                </div>
-            </form>
-        </div>
+        </main>
     </div>
 
     <!-- Modal para cambiar cliente -->
     <div class="modal fade" id="clienteModal" tabindex="-1" aria-labelledby="clienteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="client-form" class="modal-content">
+            <form id="client-form" class="modal-content staff-modal">
                 <div class="modal-header">
                     <h5 class="modal-title">Seleccionar Cliente</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <label for="client-select" class="form-label">Cliente</label>
                     <select id="client-select" class="form-select" style="width: 100%">
                         <option value="">Selecciona un cliente</option>
-                        <option value="cliente1">Cliente 1</option>
-                        <option value="cliente2">Cliente 2</option>
-                        <option value="cliente3">Cliente 3</option>
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Aceptar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-accent">Aceptar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Modal Duplicado de poliza -->
-    <div class="modal fade" id="duplicadoPolizaModal" tabindex="-1" aria-labelledby="duplicadoPolizaModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="duplicadoPolizaModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="duplicadoPolizaForm" class="modal-content">
+            <form id="duplicadoPolizaForm" class="modal-content staff-modal">
                 <div class="modal-header">
                     <h5 class="modal-title">Duplicado Póliza</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <label for="duplicado-poliza-select" class="form-label">Póliza</label>
@@ -293,21 +253,21 @@
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Descargar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-accent">Descargar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Modal Wallet de poliza -->
-    <div class="modal fade" id="walletPolizaModal" tabindex="-1" aria-labelledby="walletPolizaModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="walletPolizaModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="walletPolizaForm" class="modal-content">
+            <form id="walletPolizaForm" class="modal-content staff-modal">
                 <div class="modal-header">
                     <h5 class="modal-title">Enviar wallet</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <label for="wallet-poliza-select" class="form-label">Póliza</label>
@@ -316,21 +276,21 @@
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Enviar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-accent">Enviar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Modal para pre siniestro -->
-    <div class="modal fade" id="preSiniestroModal" tabindex="-1" aria-labelledby="preSiniestroModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="preSiniestroModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="preSiniestroForm" class="modal-content" novalidate>
+            <form id="preSiniestroForm" class="modal-content staff-modal" novalidate>
                 <div class="modal-header">
                     <h5 class="modal-title">Registro Presiniestro</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -368,61 +328,56 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-accent">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Modal Modificar cliente -->
-    <div class="modal fade" id="modClienteModal" tabindex="-1" aria-labelledby="modClienteModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="modClienteModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="modClienteForm" class="modal-content" novalidate>
+            <form id="modClienteForm" class="modal-content staff-modal" novalidate>
                 <div class="modal-header">
                     <h5 class="modal-title">Modificar datos de contacto</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- MÓVIL -->
                     <div class="mb-3">
                         <label for="movil_now" class="form-label mb-1">Móvil actual</label>
                         <input type="text" class="form-control mb-2" id="movil_now" disabled>
-
                         <label for="movil" class="form-label mb-1">Nuevo móvil</label>
                         <input type="text" class="form-control" id="movil" name="movil" pattern="^[67]\d{8}$"
                             title="Debe ser un número de móvil válido (9 dígitos, empezando por 6 o 7)" required>
-
                         <div class="invalid-feedback">Debe incluir un móvil válido</div>
                     </div>
-                    <!-- EMAIL -->
                     <div class="mb-3">
                         <label for="email_now" class="form-label mb-1">Email actual</label>
                         <input type="email" class="form-control mb-2" id="email_now" disabled>
-
                         <label for="email" class="form-label mb-1">Nuevo email</label>
                         <input type="email" class="form-control" id="email" name="email" required>
-
                         <div class="invalid-feedback">Debe incluir un email válido</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-accent">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal de Bootstrap para subir documentación -->
-    <div class="modal fade" id="subirDocModal" tabindex="-1" aria-labelledby="subirDocModalLabel" aria-hidden="true">
+    <!-- Modal para subir documentación -->
+    <div class="modal fade" id="subirDocModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <div class="modal-content">
+            <div class="modal-content staff-modal">
                 <form id="formSubirDoc" enctype="multipart/form-data" novalidate>
                     <div class="modal-header">
-                        <h5 class="modal-title" id="subirDocModalLabel">Subir documentación</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        <h5 class="modal-title">Subir documentación</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
@@ -445,9 +400,9 @@
                         <div class="mb-3">
                             <label for="subir-doc-siniestro-select" class="form-label">Siniestro</label>
                             <select id="subir-doc-siniestro-select" class="form-select" style="width: 100%" required>
-                                <option value="">Selecciona una siniestro</option>
+                                <option value="">Selecciona un siniestro</option>
                             </select>
-                            <div class="invalid-feedback">Debe seleccionar una siniestro</div>
+                            <div class="invalid-feedback">Debe seleccionar un siniestro</div>
                         </div>
                         <div class="mb-3">
                             <label for="doc-descripcion" class="form-label">Descripción</label>
@@ -457,13 +412,15 @@
                         </div>
                         <div class="mb-3">
                             <label for="doc-fichero" class="form-label">Seleccionar archivo</label>
-                            <input type="file" class="form-control" id="doc-fichero" accept=".pdf,.jpg,.png,.doc,.docx" required>
+                            <input type="file" class="form-control" id="doc-fichero"
+                                accept=".pdf,.jpg,.png,.doc,.docx" required>
                             <div class="invalid-feedback">Debe seleccionar un archivo</div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Subir</button>
+                        <button type="button" class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-accent">Subir</button>
                     </div>
                 </form>
             </div>
@@ -471,12 +428,13 @@
     </div>
 
     <!-- Modal para enviar email -->
-    <div class="modal fade" id="emailClienteModal" tabindex="-1" aria-labelledby="emailClienteModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="emailClienteModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="emailClienteForm" class="modal-content" enctype="multipart/form-data" novalidate>
+            <form id="emailClienteForm" class="modal-content staff-modal" enctype="multipart/form-data" novalidate>
                 <div class="modal-header">
                     <h5 class="modal-title">Enviar Email</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
@@ -501,42 +459,42 @@
                     <div id="sendMailAlert" class="alert alert-danger d-none" role="alert"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Enviar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-accent">Enviar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal de Bootstrap para agregar agenda -->
-    <div class="modal fade" id="agendaModal" tabindex="-1" aria-labelledby="agendaModalLabel" aria-hidden="true">
+    <!-- Modal para agregar agenda -->
+    <div class="modal fade" id="agendaModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="nuevaAgendaForm" class="modal-content" novalidate>
+            <form id="nuevaAgendaForm" class="modal-content staff-modal" novalidate>
                 <div class="modal-header">
-                    <h5 class="modal-title" id="agendaModalLabel">Nueva cita cliente</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <h5 class="modal-title">Nueva cita cliente</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="agenda-datetime" class="form-label">Fecha y Hora</label>
                         <input type="datetime-local" class="form-control" id="agenda-datetime" required>
-                        <div class="invalid-feedback">La fecha y hora no puede estar vacia</div>
+                        <div class="invalid-feedback">La fecha y hora no puede estar vacía</div>
                     </div>
                     <div class="mb-3">
                         <label for="agenda-asunto" class="form-label">Asunto</label>
                         <input type="text" class="form-control" id="agenda-asunto" placeholder="Escribe el asunto"
                             required>
-                        <div class="invalid-feedback">El asunto no puede estar vacio</div>
+                        <div class="invalid-feedback">El asunto no puede estar vacío</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-accent">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
-
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -550,20 +508,15 @@
     <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Font Awesome 6 (Free) -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-
-    <!-- SweetAlert2 CSS -->
+    <!-- SweetAlert2 -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.27/dist/sweetalert2.min.css" rel="stylesheet">
-
-    <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.27/dist/sweetalert2.all.min.js"></script>
 
     <!-- Variables de entorno -->
     <script src="env.js"></script>
 
-    <!-- Punto de entrada de tu app -->
-    <script type="module" src="js/app.js?v=<?= time() ?>"></script>
+    <!-- App -->
+    <script type="module" src="js/app.js?v=1.0.0"></script>
 
 </body>
 

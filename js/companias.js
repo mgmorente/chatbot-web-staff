@@ -5,7 +5,6 @@ import { getCompanias } from './storage.js';
 export async function storeCompaniasList() {
     const token = localStorage.getItem('userToken');
     const data = await fetchCompaniasList(token); // <-- await aquí
-    console.log('Cias obtenidas:', data);
     if (data) {
         localStorage.setItem('companias', JSON.stringify(data));
     }
@@ -19,8 +18,8 @@ async function fetchCompaniasList(token) {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
-                'Empresa': 'pacc',
-                'Device': 'web'
+                'Empresa': ENV.EMPRESA,
+                'Device': ENV.DEVICE
             }
         });
         if (!response.ok) throw new Error('Error al obtener datos de companias');

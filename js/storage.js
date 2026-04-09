@@ -1,4 +1,16 @@
 // storage.js
+
+// Utilidad segura para parsear JSON de localStorage
+export function safeGetJSON(key, fallback = null) {
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return fallback;
+        return JSON.parse(raw);
+    } catch {
+        return fallback;
+    }
+}
+
 export function getStoredToken() {
     try {
         const token = localStorage.getItem('userToken');
@@ -48,4 +60,22 @@ export function getSelectedClient() {
 
 export function getUser() {
     return localStorage.getItem('user') ? localStorage.getItem('user') : null;
+}
+
+// --- Historial de clientes recientes ---
+const MAX_RECIENTES = 8;
+
+export function addClienteReciente(nif, nombre) {
+    let recientes = safeGetJSON('clientesRecientes', []);
+    // Quitar si ya existe
+    recientes = recientes.filter(r => r.nif !== nif);
+    // Añadir al principio
+    recientes.unshift({ nif, nombre, timestamp: Date.now() });
+    // Limitar
+    if (recientes.length > MAX_RECIENTES) recientes = recientes.slice(0, MAX_RECIENTES);
+    localStorage.setItem('clientesRecientes', JSON.stringify(recientes));
+}
+
+export function getClientesRecientes() {
+    return safeGetJSON('clientesRecientes', []);
 }

@@ -3,7 +3,6 @@
 export async function storeDescriptoresList() {
     const token = localStorage.getItem('userToken');
     const data = await fetchDescriptoresList(token); // <-- await aquí
-    console.log('Descritores obtenidos:', data);
     if (data) {
         localStorage.setItem('descriptores', JSON.stringify(data));
     }
@@ -17,8 +16,8 @@ async function fetchDescriptoresList(token) {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
-                'Empresa': 'pacc',
-                'Device': 'web'
+                'Empresa': ENV.EMPRESA,
+                'Device': ENV.DEVICE
             }
         });
         if (!response.ok) throw new Error('Error al obtener datos de descriptores');

@@ -166,6 +166,104 @@ export async function walletPoliza(poliza) {
     }
 }
 
+// Mostrar pólizas activas en el chat para seleccionar y descargar duplicado
+export function renderDuplicadoInline() {
+    const data = JSON.parse(localStorage.getItem('clienteData') || 'null');
+    const polizasActivas = data?.polizas?.filter(p => p.situacion == 1) || [];
+
+    if (!polizasActivas.length) {
+        addMessageToChat('bot', '<div>No hay pólizas activas para duplicar.</div>');
+        return;
+    }
+
+    const ramoIcons = {
+        "AUTOS": "bi-car-front", "HOGAR": "bi-house", "SALUD": "bi-heart-pulse",
+        "VIDA": "bi-heart", "ACCIDENTES": "bi-bandaid", "PYME": "bi-building",
+        "COMERCIOS": "bi-shop"
+    };
+
+    const items = polizasActivas.map(p => {
+        const icon = ramoIcons[p.tipo_producto?.toUpperCase()] || 'bi-file-earmark-text';
+        return `
+            <li class="list-group-item poliza-selectable" role="button" data-poliza="${p.poliza}" data-action="duplicado">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small>
+                        <i class="bi ${icon} me-1"></i>
+                        <strong>${p.cia_poliza}</strong> · ${p.compania}
+                    </small>
+                    <span class="badge text-bg-primary"><i class="bi bi-download"></i></span>
+                </div>
+                <small class="d-block mt-1">
+                    ${p.ramo || p.tipo_producto} ${p.objeto ? ' · ' + p.objeto : ''}${p.matricula ? ' · ' + p.matricula : ''}
+                </small>
+            </li>`;
+    }).join('');
+
+    const html = `
+        <div><small class="text-success fst-italic">Selecciona una póliza para descargar duplicado</small></div>
+        <ul class="list-group list-group-flush">${items}</ul>
+    `;
+    const msgEl = addMessageToChat('bot', html);
+
+    const container = msgEl || document;
+    container.querySelectorAll('.poliza-selectable[data-action="duplicado"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const poliza = e.currentTarget.getAttribute('data-poliza');
+            addMessageToChat('user', `Duplicado: ${e.currentTarget.querySelector('strong').textContent}`);
+            descargaPoliza(poliza);
+        });
+    });
+}
+
+// Mostrar pólizas activas en el chat para seleccionar y enviar wallet
+export function renderWalletInline() {
+    const data = JSON.parse(localStorage.getItem('clienteData') || 'null');
+    const polizasActivas = data?.polizas?.filter(p => p.situacion == 1) || [];
+
+    if (!polizasActivas.length) {
+        addMessageToChat('bot', '<div>No hay pólizas activas para wallet.</div>');
+        return;
+    }
+
+    const ramoIcons = {
+        "AUTOS": "bi-car-front", "HOGAR": "bi-house", "SALUD": "bi-heart-pulse",
+        "VIDA": "bi-heart", "ACCIDENTES": "bi-bandaid", "PYME": "bi-building",
+        "COMERCIOS": "bi-shop"
+    };
+
+    const items = polizasActivas.map(p => {
+        const icon = ramoIcons[p.tipo_producto?.toUpperCase()] || 'bi-file-earmark-text';
+        return `
+            <li class="list-group-item poliza-selectable" role="button" data-poliza="${p.poliza}" data-action="wallet">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small>
+                        <i class="bi ${icon} me-1"></i>
+                        <strong>${p.cia_poliza}</strong> · ${p.compania}
+                    </small>
+                    <span class="badge text-bg-success"><i class="bi bi-wallet2"></i></span>
+                </div>
+                <small class="d-block mt-1">
+                    ${p.ramo || p.tipo_producto} ${p.objeto ? ' · ' + p.objeto : ''}${p.matricula ? ' · ' + p.matricula : ''}
+                </small>
+            </li>`;
+    }).join('');
+
+    const html = `
+        <div><small class="text-success fst-italic">Selecciona una póliza para enviar wallet</small></div>
+        <ul class="list-group list-group-flush">${items}</ul>
+    `;
+    const msgEl = addMessageToChat('bot', html);
+
+    const container = msgEl || document;
+    container.querySelectorAll('.poliza-selectable[data-action="wallet"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const poliza = e.currentTarget.getAttribute('data-poliza');
+            addMessageToChat('user', `Wallet: ${e.currentTarget.querySelector('strong').textContent}`);
+            walletPoliza(poliza);
+        });
+    });
+}
+
 export function renderPolizasCliente(d) {
     const data = localStorage.getItem('clienteData')
         ? JSON.parse(localStorage.getItem('clienteData'))

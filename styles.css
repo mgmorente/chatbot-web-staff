@@ -1830,6 +1830,20 @@ a.contact-value:hover {
     margin-right: 4px;
 }
 
+/* Poliza selectable (inline duplicado/wallet) */
+.poliza-selectable {
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.poliza-selectable:hover {
+    background: rgba(34, 197, 94, 0.1) !important;
+}
+
+.poliza-selectable:active {
+    transform: scale(0.99);
+}
+
 .search-empty {
     padding: 20px 16px;
     text-align: center;

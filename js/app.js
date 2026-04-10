@@ -2,7 +2,7 @@
 import { getStoredToken, clearStoredToken, getSelectedClient } from './storage.js';
 import { addMessageToChat, addThinkingMessage, removeThinkingMessage } from './chat.js';
 import { renderClientesSelect, handleClienteSelection, recargarDatosCliente, renderFichaCliente, renderModCliente, buscarClienteEnChat, renderBusquedaClientes, renderClientesRecientes, fetchCliente } from './clientes.js';
-import { renderPolizasSelect, descargaPoliza, walletPoliza, renderPolizasCliente } from './polizas.js';
+import { renderPolizasSelect, descargaPoliza, walletPoliza, renderPolizasCliente, renderDuplicadoInline, renderWalletInline } from './polizas.js';
 import { renderRecibosCliente } from './recibos.js';
 import { renderSiniestrosCliente } from './siniestros.js';
 import { renderTelefonosCompanias } from './companias.js';
@@ -83,8 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Modales ---
     const clienteModal = new bootstrap.Modal(document.getElementById('clienteModal'));
-    const duplicadoPolizaModal = new bootstrap.Modal(document.getElementById('duplicadoPolizaModal'));
-    const walletPolizaModal = new bootstrap.Modal(document.getElementById('walletPolizaModal'));
     const preSiniestroModal = new bootstrap.Modal(document.getElementById('preSiniestroModal'));
     const agendaModal = new bootstrap.Modal(document.getElementById('agendaModal'));
 
@@ -162,13 +160,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'duplicado':
             case 'duplicado_poliza':
-                renderPolizasSelect($duplicado_poliza_select, '#duplicadoPolizaModal');
-                duplicadoPolizaModal.show();
+                renderDuplicadoInline();
                 break;
             case 'wallet':
             case 'wallet_poliza':
-                renderPolizasSelect($wallet_poliza_select, '#walletPolizaModal');
-                walletPolizaModal.show();
+                renderWalletInline();
                 break;
             default:
                 if (d.message) addMessageToChat('bot', d.message);
@@ -407,27 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
     handleClienteSelection($select_clientes, clienteModal);
 
     // --- Pólizas ---
-    const $duplicado_poliza_select = $('#duplicado-poliza-select');
-    const $wallet_poliza_select = $('#wallet-poliza-select');
     const $presiniestro_poliza_select = $('#presiniestro-poliza-select');
-
-    document.getElementById('duplicadoPolizaForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const selectPolizas = $duplicado_poliza_select.val();
-        if (selectPolizas) {
-            duplicadoPolizaModal.hide();
-            descargaPoliza(selectPolizas);
-        }
-    });
-
-    document.getElementById('walletPolizaForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const selectPolizas = $wallet_poliza_select.val();
-        if (selectPolizas) {
-            walletPolizaModal.hide();
-            walletPoliza(selectPolizas);
-        }
-    });
 
     // --- Presiniestro ---
     document.getElementById('preSiniestroForm').addEventListener('submit', function (e) {

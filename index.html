@@ -14,9 +14,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="icon" href="avatar.jpg" type="image/jpg">
-    <!-- Flatpickr -->
+    <!-- Flatpickr (solo base, tema controlado desde styles.css) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
     <script>
@@ -70,7 +69,7 @@
 
                 <div class="nav-group">
                     <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navPolizas">
-                        <i class="bi bi-shield-check"></i> Pólizas
+                        <i class="bi bi-shield-check"></i> Pólizas y Recibos
                         <i class="bi bi-chevron-down nav-chevron"></i>
                     </button>
                     <div class="collapse" id="navPolizas">
@@ -83,17 +82,8 @@
                         <button class="nav-action" data-command="wallet_poliza">
                             <i class="bi bi-wallet2"></i> Enviar wallet
                         </button>
-                    </div>
-                </div>
-
-                <div class="nav-group">
-                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navRecibos">
-                        <i class="bi bi-receipt"></i> Recibos
-                        <i class="bi bi-chevron-down nav-chevron"></i>
-                    </button>
-                    <div class="collapse" id="navRecibos">
                         <button class="nav-action" data-command="consultar_recibo">
-                            <i class="bi bi-search"></i> Consultar recibos
+                            <i class="bi bi-receipt"></i> Consultar recibos
                         </button>
                     </div>
                 </div>
@@ -144,23 +134,14 @@
                 </div>
 
                 <div class="nav-group">
-                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navCompanias">
-                        <i class="bi bi-building"></i> Compañías
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navOtros">
+                        <i class="bi bi-grid"></i> Otros
                         <i class="bi bi-chevron-down nav-chevron"></i>
                     </button>
-                    <div class="collapse" id="navCompanias">
+                    <div class="collapse" id="navOtros">
                         <button class="nav-action" data-command="consultar_compania">
-                            <i class="bi bi-telephone"></i> Teléfonos
+                            <i class="bi bi-telephone"></i> Teléfonos compañías
                         </button>
-                    </div>
-                </div>
-
-                <div class="nav-group">
-                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navComunicacion">
-                        <i class="bi bi-envelope"></i> Comunicación
-                        <i class="bi bi-chevron-down nav-chevron"></i>
-                    </button>
-                    <div class="collapse" id="navComunicacion">
                         <button class="nav-action" data-command="enviar_email">
                             <i class="bi bi-send"></i> Enviar email
                         </button>

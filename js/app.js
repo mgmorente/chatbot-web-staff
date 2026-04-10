@@ -15,6 +15,18 @@ import { initAutocomplete } from './autocomplete.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- Fijar altura del viewport (evitar salto con teclado virtual) ---
+    function setAppHeight() {
+        const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        document.documentElement.style.setProperty('--app-height', h + 'px');
+    }
+    setAppHeight();
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', setAppHeight);
+    } else {
+        window.addEventListener('resize', setAppHeight);
+    }
+
     // --- Tema: cargar preferencia guardada ---
     const savedTheme = localStorage.getItem('staff-theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -89,6 +101,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         // Autocomplete: marcar agenda como no disponible
         window._agendaDisponible = disponible;
+    }
+
+    // Restaurar estado de agenda al cargar (si ya había un cliente seleccionado)
+    if (getSelectedClient()) {
+        const savedAgenda = localStorage.getItem('agendaDisponible');
+        if (savedAgenda !== null) {
+            updateAgendaAvailability(savedAgenda === '1');
+        }
     }
 
     // --- Scroll-to-bottom button ---
@@ -282,6 +302,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!btn) return;
 
         const command = btn.getAttribute('data-command');
+
+        // Ocultar quick actions tras cualquier acción
+        if (quickActionsVisible) hideQuickActions();
 
         // Si no hay cliente seleccionado, pedir que seleccione primero
         if (!getSelectedClient() && command !== 'cambiar_cliente') {

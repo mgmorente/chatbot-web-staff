@@ -60,7 +60,7 @@ body {
     color: var(--staff-text);
     overflow: hidden;
     height: 100vh;
-    height: 100dvh;
+    height: var(--app-height, 100dvh);
     overscroll-behavior-y: contain;
 }
 
@@ -70,7 +70,7 @@ body {
 .staff-layout {
     display: flex;
     height: 100vh;
-    height: 100dvh;
+    height: var(--app-height, 100dvh);
 }
 
 /* ============================================
@@ -1146,7 +1146,7 @@ body {
         top: 0;
         left: 0;
         height: 100vh;
-        height: 100dvh;
+        height: var(--app-height, 100dvh);
         transform: translateX(calc(var(--sidebar-width) * -1));
         box-shadow: none;
     }
@@ -1186,7 +1186,7 @@ body {
     }
 
     .header-client-pill {
-        max-width: calc(100vw - 160px);
+        max-width: calc(100vw - 200px);
         padding: 3px 10px;
         font-size: 0.75rem;
     }
@@ -1952,6 +1952,13 @@ select.inline-input {
     padding: 10px 0;
 }
 
+.inline-form-cancelled {
+    color: var(--staff-text-muted);
+    font-size: 0.8rem;
+    padding: 8px 0;
+    opacity: 0.7;
+}
+
 .inline-form-summary {
     margin-top: 8px;
     display: grid;
@@ -1979,7 +1986,7 @@ select.inline-input {
     overflow-y: auto;
     border-radius: 8px;
     border: 1px solid var(--staff-border);
-    background: var(--staff-card);
+    background: var(--staff-surface);
 }
 
 .inline-poliza-list:empty {
@@ -2043,17 +2050,31 @@ select.inline-input {
 
 /* Flatpickr overrides para tema oscuro */
 .flatpickr-calendar {
-    background: var(--staff-card) !important;
+    background: var(--staff-surface) !important;
     border-color: var(--staff-border) !important;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
     font-family: 'Inter', sans-serif !important;
     z-index: 9999 !important;
+    position: fixed !important;
+    border-radius: 12px !important;
 }
 
+.flatpickr-innerContainer,
+.flatpickr-rContainer,
+.dayContainer {
+    background: var(--staff-surface) !important;
+}
+
+.flatpickr-months,
 .flatpickr-months .flatpickr-month,
 .flatpickr-current-month .flatpickr-monthDropdown-months {
-    background: var(--staff-card) !important;
+    background: var(--staff-surface) !important;
     color: var(--staff-text) !important;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.flatpickr-weekdays {
+    background: var(--staff-surface) !important;
 }
 
 .flatpickr-current-month input.cur-year {
@@ -2062,7 +2083,7 @@ select.inline-input {
 
 span.flatpickr-weekday {
     color: var(--staff-text-muted) !important;
-    background: var(--staff-card) !important;
+    background: var(--staff-surface) !important;
 }
 
 .flatpickr-day {
@@ -2101,6 +2122,7 @@ span.flatpickr-weekday {
 }
 
 .flatpickr-time {
+    background: var(--staff-surface) !important;
     border-top-color: var(--staff-border) !important;
 }
 
@@ -2125,6 +2147,23 @@ span.flatpickr-weekday {
 
 .flatpickr-time .numInputWrapper span.arrowDown:after {
     border-top-color: var(--staff-text) !important;
+}
+
+.flatpickr-confirm-btn {
+    width: 100%;
+    padding: 8px;
+    background: var(--staff-accent) !important;
+    color: #fff !important;
+    border: none;
+    border-radius: 0 0 12px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.flatpickr-confirm-btn:hover {
+    background: var(--staff-accent-hover) !important;
 }
 
 .inline-form-error {

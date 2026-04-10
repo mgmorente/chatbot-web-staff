@@ -3,36 +3,36 @@
 
 const suggestions = [
     // Cliente
-    { icon: 'bi-person-vcard',        text: 'Consultar ficha del cliente',          command: 'consultar_cliente',    keywords: ['cliente', 'ficha', 'datos', 'consultar', 'ver', 'informacion'] },
-    { icon: 'bi-pencil',              text: 'Modificar datos del cliente',           command: 'actualizar_cliente',   keywords: ['modificar', 'cambiar', 'actualizar', 'editar', 'datos', 'email', 'movil', 'telefono'] },
-    { icon: 'bi-arrow-repeat',        text: 'Cambiar de cliente',                   command: 'cambiar_cliente',      keywords: ['cambiar', 'otro', 'seleccionar', 'cliente', 'buscar'] },
-    { icon: 'bi-arrow-clockwise',     text: 'Recargar datos del cliente',           command: 'recargar_cliente',     keywords: ['recargar', 'refrescar', 'actualizar', 'datos'] },
+    { icon: 'bi-person-vcard',        text: 'Consultar ficha del cliente',          command: 'consultar_cliente',    keywords: ['cliente', 'ficha', 'datos', 'consultar', 'ver', 'informacion', 'persona'] },
+    { icon: 'bi-pencil',              text: 'Modificar datos del cliente',           command: 'actualizar_cliente',   keywords: ['modificar', 'cambiar', 'actualizar', 'editar', 'datos', 'email', 'movil', 'telefono', 'cliente', 'direccion'] },
+    { icon: 'bi-arrow-repeat',        text: 'Cambiar de cliente',                   command: 'cambiar_cliente',      keywords: ['cambiar', 'otro', 'seleccionar', 'cliente', 'buscar', 'nuevo'] },
+    { icon: 'bi-arrow-clockwise',     text: 'Recargar datos del cliente',           command: 'recargar_cliente',     keywords: ['recargar', 'refrescar', 'actualizar', 'datos', 'cliente'] },
 
     // Pólizas
-    { icon: 'bi-shield-check',        text: 'Consultar pólizas activas',            command: 'consultar_poliza',     keywords: ['poliza', 'polizas', 'seguro', 'seguros', 'activa', 'contrato'] },
-    { icon: 'bi-files',               text: 'Descargar duplicado de póliza',        command: 'duplicado_poliza',     keywords: ['duplicado', 'copia', 'descargar', 'pdf', 'poliza', 'documento'] },
-    { icon: 'bi-wallet2',             text: 'Enviar wallet de póliza',              command: 'wallet_poliza',        keywords: ['wallet', 'tarjeta', 'enviar', 'movil', 'apple', 'google'] },
+    { icon: 'bi-shield-check',        text: 'Consultar pólizas activas',            command: 'consultar_poliza',     keywords: ['poliza', 'polizas', 'seguro', 'seguros', 'activa', 'contrato', 'consultar', 'ver'] },
+    { icon: 'bi-files',               text: 'Descargar duplicado de póliza',        command: 'duplicado_poliza',     keywords: ['duplicado', 'copia', 'descargar', 'pdf', 'poliza', 'documento', 'imprimir'] },
+    { icon: 'bi-wallet2',             text: 'Enviar wallet de póliza',              command: 'wallet_poliza',        keywords: ['wallet', 'tarjeta', 'enviar', 'movil', 'apple', 'google', 'poliza'] },
 
     // Recibos
-    { icon: 'bi-receipt',             text: 'Consultar recibos del cliente',         command: 'consultar_recibo',     keywords: ['recibo', 'recibos', 'pago', 'pagos', 'pendiente', 'cuota'] },
+    { icon: 'bi-receipt',             text: 'Consultar recibos del cliente',         command: 'consultar_recibo',     keywords: ['recibo', 'recibos', 'pago', 'pagos', 'pendiente', 'cuota', 'cliente', 'consultar', 'factura'] },
 
     // Siniestros
-    { icon: 'bi-exclamation-triangle', text: 'Consultar siniestros abiertos',       command: 'consultar_siniestro',  keywords: ['siniestro', 'siniestros', 'abierto', 'parte', 'accidente'] },
-    { icon: 'bi-plus-circle',         text: 'Registrar un presiniestro',            command: 'registrar_siniestro',  keywords: ['registrar', 'nuevo', 'presiniestro', 'alta', 'abrir', 'declarar'] },
+    { icon: 'bi-exclamation-triangle', text: 'Consultar siniestros abiertos',       command: 'consultar_siniestro',  keywords: ['siniestro', 'siniestros', 'abierto', 'parte', 'accidente', 'consultar', 'ver'] },
+    { icon: 'bi-plus-circle',         text: 'Registrar un presiniestro',            command: 'registrar_siniestro',  keywords: ['registrar', 'nuevo', 'presiniestro', 'alta', 'abrir', 'declarar', 'siniestro', 'parte'] },
 
     // Documentos
-    { icon: 'bi-folder',              text: 'Consultar documentos del cliente',      command: 'consultar_documento',  keywords: ['documento', 'documentos', 'archivo', 'adjunto', 'fichero'] },
-    { icon: 'bi-upload',              text: 'Subir un documento',                   command: 'registrar_documento',  keywords: ['subir', 'upload', 'adjuntar', 'cargar', 'documento', 'archivo'] },
+    { icon: 'bi-folder',              text: 'Consultar documentos del cliente',      command: 'consultar_documento',  keywords: ['documento', 'documentos', 'archivo', 'adjunto', 'fichero', 'consultar', 'cliente', 'ver'] },
+    { icon: 'bi-upload',              text: 'Subir un documento',                   command: 'registrar_documento',  keywords: ['subir', 'upload', 'adjuntar', 'cargar', 'documento', 'archivo', 'fichero'] },
 
     // Agenda
-    { icon: 'bi-calendar3',           text: 'Consultar agenda del cliente',          command: 'consultar_agenda',     keywords: ['agenda', 'cita', 'citas', 'calendario', 'reunion'] },
-    { icon: 'bi-calendar-plus',       text: 'Crear nueva cita en agenda',           command: 'registrar_agenda',     keywords: ['nueva', 'cita', 'crear', 'agendar', 'programar'] },
+    { icon: 'bi-calendar3',           text: 'Consultar agenda del cliente',          command: 'consultar_agenda',     keywords: ['agenda', 'cita', 'citas', 'calendario', 'reunion', 'cliente', 'consultar'] },
+    { icon: 'bi-calendar-plus',       text: 'Crear nueva cita en agenda',           command: 'registrar_agenda',     keywords: ['nueva', 'cita', 'crear', 'agendar', 'programar', 'agenda', 'cliente', 'registrar'] },
 
     // Compañías
-    { icon: 'bi-telephone',           text: 'Consultar teléfonos de compañías',     command: 'consultar_compania',   keywords: ['telefono', 'telefonos', 'compania', 'companias', 'asistencia', 'contacto', 'llamar'] },
+    { icon: 'bi-telephone',           text: 'Consultar teléfonos de compañías',     command: 'consultar_compania',   keywords: ['telefono', 'telefonos', 'compania', 'companias', 'asistencia', 'contacto', 'llamar', 'aseguradora', 'numero'] },
 
     // Comunicación
-    { icon: 'bi-envelope',            text: 'Enviar email al cliente',              command: 'enviar_email',         keywords: ['email', 'correo', 'enviar', 'mail', 'mensaje'] },
+    { icon: 'bi-envelope',            text: 'Enviar email al cliente',              command: 'enviar_email',         keywords: ['email', 'correo', 'enviar', 'mail', 'mensaje', 'cliente', 'carta', 'comunicacion'] },
 
     // Utilidades (comandos locales especiales)
     { icon: 'bi-clock-history',       text: 'Ver clientes recientes',               command: '_recientes',           keywords: ['reciente', 'recientes', 'historial', 'ultimo', 'anteriores'] },

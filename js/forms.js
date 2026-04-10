@@ -13,8 +13,22 @@ function getClienteData() {
     return JSON.parse(localStorage.getItem('clienteData') || 'null');
 }
 
+/** Cierra/desactiva formularios inline previos que sigan abiertos */
+function closePreviousForms() {
+    document.querySelectorAll('.chat-inline-form').forEach(f => {
+        // Si ya fue completado (tiene success), no tocar
+        if (f.querySelector('.inline-form-success')) return;
+        // Destruir flatpickrs abiertos
+        f.querySelectorAll('.js-flatpickr, .js-flatpickr-datetime').forEach(inp => {
+            if (inp._flatpickr) inp._flatpickr.destroy();
+        });
+        f.innerHTML = `<div class="inline-form-cancelled"><i class="bi bi-x-circle"></i> Formulario cancelado</div>`;
+    });
+}
+
 // ===== MODIFICAR CLIENTE =====
 export function renderModClienteInline() {
+    closePreviousForms();
     const data = getClienteData();
     if (!data?.cliente) return;
 
@@ -77,6 +91,7 @@ export function renderModClienteInline() {
 
 // ===== AGENDA =====
 export function renderAgendaInline() {
+    closePreviousForms();
     const data = getClienteData();
     if (!data?.cliente) return;
 
@@ -105,7 +120,7 @@ export function renderAgendaInline() {
     // Flatpickr con fecha + hora
     const dtInput = form.querySelector('.js-flatpickr-datetime');
     if (window.flatpickr) {
-        flatpickr(dtInput, {
+        const fp = flatpickr(dtInput, {
             locale: 'es',
             enableTime: true,
             time_24hr: true,
@@ -116,6 +131,15 @@ export function renderAgendaInline() {
             minuteIncrement: 15,
             disableMobile: true,
             appendTo: document.body,
+            position: 'above',
+            onReady(_, __, instance) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = 'Confirmar';
+                btn.className = 'flatpickr-confirm-btn';
+                btn.addEventListener('click', () => instance.close());
+                instance.calendarContainer.appendChild(btn);
+            },
         });
     }
 
@@ -150,6 +174,7 @@ export function renderAgendaInline() {
 
 // ===== EMAIL =====
 export function renderEmailInline() {
+    closePreviousForms();
     const data = getClienteData();
     if (!data?.cliente) return;
 
@@ -309,6 +334,7 @@ function initInlinePicker(container, items, { placeholder, renderItem, renderChi
 }
 
 export function renderPresiniestroInline() {
+    closePreviousForms();
     const data = getClienteData();
     if (!data?.cliente) return;
 
@@ -382,6 +408,7 @@ export function renderPresiniestroInline() {
             maxDate: 'today',
             disableMobile: true,
             appendTo: document.body,
+            position: 'above',
         });
     }
 
@@ -476,6 +503,7 @@ export function renderPresiniestroInline() {
 
 // ===== SUBIR DOCUMENTO =====
 export function renderSubirDocInline() {
+    closePreviousForms();
     const data = getClienteData();
     if (!data?.cliente) return;
 

@@ -1770,13 +1770,29 @@ a.contact-value:hover {
     white-space: nowrap;
 }
 
-.search-results-more {
-    padding: 8px 16px;
-    font-size: 0.78rem;
-    color: var(--staff-text-muted);
-    text-align: center;
+.search-results-hidden {
+    display: none !important;
+}
+
+.search-results-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--staff-accent);
+    background: var(--staff-badge-bg);
+    border: none;
     border-top: 1px solid var(--staff-border);
-    background: var(--staff-secondary);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.search-results-toggle:hover {
+    background: rgba(34, 197, 94, 0.15);
 }
 
 .search-empty {

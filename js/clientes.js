@@ -371,7 +371,8 @@ export function renderBusquedaClientes(resultados, termino) {
         return;
     }
 
-    const items = resultados.slice(0, 6).map(c => `
+    const INITIAL_LIMIT = 6;
+    const renderItem = c => `
         <button class="search-result-item" data-nif="${c.nif}">
             <div class="search-result-avatar"><i class="bi bi-person"></i></div>
             <div class="search-result-info">
@@ -379,11 +380,17 @@ export function renderBusquedaClientes(resultados, termino) {
                 <div class="search-result-nif">${c.nif}</div>
             </div>
             <div class="search-result-action"><i class="bi bi-arrow-right"></i></div>
-        </button>
-    `).join('');
+        </button>`;
 
-    const countMsg = resultados.length > 6
-        ? `<div class="search-results-more">Mostrando 6 de ${resultados.length} resultados</div>`
+    const initialItems = resultados.slice(0, INITIAL_LIMIT).map(renderItem).join('');
+    const hiddenItems = resultados.length > INITIAL_LIMIT
+        ? resultados.slice(INITIAL_LIMIT).map(renderItem).join('')
+        : '';
+
+    const showMoreBtn = resultados.length > INITIAL_LIMIT
+        ? `<button class="search-results-toggle" onclick="this.previousElementSibling.classList.remove('search-results-hidden');this.remove();">
+               <i class="bi bi-chevron-down"></i> Ver todos (${resultados.length})
+           </button>`
         : '';
 
     addMessageToChat('bot', `
@@ -392,9 +399,12 @@ export function renderBusquedaClientes(resultados, termino) {
                 <i class="bi bi-search"></i> ${resultados.length} resultado${resultados.length > 1 ? 's' : ''} para "<strong>${termino}</strong>"
             </div>
             <div class="search-results-list">
-                ${items}
+                ${initialItems}
             </div>
-            ${countMsg}
+            <div class="search-results-list search-results-hidden">
+                ${hiddenItems}
+            </div>
+            ${showMoreBtn}
         </div>
     `);
 }

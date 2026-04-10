@@ -175,10 +175,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Autocomplete ---
     const chatInput = document.getElementById('chat-message');
-    initAutocomplete(chatInput, (text) => {
-        // Auto-send: simular envío del form
-        chatInput.value = text;
-        document.getElementById('chat-form').dispatchEvent(new Event('submit', { cancelable: true }));
+    initAutocomplete(chatInput, (text, command) => {
+        // Mostrar el texto como mensaje del usuario
+        addMessageToChat('user', text);
+        if (quickActionsVisible) hideQuickActions();
+
+        // Comandos locales especiales
+        if (command === '_recientes') { renderClientesRecientes(); return; }
+        if (command === '_help') { renderHelp(); return; }
+
+        // Ejecutar comando directamente (no va al backend)
+        handleCommand({ command });
     });
 
     // --- Form chat ---
@@ -197,11 +204,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Comandos locales del chat
         const msgLower = message.toLowerCase().trim();
-        if (msgLower === 'recientes' || msgLower === 'clientes recientes' || msgLower === 'historial') {
+        if (msgLower === 'recientes' || msgLower.includes('clientes recientes') || msgLower === 'historial') {
             renderClientesRecientes();
             return;
         }
-        if (msgLower === 'ayuda' || msgLower === 'help' || msgLower === 'funcionalidades') {
+        if (msgLower === 'ayuda' || msgLower === 'help' || msgLower.includes('funcionalidades')) {
             renderHelp();
             return;
         }

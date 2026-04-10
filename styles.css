@@ -1833,8 +1833,35 @@ a.contact-value:hover {
 }
 
 /* ---- Siniestros Timeline ---- */
+.siniestro-timeline-details {
+    margin-top: 8px;
+}
+
+.timeline-toggle {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--staff-accent);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 0;
+    user-select: none;
+}
+
+.timeline-toggle::-webkit-details-marker { display: none; }
+
+.timeline-toggle i {
+    font-size: 0.82rem;
+}
+
+.siniestro-timeline-details[open] .timeline-toggle {
+    margin-bottom: 6px;
+}
+
 .siniestro-timeline {
-    margin-top: 10px;
+    margin-top: 0;
     padding-left: 14px;
     border-left: 2px solid var(--staff-accent);
     display: flex;

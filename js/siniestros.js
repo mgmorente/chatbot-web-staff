@@ -30,7 +30,7 @@ export function renderSiniestrosCliente(d = {}) {
         const tramitesSiniestro = data.tramites ? data.tramites.filter(t => t.siniestro == s.id) : [];
         const tieneDocs = data.documentos && data.documentos.some(d => d.entidad.toLowerCase() === 'siniestro' && d.documento == s.id);
 
-        // Construir timeline de trámites inline
+        // Construir timeline de trámites plegable
         let timelineHtml = '';
         if (tramitesSiniestro.length) {
             const items = tramitesSiniestro.map(t => {
@@ -49,7 +49,11 @@ export function renderSiniestrosCliente(d = {}) {
                         </div>
                     </div>`;
             }).join('');
-            timelineHtml = `<div class="siniestro-timeline">${items}</div>`;
+            timelineHtml = `
+                <details class="siniestro-timeline-details">
+                    <summary class="timeline-toggle"><i class="bi bi-clock-history"></i> Trámites (${tramitesSiniestro.length})</summary>
+                    <div class="siniestro-timeline">${items}</div>
+                </details>`;
         }
 
         return `

@@ -185,24 +185,33 @@
                     <button id="sidebarToggle" class="sidebar-toggle">
                         <i class="bi bi-list"></i>
                     </button>
-                    <div class="header-client">
-                        <span class="header-label">Cliente activo:</span>
-                        <span id="selected-client" class="header-client-name">Sin seleccionar</span>
+                    <div class="header-brand">
+                        <div class="header-avatar-wrap">
+                            <img src="avatar.jpg" alt="PACCMAN" class="header-avatar">
+                            <span class="header-status-dot"></span>
+                        </div>
+                        <div class="header-brand-info">
+                            <h2 class="header-brand-name">PACCMAN <span class="header-badge">STAFF</span></h2>
+                            <span class="header-status-text">En línea</span>
+                        </div>
                     </div>
                 </div>
                 <div class="header-right">
+                    <div class="header-client-pill" id="headerClientPill">
+                        <i class="bi bi-person-fill"></i>
+                        <span id="selected-client" class="header-client-name">Sin seleccionar</span>
+                    </div>
                     <button class="btn-header change-client" title="Cambiar cliente">
                         <i class="bi bi-arrow-left-right"></i>
-                    </button>
-                    <button class="btn-header" id="themeToggleHeader" title="Cambiar tema">
-                        <i class="bi bi-sun theme-icon-dark"></i>
-                        <i class="bi bi-moon-fill theme-icon-light"></i>
                     </button>
                 </div>
             </header>
 
             <!-- Chat -->
             <div class="staff-chat" id="chat-box"></div>
+
+            <!-- Acciones rápidas (se generan dinámicamente) -->
+            <div id="quick-actions" class="quick-actions"></div>
 
             <!-- Input -->
             <div class="staff-input">

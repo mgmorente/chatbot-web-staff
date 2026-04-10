@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-    document.getElementById('themeToggleHeader').addEventListener('click', toggleTheme);
 
     // --- Comprobar sesión: redirigir a login si no hay token ---
     const tokenData = getStoredToken();
@@ -37,6 +36,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     updateHeaderClient();
+
+    // --- Quick actions: 4 aleatorios ---
+    const allQuickActions = [
+        { command: 'consultar_cliente', icon: 'bi-person-vcard', label: 'Ficha cliente' },
+        { command: 'consultar_poliza', icon: 'bi-shield-check', label: 'Pólizas' },
+        { command: 'consultar_recibo', icon: 'bi-receipt', label: 'Recibos' },
+        { command: 'consultar_siniestro', icon: 'bi-exclamation-triangle', label: 'Siniestros' },
+        { command: 'consultar_documento', icon: 'bi-folder', label: 'Documentos' },
+        { command: 'consultar_agenda', icon: 'bi-calendar3', label: 'Agenda' },
+        { command: 'consultar_compania', icon: 'bi-telephone', label: 'Teléfonos' },
+        { command: 'enviar_email', icon: 'bi-envelope', label: 'Email' },
+    ];
+    const shuffled = allQuickActions.sort(() => Math.random() - 0.5).slice(0, 4);
+    const quickContainer = document.getElementById('quick-actions');
+    quickContainer.innerHTML = shuffled.map(q =>
+        `<button class="quick-btn" data-command="${q.command}"><i class="bi ${q.icon}"></i> ${q.label}</button>`
+    ).join('');
 
     // --- Modales ---
     const clienteModal = new bootstrap.Modal(document.getElementById('clienteModal'));

@@ -85,6 +85,23 @@
             </form>
         </div>
 
+        <!-- Banner instalación PWA -->
+        <div id="pwa-install-banner" class="pwa-install-banner hidden">
+            <div class="pwa-install-content">
+                <div class="pwa-install-icon">
+                    <i class="bi bi-download"></i>
+                </div>
+                <div class="pwa-install-text">
+                    <strong>Instalar PACCMAN Staff</strong>
+                    <span>Accede más rápido desde tu pantalla de inicio</span>
+                </div>
+                <button id="pwa-install-btn" class="pwa-install-btn">Instalar</button>
+                <button id="pwa-dismiss-btn" class="pwa-dismiss-btn" title="Cerrar">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+
         <!-- Footer privacidad -->
         <div class="login-privacy">
             Grupo PACC &copy; 2026 &mdash; Uso exclusivo para empleados
@@ -182,6 +199,45 @@
                 btnText.classList.remove('hidden');
                 btnSpinner.classList.add('hidden');
             }
+        });
+    </script>
+
+    <!-- PWA Install -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
+        }
+
+        let deferredPrompt = null;
+        const banner = document.getElementById('pwa-install-banner');
+        const installBtn = document.getElementById('pwa-install-btn');
+        const dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+        // Solo mostrar si NO está en standalone (ya instalada)
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+            || window.navigator.standalone === true;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            const dismissed = localStorage.getItem('pwa-staff-dismissed');
+            if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
+
+            if (!isStandalone) banner.classList.remove('hidden');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') banner.classList.add('hidden');
+            deferredPrompt = null;
+        });
+
+        dismissBtn.addEventListener('click', () => {
+            banner.classList.add('hidden');
+            localStorage.setItem('pwa-staff-dismissed', Date.now().toString());
         });
     </script>
 

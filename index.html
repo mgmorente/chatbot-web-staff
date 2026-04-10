@@ -182,9 +182,6 @@
             <!-- Header -->
             <header class="staff-header">
                 <div class="header-left">
-                    <button id="sidebarToggle" class="sidebar-toggle">
-                        <i class="bi bi-list"></i>
-                    </button>
                     <div class="header-brand">
                         <div class="header-avatar-wrap">
                             <img src="avatar.jpg" alt="PACCMAN" class="header-avatar">
@@ -204,6 +201,9 @@
                     <button class="btn-header change-client" title="Cambiar cliente">
                         <i class="bi bi-arrow-left-right"></i>
                     </button>
+                    <button id="sidebarToggle" class="btn-header" title="Menú">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
                 </div>
             </header>
 
@@ -214,17 +214,18 @@
             <div id="quick-actions" class="quick-actions"></div>
 
             <!-- Input -->
-            <div class="staff-input">
-                <form id="chat-form">
-                    <div class="chat-input-group">
-                        <input type="text" id="chat-message" class="chat-input"
-                            placeholder="Escribe tu consulta..." required>
-                        <button type="submit" class="chat-send">
+            <footer class="chat-input-area">
+                <form id="chat-form" class="chat-form">
+                    <div class="input-wrapper">
+                        <input type="text" id="chat-message"
+                            placeholder="Escribe tu consulta..."
+                            autocomplete="off">
+                        <button type="submit" class="btn-send" title="Enviar">
                             <i class="bi bi-send-fill"></i>
                         </button>
                     </div>
                 </form>
-            </div>
+            </footer>
 
         </main>
     </div>

@@ -66,6 +66,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mostrar quick actions de nuevo al cambiar de cliente
     document.addEventListener('clienteChanged', () => renderQuickActions());
 
+    // --- Scroll-to-bottom button ---
+    const chatBox = document.getElementById('chat-box');
+    const btnScrollDown = document.getElementById('btn-scroll-down');
+    const scrollThreshold = 150;
+
+    chatBox.addEventListener('scroll', () => {
+        const { scrollTop, scrollHeight, clientHeight } = chatBox;
+        const isScrolledUp = (scrollHeight - scrollTop - clientHeight) > scrollThreshold;
+        btnScrollDown.classList.toggle('hidden', !isScrolledUp);
+    });
+
+    btnScrollDown.addEventListener('click', () => {
+        chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+    });
+
     // --- Modales ---
     const clienteModal = new bootstrap.Modal(document.getElementById('clienteModal'));
     const duplicadoPolizaModal = new bootstrap.Modal(document.getElementById('duplicadoPolizaModal'));

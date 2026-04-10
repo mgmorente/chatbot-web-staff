@@ -311,6 +311,7 @@ body {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    position: relative;
 }
 
 /* Header */
@@ -519,6 +520,38 @@ body {
     background: var(--staff-badge-bg);
     border-color: var(--staff-accent);
     color: var(--staff-accent);
+}
+
+/* Botón scroll al final */
+.btn-scroll-down {
+    position: absolute;
+    bottom: 130px;
+    right: 24px;
+    z-index: 10;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--staff-border);
+    background: var(--staff-surface);
+    color: var(--staff-text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+    font-size: 16px;
+}
+
+.btn-scroll-down:hover {
+    background: var(--staff-accent);
+    color: white;
+    border-color: var(--staff-accent);
+    transform: scale(1.1);
+}
+
+.btn-scroll-down.hidden {
+    display: none;
 }
 
 /* ============================================

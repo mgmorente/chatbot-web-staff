@@ -234,7 +234,7 @@ export function renderFichaCliente() {
                     </div>
                 </div>
                 <div class="client-valor">
-                    <div class="client-valor-amount"><i class="bi bi-star-fill"></i> ${c.cod_importancia}€</div>
+                    <div class="client-valor-amount"><i class="bi bi-star-fill"></i> ${c.cod_importancia != null ? c.cod_importancia + '€' : 'N/D'}</div>
                     <div class="client-valor-label">Importancia</div>
                 </div>
             </div>
@@ -265,7 +265,7 @@ export function renderFichaCliente() {
                     <div class="contact-icon icon-phone"><i class="bi bi-telephone-fill"></i></div>
                     <div class="contact-data">
                         <div class="contact-label">Teléfono</div>
-                        <a href="tel:${c.telefono}" class="contact-value">${c.telefono}</a>
+                        ${c.telefono ? `<a href="tel:${c.telefono}" class="contact-value">${c.telefono}</a>` : '<span class="contact-value">N/D</span>'}
                     </div>
                 </div>
                 ${c.email ? `
@@ -281,7 +281,7 @@ export function renderFichaCliente() {
                     <div class="contact-icon icon-address"><i class="bi bi-geo-alt-fill"></i></div>
                     <div class="contact-data">
                         <div class="contact-label">Dirección</div>
-                        <div class="contact-value">${c.domicilio}</div>
+                        <div class="contact-value">${c.domicilio || 'N/D'}</div>
                     </div>
                 </div>
             </div>
@@ -291,17 +291,17 @@ export function renderFichaCliente() {
                 <div class="client-internal-item">
                     <i class="bi bi-building"></i>
                     <span class="internal-label">Sucursal</span>
-                    <span class="internal-value">${c.sucursal}</span>
+                    <span class="internal-value">${c.sucursal || 'N/D'}</span>
                 </div>
                 <div class="client-internal-item">
                     <i class="bi bi-people"></i>
                     <span class="internal-label">Colaborador</span>
-                    <span class="internal-value">${c.colaborador}</span>
+                    <span class="internal-value">${c.colaborador || 'N/D'}</span>
                 </div>
                 <div class="client-internal-item">
                     <i class="bi bi-person-badge"></i>
                     <span class="internal-label">ECuentas</span>
-                    <span class="internal-value">${c.ecuentas}</span>
+                    <span class="internal-value">${c.ecuentas || 'N/D'}</span>
                 </div>
             </div>
         </div>

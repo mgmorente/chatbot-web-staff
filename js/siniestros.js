@@ -1,6 +1,12 @@
 import { addMessageToChat } from './chat.js';
 import { renderDocumentos } from './docs.js';
 
+function parseDate(str) {
+    if (!str) return 0;
+    const parts = str.includes('/') ? str.split('/').reverse().join('-') : str;
+    return new Date(parts).getTime() || 0;
+}
+
 export function renderSiniestrosCliente(d = {}) {
     const data = JSON.parse(localStorage.getItem('clienteData') || 'null');
     if (!data?.siniestros?.length) {
@@ -19,10 +25,19 @@ export function renderSiniestrosCliente(d = {}) {
         return;
     }
 
-    const items = siniestros.map(s => {
+    // Ordenar: abiertos primero, luego por fecha desc
+    siniestros.sort((a, b) => {
+        const aCerrado = (a.estado || '').toLowerCase() === 'cerrado';
+        const bCerrado = (b.estado || '').toLowerCase() === 'cerrado';
+        if (aCerrado !== bCerrado) return aCerrado ? 1 : -1;
+        return parseDate(b.fecha_apertura) - parseDate(a.fecha_apertura);
+    });
+
+    function buildSiniestroCard(s) {
         const cerrado = (s.estado || '').toLowerCase() === 'cerrado';
         const tramites = data.tramites ? data.tramites.filter(t => t.siniestro == s.id) : [];
         const tieneDocs = data.documentos?.some(doc => doc.entidad.toLowerCase() === 'siniestro' && doc.documento == s.id);
+        const searchable = `${s.id} ${s.compania || ''} ${s.causa || ''} ${s.cia_poliza || ''}`.toLowerCase();
 
         let timelineHtml = '';
         if (tramites.length) {
@@ -50,14 +65,14 @@ export function renderSiniestrosCliente(d = {}) {
         }
 
         return `
-        <div class="data-card${cerrado ? ' data-card--muted' : ''}">
+        <div class="data-card${cerrado ? ' data-card--muted' : ''}" data-searchable="${searchable}">
             <div class="data-card__icon"><i class="bi ${cerrado ? 'bi-lock' : 'bi-exclamation-triangle'}"></i></div>
             <div class="data-card__body">
                 <div class="data-card__title">${s.id || 'N/D'} <span class="data-card__sep">·</span> ${s.compania || 'N/D'}</div>
                 <div class="data-card__meta">
-                    <span><i class="bi bi-calendar3"></i> ${s.fecha_apertura || 'N/D'}</span>
+                    ${s.fecha_apertura ? `<span><i class="bi bi-calendar3"></i> ${s.fecha_apertura}</span>` : ''}
                     ${s.causa ? `<span>${s.causa}</span>` : ''}
-                    <span>Póliza ${s.cia_poliza || 'N/D'}</span>
+                    ${s.cia_poliza ? `<span>Póliza ${s.cia_poliza}</span>` : ''}
                 </div>
                 <div class="data-card__status">${cerrado
                     ? '<span class="status-dot status-dot--ko"></span> Cerrado'
@@ -67,17 +82,59 @@ export function renderSiniestrosCliente(d = {}) {
             </div>
             ${tieneDocs ? `<button class="data-card__btn ver-documentos-btn" data-siniestro="${s.id}" title="Ver documentos"><i class="bi bi-folder2-open"></i></button>` : ''}
         </div>`;
-    }).join('');
+    }
 
     const count = siniestros.length;
+    const MAX_VISIBLE = 5;
+    const showSearch = count > MAX_VISIBLE;
+
+    const visibleCards = siniestros.slice(0, MAX_VISIBLE).map(s => buildSiniestroCard(s)).join('');
+    let hiddenHtml = '';
+    if (count > MAX_VISIBLE) {
+        const rest = count - MAX_VISIBLE;
+        hiddenHtml = `
+            <details class="data-group__more">
+                <summary class="data-group__more-btn"><i class="bi bi-chevron-down"></i> Ver ${rest} siniestro${rest > 1 ? 's' : ''} más</summary>
+                ${siniestros.slice(MAX_VISIBLE).map(s => buildSiniestroCard(s)).join('')}
+            </details>`;
+    }
+
+    const searchHtml = showSearch
+        ? `<div class="data-panel__search"><i class="bi bi-search"></i><input type="text" class="data-panel__search-input" placeholder="Buscar siniestro…"></div>`
+        : '';
+
     const html = `
         <div class="data-panel">
             <div class="data-panel__header"><i class="bi bi-exclamation-triangle"></i> Siniestros <span class="data-panel__count">${count}</span></div>
-            ${items}
+            ${searchHtml}
+            <div class="data-panel__list">
+                ${visibleCards}
+                ${hiddenHtml}
+            </div>
         </div>`;
 
     const msgEl = addMessageToChat('bot', html);
     const container = msgEl || document;
+
+    // Búsqueda
+    const searchInput = container.querySelector('.data-panel__search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.toLowerCase().trim();
+            const listEl = searchInput.closest('.data-panel').querySelector('.data-panel__list');
+            const detailsEl = listEl.querySelector('.data-group__more');
+            if (q) {
+                if (detailsEl) detailsEl.open = true;
+                listEl.querySelectorAll('.data-card').forEach(card => {
+                    card.style.display = card.dataset.searchable?.includes(q) ? '' : 'none';
+                });
+            } else {
+                if (detailsEl) detailsEl.open = false;
+                listEl.querySelectorAll('.data-card').forEach(card => { card.style.display = ''; });
+            }
+        });
+    }
+
     container.querySelectorAll('.ver-documentos-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();

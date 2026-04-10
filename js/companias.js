@@ -46,7 +46,12 @@ export function renderTelefonosCompanias(d = []) {
         return;
     }
 
-    const items = Object.entries(groupedData).map(([nombre, phones]) => {
+    const entries = Object.entries(groupedData);
+    const count = entries.length;
+    const MAX_VISIBLE = 5;
+    const showSearch = count > MAX_VISIBLE;
+
+    function buildCompaniaCard([nombre, phones]) {
         const phonesHtml = phones.map(i => `
             <div class="data-card__phone">
                 <span class="data-card__phone-area">${i.area}</span>
@@ -54,21 +59,58 @@ export function renderTelefonosCompanias(d = []) {
             </div>`).join('');
 
         return `
-        <div class="data-card">
+        <div class="data-card" data-searchable="${nombre.toLowerCase()} ${phones.map(i => i.area.toLowerCase()).join(' ')}">
             <div class="data-card__icon"><i class="bi bi-building"></i></div>
             <div class="data-card__body">
                 <div class="data-card__title">${nombre}</div>
                 ${phonesHtml}
             </div>
         </div>`;
-    }).join('');
+    }
 
-    const count = Object.keys(groupedData).length;
+    const visibleCards = entries.slice(0, MAX_VISIBLE).map(e => buildCompaniaCard(e)).join('');
+    let hiddenHtml = '';
+    if (count > MAX_VISIBLE) {
+        const rest = count - MAX_VISIBLE;
+        hiddenHtml = `
+            <details class="data-group__more">
+                <summary class="data-group__more-btn"><i class="bi bi-chevron-down"></i> Ver ${rest} compañía${rest > 1 ? 's' : ''} más</summary>
+                ${entries.slice(MAX_VISIBLE).map(e => buildCompaniaCard(e)).join('')}
+            </details>`;
+    }
+
+    const searchHtml = showSearch
+        ? `<div class="data-panel__search"><i class="bi bi-search"></i><input type="text" class="data-panel__search-input" placeholder="Buscar compañía…"></div>`
+        : '';
+
     const html = `
         <div class="data-panel">
             <div class="data-panel__header"><i class="bi bi-telephone"></i> Compañías <span class="data-panel__count">${count}</span></div>
-            ${items}
+            ${searchHtml}
+            <div class="data-panel__list">
+                ${visibleCards}
+                ${hiddenHtml}
+            </div>
         </div>`;
 
-    addMessageToChat('bot', html);
+    const msgEl = addMessageToChat('bot', html);
+    const container = msgEl || document;
+
+    const searchInput = container.querySelector('.data-panel__search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.toLowerCase().trim();
+            const listEl = searchInput.closest('.data-panel').querySelector('.data-panel__list');
+            const detailsEl = listEl.querySelector('.data-group__more');
+            if (q) {
+                if (detailsEl) detailsEl.open = true;
+                listEl.querySelectorAll('.data-card').forEach(card => {
+                    card.style.display = card.dataset.searchable?.includes(q) ? '' : 'none';
+                });
+            } else {
+                if (detailsEl) detailsEl.open = false;
+                listEl.querySelectorAll('.data-card').forEach(card => { card.style.display = ''; });
+            }
+        });
+    }
 }

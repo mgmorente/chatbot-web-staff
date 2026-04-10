@@ -136,8 +136,16 @@ export function renderWalletInline() {
 
 function parseDate(str) {
     if (!str) return 0;
-    const parts = str.includes('/') ? str.split('/').reverse().join('-') : str;
-    return new Date(parts).getTime() || 0;
+    if (str.includes('/')) {
+        const [d, m, y] = str.split('/');
+        const fullYear = y.length === 2 ? '20' + y : y;
+        return new Date(+fullYear, +m - 1, +d).getTime() || 0;
+    }
+    if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
+        const [d, m, y] = str.split('-');
+        return new Date(+y, +m - 1, +d).getTime() || 0;
+    }
+    return new Date(str).getTime() || 0;
 }
 
 function buildPolizaCard(p, tieneDocs) {

@@ -192,6 +192,7 @@ async function fetchCliente(clientId) {
         }
 
         updateHeaderClient();
+        document.dispatchEvent(new CustomEvent('clienteChanged'));
         Swal.close(); // cerrar swal al terminar
     } catch (error) {
         Swal.fire({

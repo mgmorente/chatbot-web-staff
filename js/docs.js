@@ -1,116 +1,8 @@
 // js/docs.js
 // documentos
 import { addMessageToChat } from './chat.js';
-import { renderPolizasSelect } from './polizas.js';
-import { renderSiniestrosSelect } from './siniestros.js';
-import { getStoredToken } from './storage.js';
-import { showLoading } from './utils.js';
 
-// Función para abrir el modal
-export function renderSubirDocumento() {
-
-    const modalElement = document.getElementById('subirDocModal');
-    const modal = new bootstrap.Modal(modalElement);
-
-    const $subir_doc_poliza_select = $('#subir-doc-poliza-select');
-    renderPolizasSelect($subir_doc_poliza_select, '#subirDocModal');
-
-    const $subir_doc_siniestro_select = $('#subir-doc-siniestro-select');
-    renderSiniestrosSelect($subir_doc_siniestro_select, '#subirDocModal');
-
-    // Inicializar inputs vacíos
-    document.getElementById('doc-entidad').value = '';
-    document.getElementById('doc-descripcion').value = '';
-    document.getElementById('doc-fichero').value = '';
-
-    modal.show();
-
-    const form = document.getElementById('formSubirDoc');
-    form.onsubmit = async function (e) {
-        e.preventDefault();
-
-        let form = this; // referencia al form
-        if (!form.checkValidity()) {
-            form.classList.add("was-validated");
-            return;
-        }
-
-        const tokenData = getStoredToken();
-        let userToken = tokenData?.token || '';
-        if (!userToken) {
-            Swal.fire('Error', 'No se encontró el token de usuario.', 'error');
-            return;
-        }
-
-        // Mostrar Swal de "Enviando..."
-        showLoading('Enviando documento, por favor espere...');
-
-        const nif = JSON.parse(localStorage.getItem('clienteData')).cliente.nif;
-        const entidad = document.getElementById('doc-entidad').value;
-        const descripcion = document.getElementById('doc-descripcion').value.trim();
-        const fichero = document.getElementById('doc-fichero').files[0];
-        const poliza = document.getElementById('subir-doc-poliza-select').value;
-        const siniestro = document.getElementById('subir-doc-siniestro-select').value;
-
-        // Preparar FormData
-        const formData = new FormData();
-        formData.append('nif', nif);
-        formData.append('entidad', entidad);
-        formData.append('descripcion', descripcion);
-        formData.append('fichero', fichero);
-
-        // Añadir los valores condicionalmente
-        if (entidad === 'poliza') {
-            formData.append('poliza', poliza);
-        } else if (entidad === 'siniestro') {
-            formData.append('siniestro', siniestro);
-            formData.append('tramite', true);
-        }
-
-        try {
-
-            fetch(`${ENV.API_URL}/upload-doc`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${userToken}`,
-                    'Empresa': ENV.EMPRESA,
-                    'Device': ENV.DEVICE
-                },
-                body: formData
-            }).then(response => {
-                if (!response.ok) throw new Error('Error en la subida');
-                return response.json();
-            })
-                .then(() => {
-                    Swal.close(); // 🔹 Cerrar el "Enviando..."
-                    Swal.fire('Enviado', 'El documento se ha subido correctamente', 'success');
-                })
-                .catch(err => {
-                    Swal.close(); // 🔹 Cerrar el "Enviando..."
-                    Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
-                    console.error(err);
-                });
-
-            // Oculta el modal si todo va bien
-            modal.hide();
-
-            // Limpieza del formulario
-            form.reset();
-
-            // Si usas Select2, reinicia
-            if (window.jQuery) {
-                $('#doc-entidad').val('').trigger('change');
-                $('#subir-doc-poliza-select').val('').trigger('change');
-                $('#subir-doc-siniestro-select').val('').trigger('change');
-            }
-        } catch (error) {
-            console.error('❌ Error al subir el documento:', error);
-            alert('Error al subir el documento.');
-        }
-
-    };
-}
-
+// Mostrar documentos filtrados directamente (usado desde polizas.js y siniestros.js al pulsar "Docs")
 export function renderDocumentos(id = null) {
     const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
     if (!data || !data.documentos || !data.documentos.length) {
@@ -118,31 +10,156 @@ export function renderDocumentos(id = null) {
         return;
     }
 
-    // filtrar por siniestro si corresponde
     const docsFiltrados = id
         ? data.documentos.filter(d => d.documento == id)
         : data.documentos;
 
     if (!docsFiltrados.length) {
-        addMessageToChat('bot', `<div>No hay documentos disponibles.</div>`);
+        addMessageToChat('bot', '<div>No hay documentos disponibles.</div>');
         return;
     }
 
-    // Agrupar por entidad+documento
-    const grouped = docsFiltrados.reduce((acc, d) => {
+    addMessageToChat('bot', buildDocsHTML(docsFiltrados));
+}
+
+// Flujo con selects: entidad → item → documentos
+export function renderDocumentosConFiltro() {
+    const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
+    if (!data || !data.documentos || !data.documentos.length) {
+        addMessageToChat('bot', '<div>No hay documentos disponibles.</div>');
+        return;
+    }
+
+    const allPolizas = data.polizas || [];
+    const siniestros = data.siniestros || [];
+
+    // Entidades que tienen documentos
+    const entidades = [...new Set(data.documentos.map(d => d.entidad.toLowerCase()))];
+
+    const entidadLabels = {
+        'cliente': 'Cliente',
+        'poliza': 'Póliza',
+        'siniestro': 'Siniestro',
+        'recibo': 'Recibo',
+    };
+
+    const entidadOpts = entidades.map(e =>
+        `<option value="${e}">${entidadLabels[e] || e} (${data.documentos.filter(d => d.entidad.toLowerCase() === e).length})</option>`
+    ).join('');
+
+    const html = `
+        <div class="chat-inline-form">
+            <div class="inline-form-title"><i class="bi bi-folder"></i> Consultar documentos</div>
+            <form class="js-docs-form" novalidate>
+                <div class="inline-form-group">
+                    <label>Entidad</label>
+                    <select name="entidad" class="inline-input" required>
+                        <option value="">Selecciona una entidad</option>
+                        ${entidadOpts}
+                    </select>
+                </div>
+                <div class="inline-form-group js-docs-item-group" style="display:none">
+                    <label class="js-docs-item-label">Elemento</label>
+                    <select name="item" class="inline-input">
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="inline-form-actions">
+                    <button type="button" class="inline-btn-submit js-form-btn"><i class="bi bi-search"></i> Consultar</button>
+                </div>
+            </form>
+            <div class="js-docs-result"></div>
+        </div>`;
+
+    const msgEl = addMessageToChat('bot', html);
+    const container = msgEl || document;
+    const form = container.querySelector('.js-docs-form');
+    const entidadSelect = form.querySelector('[name="entidad"]');
+    const itemGroup = form.querySelector('.js-docs-item-group');
+    const itemLabel = form.querySelector('.js-docs-item-label');
+    const itemSelect = form.querySelector('[name="item"]');
+    const resultDiv = container.querySelector('.js-docs-result');
+
+    // Bloquear Enter
+    form.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
+
+    // Al cambiar entidad → poblar segundo select
+    entidadSelect.addEventListener('change', () => {
+        const entidad = entidadSelect.value;
+        resultDiv.innerHTML = '';
+
+        if (!entidad) {
+            itemGroup.style.display = 'none';
+            return;
+        }
+
+        // Cliente no tiene sub-items
+        if (entidad === 'cliente') {
+            itemGroup.style.display = 'none';
+            return;
+        }
+
+        const docsEntidad = data.documentos.filter(d => d.entidad.toLowerCase() === entidad);
+        const docIds = [...new Set(docsEntidad.map(d => d.documento))];
+
+        itemLabel.textContent = entidadLabels[entidad] || entidad;
+
+        let options = '<option value="">Todos</option>';
+        docIds.forEach(id => {
+            const count = docsEntidad.filter(d => d.documento == id).length;
+            let label = id;
+            if (entidad === 'poliza') {
+                const p = allPolizas.find(x => x.poliza == id);
+                label = p ? `${p.cia_poliza} · ${p.compania}` : id;
+            } else if (entidad === 'siniestro') {
+                const s = siniestros.find(x => x.id == id);
+                label = s ? `${id} · ${s.compania}` : id;
+            }
+            options += `<option value="${id}">${label} (${count})</option>`;
+        });
+
+        itemSelect.innerHTML = options;
+        itemGroup.style.display = '';
+    });
+
+    // Botón consultar
+    form.querySelector('.js-form-btn').addEventListener('click', () => {
+        const entidad = entidadSelect.value;
+        if (!entidad) return;
+
+        const itemValue = itemSelect.value;
+        let docsFiltrados;
+
+        if (entidad === 'cliente') {
+            docsFiltrados = data.documentos.filter(d => d.entidad.toLowerCase() === 'cliente');
+        } else if (itemValue) {
+            docsFiltrados = data.documentos.filter(d => d.entidad.toLowerCase() === entidad && d.documento == itemValue);
+        } else {
+            docsFiltrados = data.documentos.filter(d => d.entidad.toLowerCase() === entidad);
+        }
+
+        if (!docsFiltrados.length) {
+            resultDiv.innerHTML = '<div class="mt-2" style="font-size:0.85rem;color:var(--staff-text-muted)">No hay documentos.</div>';
+            return;
+        }
+
+        resultDiv.innerHTML = '<div class="mt-2">' + buildDocsHTML(docsFiltrados) + '</div>';
+    });
+}
+
+// Helper: construir HTML de lista de documentos
+function buildDocsHTML(docs) {
+    const grouped = docs.reduce((acc, d) => {
         const key = `${d.entidad}-${d.documento}`;
         if (!acc[key]) acc[key] = [];
         acc[key].push(d);
         return acc;
     }, {});
 
-    // Construir HTML
-    let html = '<div><small class="text-success fst-italic">Documentos</small></div>'; // texto encima de todo
-
-    Object.entries(grouped).forEach(([key, docs]) => {
+    let html = '';
+    Object.entries(grouped).forEach(([key, items]) => {
         const [entidad, documento] = key.split('-');
-
-        const itemsHtml = docs.map(s => `
+        const itemsHtml = items.map(s => `
             <li class="list-group-item">
                 <div class="d-flex justify-content-between w-100">
                     <small><a href="#">${s.descripcion}</a></small>
@@ -159,56 +176,5 @@ export function renderDocumentos(id = null) {
         `;
     });
 
-    addMessageToChat('bot', html);
+    return html;
 }
-
-document.addEventListener('DOMContentLoaded', function () {
-    // --- Form subir documento ---
-    const entidadSelect = document.getElementById('doc-entidad');
-    const polizaSelect = document.getElementById('subir-doc-poliza-select');
-    const siniestroSelect = document.getElementById('subir-doc-siniestro-select');
-
-    // Si el formulario no está presente, salimos
-    if (!entidadSelect || !polizaSelect || !siniestroSelect) return;
-
-    const polizaGroup = polizaSelect.closest('.mb-3');
-    const siniestroGroup = siniestroSelect.closest('.mb-3');
-
-    // Ocultar ambos al inicio y quitar required
-    polizaGroup.style.display = 'none';
-    siniestroGroup.style.display = 'none';
-    polizaSelect.removeAttribute('required');
-    siniestroSelect.removeAttribute('required');
-
-    entidadSelect.addEventListener('change', function () {
-        const valor = entidadSelect.value;
-
-        // Ocultamos ambos por defecto y quitamos required
-        polizaGroup.style.display = 'none';
-        siniestroGroup.style.display = 'none';
-        polizaSelect.removeAttribute('required');
-        siniestroSelect.removeAttribute('required');
-
-        // Limpiar valores
-        polizaSelect.value = '';
-        siniestroSelect.value = '';
-
-        // Si usas Select2, reinicia también el plugin
-        if (window.jQuery && $(polizaSelect).data('select2')) {
-            $(polizaSelect).val('').trigger('change');
-        }
-        if (window.jQuery && $(siniestroSelect).data('select2')) {
-            $(siniestroSelect).val('').trigger('change');
-        }
-
-        // Mostrar según selección y aplicar required
-        if (valor === 'poliza') {
-            polizaGroup.style.display = '';
-            polizaSelect.setAttribute('required', 'required');
-        } else if (valor === 'siniestro') {
-            siniestroGroup.style.display = '';
-            siniestroSelect.setAttribute('required', 'required');
-        }
-    });
-});
-

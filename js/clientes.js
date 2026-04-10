@@ -8,6 +8,23 @@ export function initClienteSearch(clienteModal) {
     const searchInput = document.getElementById('client-search');
     const listEl = document.getElementById('client-list');
     const MAX_VISIBLE = 30;
+    let activeIndex = -1;
+
+    function selectCliente(nif) {
+        clienteModal.hide();
+        searchInput.value = '';
+        listEl.innerHTML = '';
+        activeIndex = -1;
+        fetchCliente(nif);
+    }
+
+    function updateActive() {
+        const items = listEl.querySelectorAll('.client-search-item');
+        items.forEach((el, i) => {
+            el.classList.toggle('active', i === activeIndex);
+            if (i === activeIndex) el.scrollIntoView({ block: 'nearest' });
+        });
+    }
 
     function renderList(term = '') {
         const clientes = getClientes();
@@ -18,6 +35,7 @@ export function initClienteSearch(clienteModal) {
             : clientes;
 
         const visibles = filtered.slice(0, MAX_VISIBLE);
+        activeIndex = -1;
 
         listEl.innerHTML = visibles.map(c => `
             <li class="client-search-item" data-nif="${c.nif}">
@@ -28,24 +46,40 @@ export function initClienteSearch(clienteModal) {
             ? `<li class="client-search-hint">Mostrando ${MAX_VISIBLE} de ${filtered.length} — refina la búsqueda</li>`
             : '');
 
-        // Listeners
+        // Click listeners
         listEl.querySelectorAll('.client-search-item').forEach(item => {
-            item.addEventListener('click', async () => {
-                const nif = item.getAttribute('data-nif');
-                clienteModal.hide();
-                searchInput.value = '';
-                listEl.innerHTML = '';
-                await fetchCliente(nif);
-            });
+            item.addEventListener('click', () => selectCliente(item.getAttribute('data-nif')));
         });
     }
+
+    // Navegación con teclado
+    searchInput.addEventListener('keydown', (e) => {
+        const items = listEl.querySelectorAll('.client-search-item');
+        if (!items.length) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            activeIndex = activeIndex < items.length - 1 ? activeIndex + 1 : 0;
+            updateActive();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            activeIndex = activeIndex > 0 ? activeIndex - 1 : items.length - 1;
+            updateActive();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (activeIndex >= 0 && activeIndex < items.length) {
+                selectCliente(items[activeIndex].getAttribute('data-nif'));
+            }
+        }
+    });
 
     searchInput.addEventListener('input', () => renderList(searchInput.value.trim()));
 
     // Al abrir el modal, resetear y enfocar
     document.getElementById('clienteModal').addEventListener('shown.bs.modal', () => {
         searchInput.value = '';
-        renderList();
+        listEl.innerHTML = '';
+        activeIndex = -1;
         searchInput.focus();
     });
 }
@@ -65,19 +99,6 @@ export async function recargarDatosCliente() {
         : null;
     if (!data || !data.cliente) return;
     await fetchCliente(data.cliente.nif);
-}
-
-export function renderModCliente() {
-    const data = localStorage.getItem('clienteData')
-        ? JSON.parse(localStorage.getItem('clienteData'))
-        : null;
-    if (!data || !data.cliente) return;
-
-    document.getElementById('movil_now').value = data.cliente.telefono || '';
-    document.getElementById('email_now').value = data.cliente.email || '';
-
-    const modal = new bootstrap.Modal(document.getElementById('modClienteModal'));
-    modal.show();
 }
 
 // Llamada a la API para obtener los datos del cliente
@@ -160,8 +181,12 @@ async function fetchCliente(clientId) {
     try {
         const data = await fetchClienteData(clientId, token);
         localStorage.setItem('clienteData', JSON.stringify(data));
+
+        // Agenda: intentar cargar, pero no bloquear si falla
         const agenda = await fetchClienteAgenda(clientId, token);
-        localStorage.setItem('clienteAgenda', JSON.stringify(agenda));
+        const agendaOk = Array.isArray(agenda);
+        localStorage.setItem('clienteAgenda', JSON.stringify(agendaOk ? agenda : []));
+        localStorage.setItem('agendaDisponible', agendaOk ? '1' : '0');
 
         // Guardar en historial de recientes
         if (data && data.cliente) {
@@ -169,7 +194,7 @@ async function fetchCliente(clientId) {
         }
 
         updateHeaderClient();
-        document.dispatchEvent(new CustomEvent('clienteChanged'));
+        document.dispatchEvent(new CustomEvent('clienteChanged', { detail: { agendaDisponible: agendaOk } }));
         Swal.close(); // cerrar swal al terminar
     } catch (error) {
         Swal.fire({

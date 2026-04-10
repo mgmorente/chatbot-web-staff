@@ -14,6 +14,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="icon" href="avatar.jpg" type="image/jpg">
+    <!-- Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
     <script>
         const _v = Date.now();
         document.write(`<link href="styles.css?v=${_v}" rel="stylesheet">`);
@@ -29,7 +34,7 @@
             <div class="sidebar-brand">
                 <img src="avatar.jpg" alt="GRUPO PACC" class="sidebar-logo">
                 <div>
-                    <span class="brand-name">GRUPO PACC</span>
+                    <span class="brand-name">PACCMAN</span>
                     <span class="brand-badge">STAFF</span>
                 </div>
             </div>
@@ -253,227 +258,6 @@
         </div>
     </div>
 
-    <!-- Modal para pre siniestro -->
-    <div class="modal fade" id="preSiniestroModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form id="preSiniestroForm" class="modal-content staff-modal" novalidate>
-                <div class="modal-header">
-                    <h5 class="modal-title">Registro Presiniestro</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="presiniestro-poliza-select" class="form-label">Póliza</label>
-                        <select id="presiniestro-poliza-select" class="form-select" style="width: 100%" required>
-                            <option value="">Selecciona una póliza</option>
-                        </select>
-                        <div class="invalid-feedback">Debe incluir una póliza</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="causa-select" class="form-label">Causa</label>
-                        <select id="causa-select" class="form-select" required>
-                            <option value="">Selecciona una causa</option>
-                        </select>
-                        <div class="invalid-feedback">Debe incluir una causa</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="fecha-ocurrencia" class="form-label">Fecha</label>
-                        <input type="date" id="fecha-ocurrencia" class="form-control" required>
-                        <div class="invalid-feedback">Debe incluir una fecha</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="descripcion" class="form-label">Descripción</label>
-                        <textarea id="descripcion" class="form-control" rows="3" placeholder="Detalle del siniestro"
-                            required></textarea>
-                        <div class="invalid-feedback">Debe incluir una descripcion</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="doc-fichero-1" class="form-label">Seleccionar archivo</label>
-                        <input type="file" class="form-control mb-1" id="doc-fichero-1"
-                            accept=".pdf,.jpg,.png,.doc,.docx">
-                        <input type="file" class="form-control mb-1" id="doc-fichero-2"
-                            accept=".pdf,.jpg,.png,.doc,.docx">
-                        <input type="file" class="form-control" id="doc-fichero-3" accept=".pdf,.jpg,.png,.doc,.docx">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-accent">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Modificar cliente -->
-    <div class="modal fade" id="modClienteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form id="modClienteForm" class="modal-content staff-modal" novalidate>
-                <div class="modal-header">
-                    <h5 class="modal-title">Modificar datos de contacto</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="movil_now" class="form-label mb-1">Móvil actual</label>
-                        <input type="text" class="form-control mb-2" id="movil_now" disabled>
-                        <label for="movil" class="form-label mb-1">Nuevo móvil</label>
-                        <input type="text" class="form-control" id="movil" name="movil" pattern="^[67]\d{8}$"
-                            title="Debe ser un número de móvil válido (9 dígitos, empezando por 6 o 7)" required>
-                        <div class="invalid-feedback">Debe incluir un móvil válido</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="email_now" class="form-label mb-1">Email actual</label>
-                        <input type="email" class="form-control mb-2" id="email_now" disabled>
-                        <label for="email" class="form-label mb-1">Nuevo email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                        <div class="invalid-feedback">Debe incluir un email válido</div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-accent">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal para subir documentación -->
-    <div class="modal fade" id="subirDocModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content staff-modal">
-                <form id="formSubirDoc" enctype="multipart/form-data" novalidate>
-                    <div class="modal-header">
-                        <h5 class="modal-title">Subir documentación</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="doc-entidad" class="form-label">Entidad</label>
-                            <select class="form-select" id="doc-entidad" required>
-                                <option value="" selected>Selecciona una entidad</option>
-                                <option value="cliente">Cliente</option>
-                                <option value="poliza">Póliza</option>
-                                <option value="siniestro">Siniestro</option>
-                            </select>
-                            <div class="invalid-feedback">Debe seleccionar una entidad</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="subir-doc-poliza-select" class="form-label">Póliza</label>
-                            <select id="subir-doc-poliza-select" class="form-select" style="width: 100%" required>
-                                <option value="">Selecciona una póliza</option>
-                            </select>
-                            <div class="invalid-feedback">Debe seleccionar una póliza</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="subir-doc-siniestro-select" class="form-label">Siniestro</label>
-                            <select id="subir-doc-siniestro-select" class="form-select" style="width: 100%" required>
-                                <option value="">Selecciona un siniestro</option>
-                            </select>
-                            <div class="invalid-feedback">Debe seleccionar un siniestro</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="doc-descripcion" class="form-label">Descripción</label>
-                            <input type="text" class="form-control" id="doc-descripcion"
-                                placeholder="Ej: DNI escaneado" required>
-                            <div class="invalid-feedback">Debe incluir una descripción</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="doc-fichero" class="form-label">Seleccionar archivo</label>
-                            <input type="file" class="form-control" id="doc-fichero"
-                                accept=".pdf,.jpg,.png,.doc,.docx" required>
-                            <div class="invalid-feedback">Debe seleccionar un archivo</div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary"
-                            data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-accent">Subir</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal para enviar email -->
-    <div class="modal fade" id="emailClienteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form id="emailClienteForm" class="modal-content staff-modal" enctype="multipart/form-data" novalidate>
-                <div class="modal-header">
-                    <h5 class="modal-title">Enviar Email</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="email_to" class="form-label">Para</label>
-                        <input type="email" class="form-control" id="email_to" required>
-                        <div class="invalid-feedback">Debe incluir un email correcto</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="subject" class="form-label">Asunto</label>
-                        <input type="text" class="form-control" id="subject" required>
-                        <div class="invalid-feedback">El asunto no puede estar vacío</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="attachment" class="form-label">Adjunto</label>
-                        <input type="file" class="form-control" id="attachment">
-                    </div>
-                    <div class="mb-3">
-                        <label for="body" class="form-label">Mensaje</label>
-                        <textarea class="form-control" id="body" rows="4" required></textarea>
-                        <div class="invalid-feedback">El mensaje no puede estar vacío</div>
-                    </div>
-                    <div id="sendMailAlert" class="alert alert-danger d-none" role="alert"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-accent">Enviar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal para agregar agenda -->
-    <div class="modal fade" id="agendaModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <form id="nuevaAgendaForm" class="modal-content staff-modal" novalidate>
-                <div class="modal-header">
-                    <h5 class="modal-title">Nueva cita cliente</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="agenda-datetime" class="form-label">Fecha y Hora</label>
-                        <input type="datetime-local" class="form-control" id="agenda-datetime" required>
-                        <div class="invalid-feedback">La fecha y hora no puede estar vacía</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="agenda-asunto" class="form-label">Asunto</label>
-                        <input type="text" class="form-control" id="agenda-asunto" placeholder="Escribe el asunto"
-                            required>
-                        <div class="invalid-feedback">El asunto no puede estar vacío</div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-accent">Guardar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-    <!-- Select2 -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
-        rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

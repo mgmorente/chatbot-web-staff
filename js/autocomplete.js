@@ -60,7 +60,13 @@ function onInput() {
     const query = normalize(raw);
     const words = query.split(/\s+/);
 
+    // Comandos de agenda deshabilitados si no está disponible
+    const agendaCommands = ['consultar_agenda', 'registrar_agenda'];
+
     const scored = suggestions.map(s => {
+        // Ocultar opciones de agenda si no está disponible
+        if (agendaCommands.includes(s.command) && !window._agendaDisponible) return { ...s, score: 0 };
+
         let score = 0;
         const normalText = normalize(s.text);
 

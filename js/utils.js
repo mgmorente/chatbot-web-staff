@@ -10,32 +10,53 @@ export function showLoading(message = 'Por favor espere mientras se realiza el p
     });
 }
 
-// Interceptor global de fetch: detecta 401 SOLO en llamadas API y redirige al login
+// Redirige al login cuando la sesión ha expirado
+function handleSessionExpired() {
+    if (window._redirectingLogin) return;
+    window._redirectingLogin = true;
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('userTokenExpiry');
+    Swal.fire({
+        icon: 'warning',
+        title: 'Sesión expirada',
+        text: 'Tu sesión ha caducado. Vuelve a iniciar sesión.',
+        confirmButtonText: 'Ir al login',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+    }).then(() => {
+        window.location.href = 'login.html';
+    });
+}
+
+// Interceptor global de fetch: detecta sesión inválida y redirige al login
 const _originalFetch = window.fetch;
 window.fetch = async function (...args) {
     const response = await _originalFetch.apply(this, args);
 
     // Solo interceptar llamadas a nuestra API, no recursos externos
     const url = (typeof args[0] === 'string' ? args[0] : args[0]?.url) || '';
-    const isApiCall = typeof window.ENV !== 'undefined' && url.startsWith(window.ENV.API_URL);
+    const isApiCall = typeof window.ENV !== 'undefined'
+        && (url.startsWith(window.ENV.API_URL) || url.startsWith(window.ENV.API_URL_PRODUCCION));
 
-    if (response.status === 401 && isApiCall) {
-        // Evitar múltiples redirecciones simultáneas
-        if (!window._redirecting401) {
-            window._redirecting401 = true;
-            localStorage.removeItem('userToken');
-            localStorage.removeItem('userTokenExpiry');
-            Swal.fire({
-                icon: 'warning',
-                title: 'Sesion expirada',
-                text: 'Tu sesion ha caducado. Vuelve a iniciar sesion.',
-                confirmButtonText: 'Ir al login',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-            }).then(() => {
-                window.location.href = 'login.html';
-            });
-        }
+    if (!isApiCall) return response;
+
+    // 401/403 → sesión expirada
+    if (response.status === 401 || response.status === 403) {
+        handleSessionExpired();
+        return response;
+    }
+
+    // Algunas respuestas 200/500 traen error de sesión en el body (ej: "usuario_pacc on null")
+    // Clonamos para poder leer sin consumir el body original
+    if (isApiCall && response.status >= 400) {
+        try {
+            const clone = response.clone();
+            const body = await clone.json();
+            const errMsg = (body.errors || body.error || '').toString().toLowerCase();
+            if (errMsg.includes('usuario_pacc') || errMsg.includes('unauthenticated') || errMsg.includes('token')) {
+                handleSessionExpired();
+            }
+        } catch { /* no es JSON, ignorar */ }
     }
 
     return response;

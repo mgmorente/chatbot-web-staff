@@ -1,13 +1,14 @@
 // app.js
 import { getStoredToken, clearStoredToken, getSelectedClient } from './storage.js';
 import { addMessageToChat, addThinkingMessage, removeThinkingMessage } from './chat.js';
-import { initClienteSearch, recargarDatosCliente, renderFichaCliente, renderModCliente, buscarClienteEnChat, renderBusquedaClientes, renderClientesRecientes, fetchCliente } from './clientes.js';
-import { renderPolizasSelect, descargaPoliza, walletPoliza, renderPolizasCliente, renderDuplicadoInline, renderWalletInline } from './polizas.js';
+import { initClienteSearch, recargarDatosCliente, renderFichaCliente, buscarClienteEnChat, renderBusquedaClientes, renderClientesRecientes, fetchCliente } from './clientes.js';
+import { renderPolizasCliente, renderDuplicadoInline, renderWalletInline } from './polizas.js';
+import { renderModClienteInline, renderAgendaInline, renderEmailInline, renderPresiniestroInline, renderSubirDocInline } from './forms.js';
 import { renderRecibosCliente } from './recibos.js';
 import { renderSiniestrosCliente } from './siniestros.js';
 import { renderTelefonosCompanias } from './companias.js';
 import { renderAgenda } from './agenda.js';
-import { renderSubirDocumento, renderDocumentos } from './docs.js';
+import { renderDocumentos, renderDocumentosConFiltro } from './docs.js';
 import { updateHeaderClient } from './header.js';
 import { showLoading } from './utils.js';
 import { initAutocomplete } from './autocomplete.js';
@@ -36,6 +37,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // Comprobar expiración del token cada minuto
+    setInterval(() => {
+        const t = getStoredToken();
+        if (!t || t.expiry < Date.now()) {
+            clearStoredToken();
+            window.location.href = 'login.html';
+        }
+    }, 60_000);
+
     updateHeaderClient();
 
     // --- Quick actions: fijos ---
@@ -63,8 +73,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderQuickActions();
 
-    // Mostrar quick actions de nuevo al cambiar de cliente
-    document.addEventListener('clienteChanged', () => renderQuickActions());
+    // Mostrar quick actions de nuevo al cambiar de cliente + controlar agenda
+    document.addEventListener('clienteChanged', (e) => {
+        renderQuickActions();
+        const agendaOk = e.detail?.agendaDisponible ?? (localStorage.getItem('agendaDisponible') === '1');
+        updateAgendaAvailability(agendaOk);
+    });
+
+    function updateAgendaAvailability(disponible) {
+        // Sidebar: deshabilitar botones de agenda
+        document.querySelectorAll('[data-command="consultar_agenda"], [data-command="registrar_agenda"]').forEach(btn => {
+            btn.disabled = !disponible;
+            btn.style.opacity = disponible ? '' : '0.4';
+            btn.style.pointerEvents = disponible ? '' : 'none';
+        });
+        // Autocomplete: marcar agenda como no disponible
+        window._agendaDisponible = disponible;
+    }
 
     // --- Scroll-to-bottom button ---
     const chatBox = document.getElementById('chat-box');
@@ -81,10 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
         chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
     });
 
-    // --- Modales ---
+    // --- Modal cliente (único modal que se mantiene) ---
     const clienteModal = new bootstrap.Modal(document.getElementById('clienteModal'));
-    const preSiniestroModal = new bootstrap.Modal(document.getElementById('preSiniestroModal'));
-    const agendaModal = new bootstrap.Modal(document.getElementById('agendaModal'));
 
     // --- Sidebar toggle (responsive) ---
     const sidebar = document.getElementById('staffSidebar');
@@ -122,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderFichaCliente();
                 break;
             case 'actualizar_cliente':
-                renderModCliente();
+                renderModClienteInline();
                 break;
             case 'consultar_poliza':
                 renderPolizasCliente(d);
@@ -134,29 +157,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderSiniestrosCliente(d);
                 break;
             case 'consultar_documento':
-                renderDocumentos();
+                renderDocumentosConFiltro();
                 break;
             case 'consultar_compania':
                 renderTelefonosCompanias(d);
                 break;
             case 'registrar_siniestro':
-                renderPolizasSelect($presiniestro_poliza_select, '#preSiniestroModal');
-                preSiniestroModal.show();
+                renderPresiniestroInline();
                 break;
             case 'consultar_agenda':
                 renderAgenda();
                 break;
             case 'registrar_agenda':
-                agendaModal.show();
+                renderAgendaInline();
                 break;
             case 'registrar_documento':
             case 'registrar_documento_cliente':
             case 'registrar_documento_poliza':
-                renderSubirDocumento();
+                renderSubirDocInline();
                 break;
             case 'enviar_email':
             case 'enviar_email_cliente':
-                enviarEmail();
+                renderEmailInline();
                 break;
             case 'duplicado':
             case 'duplicado_poliza':
@@ -170,22 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (d.message) addMessageToChat('bot', d.message);
                 else addMessageToChat('bot', d.error || 'Error en la respuesta del servidor');
         }
-    }
-
-    // --- Modal enviar email ---
-    function enviarEmail() {
-        const data = localStorage.getItem('clienteData')
-            ? JSON.parse(localStorage.getItem('clienteData'))
-            : null;
-
-        if (!data || !data.cliente) {
-            clienteModal.show();
-            return;
-        }
-
-        const modal = new bootstrap.Modal(document.getElementById('emailClienteModal'));
-        modal.show();
-        document.getElementById('email_to').value = data.cliente.email || '';
     }
 
     // --- Autocomplete ---
@@ -392,263 +398,15 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'login.html';
     });
 
-    // --- Fecha max hoy en input fecha ocurrencia ---
-    const inputFecha = document.getElementById("fecha-ocurrencia");
-    const hoy = new Date().toISOString().split("T")[0];
-    inputFecha.setAttribute("max", hoy);
-
     // --- Clientes ---
     initClienteSearch(clienteModal);
 
-    // --- Pólizas ---
-    const $presiniestro_poliza_select = $('#presiniestro-poliza-select');
-
-    // --- Presiniestro ---
-    document.getElementById('preSiniestroForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        let form = this;
-        if (!form.checkValidity()) {
-            form.classList.add("was-validated");
-            return;
-        }
-
-        const datos = {
-            "poliza": $presiniestro_poliza_select.val(),
-            "fecha": $('#fecha-ocurrencia').val(),
-            "causa": $('#causa-select').val(),
-            "descripcion": $('#descripcion').val().trim(),
-        };
-
-        showLoading();
-
-        fetch(`${ENV.API_URL}/presiniestro`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${userToken}`,
-                'empresa': ENV.EMPRESA,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(datos)
-        })
-            .then(response => {
-                if (!response.ok) throw new Error('Error en el envío');
-                return response.json();
-            })
-            .then(() => {
-                Swal.close();
-                $('#preSiniestroModal').modal('hide');
-                Swal.fire('Grabado', 'El presiniestro se registro correctamente', 'success');
-            })
-            .catch(err => {
-                Swal.close();
-                Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
-                console.error(err);
-            });
-    });
-
-    // Modificar causas siniestro segun tipo poliza
-    $('#presiniestro-poliza-select').on('change', function (e) {
-        let valor = $(this).val();
-
-        const cd = JSON.parse(localStorage.getItem('clienteData') || 'null');
-        const polizas = cd?.polizas || [];
-
-        const poliza = polizas.find(p => p.poliza === valor);
-        if (!poliza) return;
-
-        const descriptores = localStorage.getItem('descriptores')
-            ? JSON.parse(localStorage.getItem('descriptores'))
-            : [];
-
-        const $causa_select = $('#causa-select');
-        if ($causa_select.hasClass("select2-hidden-accessible")) {
-            $causa_select.select2('destroy');
-        }
-        $causa_select.empty();
-        $causa_select.append('<option value="" selected disabled>Seleccione una opción</option>');
-        $causa_select.select2();
-        const datos = descriptores.filter(d => d.tipo.includes(poliza.ramo_tipo));
-        datos.forEach(item => {
-            $causa_select.append(new Option(item.nombre, item.codigo));
-        });
-        $causa_select.select2({
-            theme: 'bootstrap-5',
-            allowClear: true,
-            closeOnSelect: true,
-        });
-    });
-
-    // --- Email cliente ---
+    // --- Email cliente (delegado) ---
     document.addEventListener('click', function (e) {
         if (e.target && e.target.classList.contains('email-cliente')) {
             e.preventDefault();
-            enviarEmail();
+            renderEmailInline();
         }
-    });
-
-    // --- Modificar cliente ---
-    document.getElementById('modClienteForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        let form = this;
-        if (!form.checkValidity()) {
-            form.classList.add("was-validated");
-            return;
-        }
-
-        const clienteData = JSON.parse(localStorage.getItem('clienteData') || 'null');
-        if (!clienteData?.cliente?.nif) return;
-        const nif = clienteData.cliente.nif;
-        const movil = $('#movil').val().trim();
-        const email = $('#email').val().trim();
-
-        showLoading();
-
-        fetch(`${ENV.API_URL}/update-cliente`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${userToken}`,
-                'empresa': ENV.EMPRESA,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ nif, movil, email })
-        })
-            .then(response => {
-                if (!response.ok) throw new Error('Error en el envío');
-                return response.json();
-            })
-            .then(() => {
-                Swal.close();
-                $('#modClienteModal').modal('hide');
-                $('#movil, #email').val('');
-                Swal.fire('Grabado', 'Los datos han sido modificados', 'success');
-            })
-            .catch(err => {
-                Swal.close();
-                Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
-                console.error(err);
-            });
-    });
-
-    // --- Enviar email ---
-    document.getElementById('emailClienteForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        let form = this;
-        if (!form.checkValidity()) {
-            form.classList.add("was-validated");
-            return;
-        }
-
-        const $alertBox = $('#sendMailAlert');
-        $alertBox.addClass('d-none').text('');
-
-        const to = $('#email_to').val().trim();
-        const subject = $('#subject').val().trim();
-        const body = $('#body').val().trim();
-        const attachment = $('#attachment')[0].files[0] || null;
-
-        const formData = new FormData();
-        formData.append('to', to);
-        formData.append('subject', subject);
-        formData.append('body', body);
-        if (attachment) {
-            formData.append('attachment', attachment);
-        }
-
-        if (attachment) {
-            const allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx'];
-            const maxSize = 5 * 1024 * 1024;
-
-            const extension = attachment.name.split('.').pop().toLowerCase();
-            if (!allowedExtensions.includes(extension)) {
-                $alertBox.text('Tipo de archivo no permitido. Solo JPG, PNG, PDF, DOC, XLS...').removeClass('d-none');
-                $('#attachment').val('');
-                return;
-            }
-
-            if (attachment.size > maxSize) {
-                $alertBox.text('El archivo es demasiado grande. Máximo 5 MB.').removeClass('d-none');
-                $('#attachment').val('');
-                return;
-            }
-        }
-
-        showLoading();
-
-        fetch(`${ENV.API_URL}/send-email`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${userToken}`,
-                'Empresa': ENV.EMPRESA,
-                'Device': ENV.DEVICE
-            },
-            body: formData
-        })
-            .then(response => {
-                if (!response.ok) throw new Error('Error en el envío');
-                return response.json();
-            })
-            .then(() => {
-                Swal.close();
-                $('#emailClienteModal').modal('hide');
-                $('#subject, #body, #attachment').val('');
-                Swal.fire('Enviado', 'El correo se envió correctamente', 'success');
-            })
-            .catch(err => {
-                Swal.close();
-                Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
-                console.error(err);
-            });
-    });
-
-    // --- Nueva agenda ---
-    document.getElementById('nuevaAgendaForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        let form = this;
-        if (!form.checkValidity()) {
-            form.classList.add("was-validated");
-            return;
-        }
-
-        const clienteData = JSON.parse(localStorage.getItem('clienteData') || 'null');
-        if (!clienteData?.cliente?.nif) return;
-        const data = {
-            nif: clienteData.cliente.nif,
-            subject: $("#agenda-asunto").val(),
-            start: $("#agenda-datetime").val(),
-            tipo: 'cita',
-        };
-
-        showLoading();
-
-        fetch(`${ENV.API_URL}/agenda`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${userToken}`,
-                'Empresa': ENV.EMPRESA,
-                'Device': ENV.DEVICE
-            },
-            body: JSON.stringify(data)
-        })
-            .then(response => {
-                if (!response.ok) throw new Error('Error en el envío');
-                return response.json();
-            })
-            .then(() => {
-                Swal.close();
-                $('#agendaModal').modal('hide');
-                $('#agenda-datetime, #agenda-asunto').val('');
-                Swal.fire('Grabado', 'La agenda se registro correctamente', 'success');
-            })
-            .catch(err => {
-                Swal.close();
-                Swal.fire('Error', 'No se pudo realizar el proceso', 'error');
-                console.error(err);
-            });
     });
 
 });

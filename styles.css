@@ -448,6 +448,13 @@ body {
     transition: all 0.2s ease;
 }
 
+/* En desktop el sidebar ya está visible, ocultar botón menú */
+@media (min-width: 993px) {
+    #sidebarToggle {
+        display: none;
+    }
+}
+
 .btn-header:hover {
     background: rgba(255, 255, 255, 0.18);
     border-color: rgba(255, 255, 255, 0.2);
@@ -1830,6 +1837,313 @@ a.contact-value:hover {
     margin-right: 4px;
 }
 
+/* ---- Inline Forms (chat) ---- */
+.chat-inline-form {
+    background: var(--staff-surface);
+    border: 1px solid var(--staff-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    max-width: 100%;
+    overflow: visible;
+}
+
+.inline-form-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--staff-accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.inline-form-group {
+    margin-bottom: 10px;
+}
+
+.inline-form-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--staff-text-muted);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.inline-form-group label small {
+    text-transform: none;
+    font-weight: 400;
+    letter-spacing: 0;
+}
+
+.inline-input {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    border: 1px solid var(--staff-border);
+    border-radius: 8px;
+    background: var(--staff-primary);
+    color: var(--staff-text);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inline-input:focus {
+    border-color: var(--staff-accent);
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
+}
+
+.inline-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.inline-input::placeholder {
+    color: var(--staff-text-muted);
+    opacity: 0.5;
+}
+
+.inline-textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+select.inline-input {
+    cursor: pointer;
+    appearance: auto;
+}
+
+.inline-form-actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+}
+
+.inline-btn-submit {
+    padding: 8px 18px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: inherit;
+    color: #fff;
+    background: var(--staff-accent);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.inline-btn-submit:hover {
+    background: var(--staff-accent-hover);
+}
+
+.inline-btn-submit:active {
+    transform: scale(0.97);
+}
+
+.inline-form-success {
+    color: var(--staff-accent);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 10px 0;
+}
+
+.inline-form-summary {
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    color: var(--staff-text);
+    font-weight: 400;
+    font-size: 0.82rem;
+    padding: 10px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    border: 1px solid var(--staff-border);
+}
+
+/* Inline poliza picker */
+.inline-poliza-picker {
+    position: relative;
+}
+
+.inline-poliza-list {
+    list-style: none;
+    padding: 0;
+    margin: 4px 0 0;
+    max-height: 180px;
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid var(--staff-border);
+    background: var(--staff-card);
+}
+
+.inline-poliza-list:empty {
+    display: none;
+}
+
+.inline-poliza-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    border-bottom: 1px solid var(--staff-border);
+    transition: background 0.15s;
+    color: var(--staff-text);
+}
+
+.inline-poliza-item:last-child {
+    border-bottom: none;
+}
+
+.inline-poliza-item:hover,
+.inline-poliza-item.active {
+    background: rgba(34, 197, 94, 0.12);
+}
+
+.inline-poliza-hint {
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--staff-text-muted);
+    font-style: italic;
+}
+
+.inline-poliza-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    font-size: 0.84rem;
+    color: var(--staff-text);
+    flex-wrap: wrap;
+}
+
+.inline-poliza-clear {
+    background: none;
+    border: none;
+    color: var(--staff-text-muted);
+    cursor: pointer;
+    margin-left: auto;
+    padding: 2px 4px;
+    font-size: 0.9rem;
+    line-height: 1;
+    transition: color 0.15s;
+}
+
+.inline-poliza-clear:hover {
+    color: var(--staff-danger);
+}
+
+/* Flatpickr overrides para tema oscuro */
+.flatpickr-calendar {
+    background: var(--staff-card) !important;
+    border-color: var(--staff-border) !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4) !important;
+    font-family: 'Inter', sans-serif !important;
+    z-index: 9999 !important;
+}
+
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    background: var(--staff-card) !important;
+    color: var(--staff-text) !important;
+}
+
+.flatpickr-current-month input.cur-year {
+    color: var(--staff-text) !important;
+}
+
+span.flatpickr-weekday {
+    color: var(--staff-text-muted) !important;
+    background: var(--staff-card) !important;
+}
+
+.flatpickr-day {
+    color: var(--staff-text) !important;
+}
+
+.flatpickr-day:hover {
+    background: rgba(34, 197, 94, 0.15) !important;
+    border-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+.flatpickr-day.selected {
+    background: var(--staff-accent) !important;
+    border-color: var(--staff-accent) !important;
+    color: #fff !important;
+}
+
+.flatpickr-day.today {
+    border-color: var(--staff-accent) !important;
+}
+
+.flatpickr-day.flatpickr-disabled {
+    color: var(--staff-text-muted) !important;
+    opacity: 0.3;
+}
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+    fill: var(--staff-text) !important;
+    color: var(--staff-text) !important;
+}
+
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: var(--staff-accent) !important;
+}
+
+.flatpickr-time {
+    border-top-color: var(--staff-border) !important;
+}
+
+.flatpickr-time input,
+.flatpickr-time .flatpickr-am-pm {
+    color: var(--staff-text) !important;
+}
+
+.flatpickr-time input:hover,
+.flatpickr-time input:focus,
+.flatpickr-time .flatpickr-am-pm:hover {
+    background: rgba(34, 197, 94, 0.1) !important;
+}
+
+.numInputWrapper:hover {
+    background: rgba(255,255,255,0.05) !important;
+}
+
+.flatpickr-time .numInputWrapper span.arrowUp:after {
+    border-bottom-color: var(--staff-text) !important;
+}
+
+.flatpickr-time .numInputWrapper span.arrowDown:after {
+    border-top-color: var(--staff-text) !important;
+}
+
+.inline-form-error {
+    color: var(--staff-danger);
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    background: rgba(239, 68, 68, 0.08);
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.inline-form-error.hidden {
+    display: none;
+}
+
+.was-validated .inline-input:invalid {
+    border-color: var(--staff-danger);
+}
+
 /* Poliza selectable (inline duplicado/wallet) */
 .poliza-selectable {
     cursor: pointer;
@@ -1870,8 +2184,9 @@ a.contact-value:hover {
     border-bottom: none;
 }
 
-.client-search-item:hover {
-    background: rgba(34, 197, 94, 0.1);
+.client-search-item:hover,
+.client-search-item.active {
+    background: rgba(34, 197, 94, 0.15);
 }
 
 .client-search-item strong {

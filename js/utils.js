@@ -10,12 +10,16 @@ export function showLoading(message = 'Por favor espere mientras se realiza el p
     });
 }
 
-// Interceptor global de fetch: detecta 401 y redirige al login
+// Interceptor global de fetch: detecta 401 SOLO en llamadas API y redirige al login
 const _originalFetch = window.fetch;
 window.fetch = async function (...args) {
     const response = await _originalFetch.apply(this, args);
 
-    if (response.status === 401) {
+    // Solo interceptar llamadas a nuestra API, no recursos externos
+    const url = (typeof args[0] === 'string' ? args[0] : args[0]?.url) || '';
+    const isApiCall = typeof window.ENV !== 'undefined' && url.startsWith(window.ENV.API_URL);
+
+    if (response.status === 401 && isApiCall) {
         // Evitar múltiples redirecciones simultáneas
         if (!window._redirecting401) {
             window._redirecting401 = true;
@@ -36,3 +40,15 @@ window.fetch = async function (...args) {
 
     return response;
 };
+
+// Verificar token antes de llamar al API (uso compartido)
+export function isTokenValid() {
+    const token = localStorage.getItem('userToken');
+    const expiry = parseInt(localStorage.getItem('userTokenExpiry'), 10);
+    if (!token || !expiry || expiry < Date.now()) {
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('userTokenExpiry');
+        return false;
+    }
+    return true;
+}

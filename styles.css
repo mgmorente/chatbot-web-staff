@@ -1384,7 +1384,7 @@ body {
 }
 
 .message .text .bi-envelope {
-    color: var(--staff-warning);
+    color: var(--staff-accent);
 }
 
 .message .text .bi-geo-alt {
@@ -1586,9 +1586,9 @@ body {
 }
 
 .icon-email {
-    background: rgba(245, 158, 11, 0.1);
-    color: var(--staff-warning);
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--staff-accent);
+    border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
 .icon-address {

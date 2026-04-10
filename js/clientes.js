@@ -382,13 +382,15 @@ export function renderBusquedaClientes(resultados, termino) {
             <div class="search-result-action"><i class="bi bi-arrow-right"></i></div>
         </button>`;
 
-    const initialItems = resultados.slice(0, INITIAL_LIMIT).map(renderItem).join('');
-    const hiddenItems = resultados.length > INITIAL_LIMIT
-        ? resultados.slice(INITIAL_LIMIT).map(renderItem).join('')
+    const allItems = resultados.map(renderItem).join('');
+    const hasMore = resultados.length > INITIAL_LIMIT;
+
+    const refineHint = resultados.length > 50
+        ? `<div class="search-results-hint"><i class="bi bi-lightbulb"></i> Demasiados resultados. Intenta buscar con NIF o nombre completo.</div>`
         : '';
 
-    const showMoreBtn = resultados.length > INITIAL_LIMIT
-        ? `<button class="search-results-toggle" onclick="this.previousElementSibling.classList.remove('search-results-hidden');this.remove();">
+    const showMoreBtn = hasMore
+        ? `<button class="search-results-toggle" onclick="this.previousElementSibling.classList.add('search-results-expanded');this.remove();">
                <i class="bi bi-chevron-down"></i> Ver todos (${resultados.length})
            </button>`
         : '';
@@ -398,13 +400,11 @@ export function renderBusquedaClientes(resultados, termino) {
             <div class="search-results-header">
                 <i class="bi bi-search"></i> ${resultados.length} resultado${resultados.length > 1 ? 's' : ''} para "<strong>${termino}</strong>"
             </div>
-            <div class="search-results-list">
-                ${initialItems}
-            </div>
-            <div class="search-results-list search-results-hidden">
-                ${hiddenItems}
+            <div class="search-results-list ${hasMore ? 'search-results-capped' : ''}">
+                ${allItems}
             </div>
             ${showMoreBtn}
+            ${refineHint}
         </div>
     `);
 }

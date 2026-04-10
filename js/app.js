@@ -1,7 +1,7 @@
 // app.js
 import { getStoredToken, clearStoredToken, getSelectedClient } from './storage.js';
 import { addMessageToChat, addThinkingMessage, removeThinkingMessage } from './chat.js';
-import { renderClientesSelect, handleClienteSelection, recargarDatosCliente, renderFichaCliente, renderModCliente, buscarClienteEnChat, renderBusquedaClientes, renderClientesRecientes, fetchCliente } from './clientes.js';
+import { initClienteSearch, recargarDatosCliente, renderFichaCliente, renderModCliente, buscarClienteEnChat, renderBusquedaClientes, renderClientesRecientes, fetchCliente } from './clientes.js';
 import { renderPolizasSelect, descargaPoliza, walletPoliza, renderPolizasCliente, renderDuplicadoInline, renderWalletInline } from './polizas.js';
 import { renderRecibosCliente } from './recibos.js';
 import { renderSiniestrosCliente } from './siniestros.js';
@@ -398,9 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
     inputFecha.setAttribute("max", hoy);
 
     // --- Clientes ---
-    const $select_clientes = $('#client-select');
-    renderClientesSelect($select_clientes);
-    handleClienteSelection($select_clientes, clienteModal);
+    initClienteSearch(clienteModal);
 
     // --- Pólizas ---
     const $presiniestro_poliza_select = $('#presiniestro-poliza-select');

@@ -239,23 +239,17 @@
     <!-- Modal para cambiar cliente -->
     <div class="modal fade" id="clienteModal" tabindex="-1" aria-labelledby="clienteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
-            <form id="client-form" class="modal-content staff-modal">
+            <div class="modal-content staff-modal">
                 <div class="modal-header">
                     <h5 class="modal-title">Seleccionar Cliente</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <label for="client-select" class="form-label">Cliente</label>
-                    <select id="client-select" class="form-select" style="width: 100%">
-                        <option value="">Selecciona un cliente</option>
-                    </select>
+                    <input type="text" id="client-search" class="form-control mb-2" placeholder="Buscar por nombre o NIF..." autocomplete="off">
+                    <ul id="client-list" class="client-search-list"></ul>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-accent">Aceptar</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 

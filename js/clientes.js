@@ -3,74 +3,50 @@ import { getClientes, addClienteReciente, getClientesRecientes } from './storage
 import { addMessageToChat } from './chat.js';
 import { updateHeaderClient } from './header.js';
 
-export function renderClientesSelect($select) {
-    const clientes = getClientes();
-    $select.empty();
+// Inicializa el buscador nativo de clientes en el modal
+export function initClienteSearch(clienteModal) {
+    const searchInput = document.getElementById('client-search');
+    const listEl = document.getElementById('client-list');
+    const MAX_VISIBLE = 30;
 
-    // Opción inicial
-    $select.append('<option value="">Selecciona un cliente</option>');
+    function renderList(term = '') {
+        const clientes = getClientes();
+        const filtered = term
+            ? clientes.filter(c =>
+                c.nombre.toLowerCase().includes(term.toLowerCase()) ||
+                c.nif.toLowerCase().includes(term.toLowerCase()))
+            : clientes;
 
-    // Añadir clientes
-    clientes.forEach(c => {
-        $select.append(new Option(c.nombre, c.nif, false, false));
-    });
+        const visibles = filtered.slice(0, MAX_VISIBLE);
 
-    // Inicializar Select2
-    $select.select2({
-        theme: "bootstrap-5",
-        placeholder: "Selecciona un cliente",
-        dropdownParent: $('#clienteModal'),
-        allowClear: true,
-        closeOnSelect: true,
-        width: '100%',
-        templateResult: function (data) {
-            if (!data.id) return data.text;
-            const cliente = clientes.find(c => c.nif === data.id);
-            if (!cliente) return data.text;
+        listEl.innerHTML = visibles.map(c => `
+            <li class="client-search-item" data-nif="${c.nif}">
+                <strong>${c.nombre}</strong>
+                <small>${c.nif}</small>
+            </li>
+        `).join('') + (filtered.length > MAX_VISIBLE
+            ? `<li class="client-search-hint">Mostrando ${MAX_VISIBLE} de ${filtered.length} — refina la búsqueda</li>`
+            : '');
 
-            return $(`
-                <div>
-                    <strong>${cliente.nombre}</strong><br>
-                    <small style="color: var(--staff-text-muted, #94a3b8)">${cliente.nif}</small>
-                </div>
-            `);
-        },
-        templateSelection: function (data) {
-            if (!data.id) return data.text;
-            const cliente = clientes.find(c => c.nif === data.id);
-            return cliente ? `${cliente.nombre} (${cliente.nif})` : data.text;
-        },
-        matcher: function (params, data) {
-            if ($.trim(params.term) === '') return data;
+        // Listeners
+        listEl.querySelectorAll('.client-search-item').forEach(item => {
+            item.addEventListener('click', async () => {
+                const nif = item.getAttribute('data-nif');
+                clienteModal.hide();
+                searchInput.value = '';
+                listEl.innerHTML = '';
+                await fetchCliente(nif);
+            });
+        });
+    }
 
-            const cliente = clientes.find(c => c.nif === data.id);
-            if (!cliente) return null;
+    searchInput.addEventListener('input', () => renderList(searchInput.value.trim()));
 
-            const term = params.term.toLowerCase();
-            // Busca en varios campos
-            if (
-                cliente.nombre.toLowerCase().includes(term) ||
-                cliente.nif.toLowerCase().includes(term)
-            ) {
-                return data;
-            }
-
-            return null;
-        }
-    });
-
-}
-
-// Función principal para manejar la selección de cliente
-export function handleClienteSelection($select, clienteModal) {
-    document.getElementById('client-form').addEventListener('submit', async function (e) {
-        e.preventDefault();
-        const selectedClient = $select.val();
-        if (!selectedClient) return;
-
-        clienteModal.hide();
-        // Llamada a API
-        await fetchCliente(selectedClient);
+    // Al abrir el modal, resetear y enfocar
+    document.getElementById('clienteModal').addEventListener('shown.bs.modal', () => {
+        searchInput.value = '';
+        renderList();
+        searchInput.focus();
     });
 }
 
@@ -80,7 +56,6 @@ export async function storeClientesList() {
     const data = await fetchClientesList(token); // <-- await aquí
     if (data) {
         localStorage.setItem('clientes', JSON.stringify(data));
-        renderClientesSelect($('#client-select'));
     }
 }
 

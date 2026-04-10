@@ -1844,6 +1844,53 @@ a.contact-value:hover {
     transform: scale(0.99);
 }
 
+/* Client search list (modal) */
+.client-search-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--staff-border);
+    border-radius: 8px;
+}
+
+.client-search-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--staff-border);
+    transition: background 0.15s ease;
+    font-size: 0.88rem;
+}
+
+.client-search-item:last-child {
+    border-bottom: none;
+}
+
+.client-search-item:hover {
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.client-search-item strong {
+    color: var(--staff-text);
+}
+
+.client-search-item small {
+    color: var(--staff-text-muted);
+    font-size: 0.78rem;
+}
+
+.client-search-hint {
+    padding: 10px 14px;
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--staff-text-muted);
+    font-style: italic;
+}
+
 .search-empty {
     padding: 20px 16px;
     text-align: center;

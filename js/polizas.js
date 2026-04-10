@@ -239,9 +239,10 @@ export function renderPolizasCliente(d) {
         <div><small class="text-success fst-italic">Pólizas</small></div>
         <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
     `;
-    addMessageToChat('bot', html);
+    const msgEl = addMessageToChat('bot', html);
 
-    document.querySelectorAll('.ver-documentos-btn').forEach(btn => {
+    const container = msgEl || document;
+    container.querySelectorAll('.ver-documentos-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const poliza = e.currentTarget.getAttribute('data-poliza');
             renderDocumentos(poliza);

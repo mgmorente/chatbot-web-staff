@@ -21,6 +21,7 @@ export function addMessageToChat(type, message, thinking = false) {
     messageDiv.appendChild(textDiv);
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
+    return messageDiv;
 }
 
 export function addThinkingMessage() {

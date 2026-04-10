@@ -82,10 +82,11 @@ export function renderSiniestrosCliente(d = {}) {
         <div><small class="text-success fst-italic">Siniestros</small></div>
         <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
     `;
-    addMessageToChat('bot', html);
+    const msgEl = addMessageToChat('bot', html);
 
-    // Listeners
-    document.querySelectorAll('.ver-documentos-btn').forEach(btn => {
+    // Listeners solo del mensaje recién añadido
+    const container = msgEl || document;
+    container.querySelectorAll('.ver-documentos-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const siniestroId = e.currentTarget.getAttribute('data-siniestro');
             renderDocumentos(siniestroId);

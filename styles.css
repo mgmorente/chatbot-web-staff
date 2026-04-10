@@ -1177,10 +1177,16 @@ body {
     }
 
     .header-client-pill {
-        display: none;
+        max-width: 120px;
+        padding: 3px 10px;
+        font-size: 0.72rem;
     }
 
     .header-brand-name .header-badge {
+        display: none;
+    }
+
+    .btn-header.change-client {
         display: none;
     }
 

@@ -163,14 +163,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Modal enviar email ---
     function enviarEmail() {
-        const modal = new bootstrap.Modal(document.getElementById('emailClienteModal'));
-        modal.show();
-
         const data = localStorage.getItem('clienteData')
             ? JSON.parse(localStorage.getItem('clienteData'))
             : null;
 
-        document.getElementById('email_to').value = data.cliente.email;
+        if (!data || !data.cliente) {
+            clienteModal.show();
+            return;
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById('emailClienteModal'));
+        modal.show();
+        document.getElementById('email_to').value = data.cliente.email || '';
     }
 
     // --- Autocomplete ---
@@ -180,9 +184,15 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessageToChat('user', text);
         if (quickActionsVisible) hideQuickActions();
 
-        // Comandos locales especiales
+        // Comandos locales especiales (no requieren cliente)
         if (command === '_recientes') { renderClientesRecientes(); return; }
         if (command === '_help') { renderHelp(); return; }
+
+        // Verificar que hay cliente seleccionado (excepto cambiar_cliente)
+        if (!getSelectedClient() && command !== 'cambiar_cliente') {
+            clienteModal.show();
+            return;
+        }
 
         // Ejecutar comando directamente (no va al backend)
         handleCommand({ command });
@@ -452,9 +462,8 @@ document.addEventListener('DOMContentLoaded', () => {
     $('#presiniestro-poliza-select').on('change', function (e) {
         let valor = $(this).val();
 
-        const polizas = localStorage.getItem('clienteData')
-            ? JSON.parse(localStorage.getItem('clienteData')).polizas
-            : [];
+        const cd = JSON.parse(localStorage.getItem('clienteData') || 'null');
+        const polizas = cd?.polizas || [];
 
         const poliza = polizas.find(p => p.poliza === valor);
         if (!poliza) return;
@@ -499,7 +508,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const nif = JSON.parse(localStorage.getItem('clienteData')).cliente.nif;
+        const clienteData = JSON.parse(localStorage.getItem('clienteData') || 'null');
+        if (!clienteData?.cliente?.nif) return;
+        const nif = clienteData.cliente.nif;
         const movil = $('#movil').val().trim();
         const email = $('#email').val().trim();
 
@@ -613,8 +624,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const clienteData = JSON.parse(localStorage.getItem('clienteData') || 'null');
+        if (!clienteData?.cliente?.nif) return;
         const data = {
-            nif: JSON.parse(localStorage.getItem('clienteData')).cliente.nif,
+            nif: clienteData.cliente.nif,
             subject: $("#agenda-asunto").val(),
             start: $("#agenda-datetime").val(),
             tipo: 'cita',

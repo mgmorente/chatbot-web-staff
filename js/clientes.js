@@ -85,22 +85,24 @@ export async function storeClientesList() {
 }
 
 export async function recargarDatosCliente() {
-    const nif = JSON.parse(localStorage.getItem('clienteData')).cliente.nif;
-    await fetchCliente(nif);
+    const data = localStorage.getItem('clienteData')
+        ? JSON.parse(localStorage.getItem('clienteData'))
+        : null;
+    if (!data || !data.cliente) return;
+    await fetchCliente(data.cliente.nif);
 }
 
 export function renderModCliente() {
     const data = localStorage.getItem('clienteData')
         ? JSON.parse(localStorage.getItem('clienteData'))
         : null;
+    if (!data || !data.cliente) return;
 
     document.getElementById('movil_now').value = data.cliente.telefono || '';
     document.getElementById('email_now').value = data.cliente.email || '';
 
     const modal = new bootstrap.Modal(document.getElementById('modClienteModal'));
     modal.show();
-
-    
 }
 
 // Llamada a la API para obtener los datos del cliente

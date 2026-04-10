@@ -55,7 +55,12 @@ export function getAgenda() {
 }
 
 export function getSelectedClient() {
-    return localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')).cliente.nombre : null;
+    try {
+        const data = JSON.parse(localStorage.getItem('clienteData'));
+        return data?.cliente?.nombre || null;
+    } catch {
+        return null;
+    }
 }
 
 export function getUser() {

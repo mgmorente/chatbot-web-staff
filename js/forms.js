@@ -131,7 +131,7 @@ export function renderAgendaInline() {
             minuteIncrement: 15,
             disableMobile: true,
             appendTo: document.body,
-            position: 'above',
+            position: 'auto',
             onReady(_, __, instance) {
                 const btn = document.createElement('button');
                 btn.type = 'button';
@@ -139,6 +139,22 @@ export function renderAgendaInline() {
                 btn.className = 'flatpickr-confirm-btn';
                 btn.addEventListener('click', () => instance.close());
                 instance.calendarContainer.appendChild(btn);
+            },
+            onOpen(_, __, instance) {
+                // Asegurar que el calendario sea completamente visible
+                requestAnimationFrame(() => {
+                    const cal = instance.calendarContainer;
+                    if (!cal) return;
+                    const rect = cal.getBoundingClientRect();
+                    // Si el top queda fuera de la pantalla, reposicionar abajo
+                    if (rect.top < 0) {
+                        cal.style.top = '8px';
+                    }
+                    // Si el bottom queda fuera de la pantalla, reposicionar arriba
+                    if (rect.bottom > window.innerHeight) {
+                        cal.style.top = (window.innerHeight - rect.height - 8) + 'px';
+                    }
+                });
             },
         });
     }
@@ -408,7 +424,20 @@ export function renderPresiniestroInline() {
             maxDate: 'today',
             disableMobile: true,
             appendTo: document.body,
-            position: 'above',
+            position: 'auto',
+            onOpen(_, __, instance) {
+                requestAnimationFrame(() => {
+                    const cal = instance.calendarContainer;
+                    if (!cal) return;
+                    const rect = cal.getBoundingClientRect();
+                    if (rect.top < 0) {
+                        cal.style.top = '8px';
+                    }
+                    if (rect.bottom > window.innerHeight) {
+                        cal.style.top = (window.innerHeight - rect.height - 8) + 'px';
+                    }
+                });
+            },
         });
     }
 

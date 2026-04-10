@@ -27,19 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('resize', setAppHeight);
     }
 
-    // --- Tema: cargar preferencia guardada ---
-    const savedTheme = localStorage.getItem('staff-theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-
-    function toggleTheme() {
-        const current = document.documentElement.getAttribute('data-theme') || 'dark';
-        const next = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('staff-theme', next);
-    }
-
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
     // --- Comprobar sesión: redirigir a login si no hay token ---
     const tokenData = getStoredToken();
     let userToken = tokenData?.token || '';

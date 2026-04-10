@@ -1,16 +1,13 @@
-// js/siniestros.js
 import { addMessageToChat } from './chat.js';
-import { renderDocumentos } from './docs.js'; // importa tu función
+import { renderDocumentos } from './docs.js';
 
-// Renderiza la lista de siniestros con botón para ver trámites
 export function renderSiniestrosCliente(d = {}) {
-    const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
-    if (!data || !data.siniestros || !data.siniestros.length) {
-        addMessageToChat('bot', '<div>No hay siniestros disponibles.</div>');
+    const data = JSON.parse(localStorage.getItem('clienteData') || 'null');
+    if (!data?.siniestros?.length) {
+        addMessageToChat('bot', '<div class="data-empty"><i class="bi bi-shield-x"></i> No hay siniestros disponibles</div>');
         return;
     }
 
-    // Filtrar por estado si existe d.args.estado
     let siniestros = data.siniestros;
     if (d?.args?.estado) {
         const estadoBuscado = d.args.estado.toLowerCase();
@@ -18,24 +15,20 @@ export function renderSiniestrosCliente(d = {}) {
     }
 
     if (!siniestros.length) {
-        addMessageToChat('bot', `<div>No hay siniestros con estado "${d.args.estado}".</div>`);
+        addMessageToChat('bot', `<div class="data-empty"><i class="bi bi-check-circle"></i> No hay siniestros con estado "${d.args.estado}"</div>`);
         return;
     }
 
-    const htmlParts = siniestros.map(s => {
-        const estado = s.estado || 'Desconocido';
-        const textoClase = estado.toLowerCase() === 'cerrado' ? 'text-secondary' : '';
+    const items = siniestros.map(s => {
+        const cerrado = (s.estado || '').toLowerCase() === 'cerrado';
+        const tramites = data.tramites ? data.tramites.filter(t => t.siniestro == s.id) : [];
+        const tieneDocs = data.documentos?.some(doc => doc.entidad.toLowerCase() === 'siniestro' && doc.documento == s.id);
 
-        // comprobar si hay trámites o documentos para este siniestro
-        const tramitesSiniestro = data.tramites ? data.tramites.filter(t => t.siniestro == s.id) : [];
-        const tieneDocs = data.documentos && data.documentos.some(d => d.entidad.toLowerCase() === 'siniestro' && d.documento == s.id);
-
-        // Construir timeline de trámites plegable
         let timelineHtml = '';
-        if (tramitesSiniestro.length) {
-            const items = tramitesSiniestro.map(t => {
+        if (tramites.length) {
+            const timelineItems = tramites.map(t => {
                 const adjuntosJson = t.adjuntos ? JSON.parse(t.adjuntos) : null;
-                const adjuntoHtml = adjuntosJson && adjuntosJson.descripcion
+                const adjuntoHtml = adjuntosJson?.descripcion
                     ? `<span class="timeline-adjunto"><i class="bi bi-paperclip"></i> ${adjuntosJson.descripcion}</span>`
                     : '';
                 return `
@@ -51,113 +44,100 @@ export function renderSiniestrosCliente(d = {}) {
             }).join('');
             timelineHtml = `
                 <details class="siniestro-timeline-details">
-                    <summary class="timeline-toggle"><i class="bi bi-clock-history"></i> Trámites (${tramitesSiniestro.length})</summary>
-                    <div class="siniestro-timeline">${items}</div>
+                    <summary class="timeline-toggle"><i class="bi bi-clock-history"></i> Trámites (${tramites.length})</summary>
+                    <div class="siniestro-timeline">${timelineItems}</div>
                 </details>`;
         }
 
         return `
-            <li class="list-group-item ${textoClase}">
-                <div class="d-flex justify-content-between align-items-center">
-                    <small>
-                        <strong>${s.id || 'N/D'}</strong> · ${s.compania || 'N/D'}
-                    </small>
-                    <div>
-                        ${tieneDocs ? `<span class="badge text-bg-secondary ver-documentos-btn" role="button" data-siniestro="${s.id}">Docs</span>` : ''}
-                        ${textoClase ? `<span class="badge text-bg-danger"><i class="bi bi-lock"></i></span>` : ''}
-                    </div>
+        <div class="data-card${cerrado ? ' data-card--muted' : ''}">
+            <div class="data-card__icon"><i class="bi ${cerrado ? 'bi-lock' : 'bi-exclamation-triangle'}"></i></div>
+            <div class="data-card__body">
+                <div class="data-card__title">${s.id || 'N/D'} <span class="data-card__sep">·</span> ${s.compania || 'N/D'}</div>
+                <div class="data-card__meta">
+                    <span><i class="bi bi-calendar3"></i> ${s.fecha_apertura || 'N/D'}</span>
+                    ${s.causa ? `<span>${s.causa}</span>` : ''}
+                    <span>Póliza ${s.cia_poliza || 'N/D'}</span>
                 </div>
-                <small class="d-block mt-1">
-                    <i class="bi bi-calendar me-2"></i>Apertura: ${s.fecha_apertura || 'N/D'}
-                    ${s.causa ? ' · Causa: ' + s.causa : ''} ·
-                    Póliza: ${s.cia_poliza || 'N/D'}
-                </small>
+                <div class="data-card__status">${cerrado
+                    ? '<span class="status-dot status-dot--ko"></span> Cerrado'
+                    : '<span class="status-dot status-dot--ok"></span> Abierto'
+                }</div>
                 ${timelineHtml}
-                <div class="documentos-container" id="documentos-${s.id}"></div>
-            </li>
-        `;
-    });
+            </div>
+            ${tieneDocs ? `<button class="data-card__btn ver-documentos-btn" data-siniestro="${s.id}" title="Ver documentos"><i class="bi bi-folder2-open"></i></button>` : ''}
+        </div>`;
+    }).join('');
 
+    const count = siniestros.length;
     const html = `
-        <div><small class="text-success fst-italic">Siniestros</small></div>
-        <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
-    `;
-    const msgEl = addMessageToChat('bot', html);
+        <div class="data-panel">
+            <div class="data-panel__header"><i class="bi bi-exclamation-triangle"></i> Siniestros <span class="data-panel__count">${count}</span></div>
+            ${items}
+        </div>`;
 
-    // Listeners solo del mensaje recién añadido
+    const msgEl = addMessageToChat('bot', html);
     const container = msgEl || document;
     container.querySelectorAll('.ver-documentos-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const siniestroId = e.currentTarget.getAttribute('data-siniestro');
-            renderDocumentos(siniestroId);
+            e.stopPropagation();
+            renderDocumentos(e.currentTarget.dataset.siniestro);
         });
     });
 }
 
-
-
-// Renderiza los trámites, opcionalmente por siniestro
 export function renderSiniestrosTramites(siniestroId = null) {
-    const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
-    if (!data || !data.tramites || !data.tramites.length) {
-        addMessageToChat('bot', '<div>No hay trámites disponibles.</div>');
+    const data = JSON.parse(localStorage.getItem('clienteData') || 'null');
+    if (!data?.tramites?.length) {
+        addMessageToChat('bot', '<div class="data-empty"><i class="bi bi-clock-history"></i> No hay trámites disponibles</div>');
         return;
     }
 
-    // Filtrar por siniestro si se pasa un ID
     const tramitesFiltrados = siniestroId
         ? data.tramites.filter(t => t.siniestro == siniestroId)
         : data.tramites;
 
     if (!tramitesFiltrados.length) {
-        addMessageToChat('bot', `<div>No hay trámites disponibles${siniestroId ? ' para el siniestro ' + siniestroId : ''}.</div>`);
+        addMessageToChat('bot', `<div class="data-empty"><i class="bi bi-clock-history"></i> No hay trámites${siniestroId ? ' para el siniestro ' + siniestroId : ''}</div>`);
         return;
     }
 
-    // Agrupar por siniestro
     const grouped = tramitesFiltrados.reduce((acc, t) => {
         if (!acc[t.siniestro]) acc[t.siniestro] = [];
         acc[t.siniestro].push(t);
         return acc;
     }, {});
 
-    // Construir todo el HTML en una sola cadena
-    let html = '<div><small class="text-success fst-italic">Trámites</small></div>'; // texto encima de todo
-
+    let panels = '';
     Object.entries(grouped).forEach(([siniestro, tramites]) => {
-        const tramitesHtml = tramites.map(t => {
+        const items = tramites.map(t => {
             const adjuntosJson = t.adjuntos ? JSON.parse(t.adjuntos) : null;
-
             return `
-                <li class="list-group-item">
-                    <small class="d-block text-muted">${t.fecha_creacion}</small>
-                    <small class="d-block">${t.traza}</small>
-                    <small class="d-block">
-                        <div class="p-2 rounded bg-light">
-                            ${t.mensaje}
-                            ${adjuntosJson && adjuntosJson.descripcion
-                                ? `<div>
-                                        <a href="#" class="ver-adjuntos" title="Ver adjuntos">
-                                            <i class="bi bi-paperclip"></i> ${adjuntosJson.descripcion}
-                                        </a>
-                                   </div>`
-                                : ''}
-                        </div>
-                    </small>
-                </li>
-            `;
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">${t.fecha_creacion}</div>
+                        <div class="timeline-traza">${t.traza}</div>
+                        ${t.mensaje ? `<div class="timeline-mensaje">${t.mensaje}</div>` : ''}
+                        ${adjuntosJson?.descripcion ? `<span class="timeline-adjunto"><i class="bi bi-paperclip"></i> ${adjuntosJson.descripcion}</span>` : ''}
+                    </div>
+                </div>`;
         }).join('');
 
-        html += `
-            <div>
-                <div><small class="fw-bold">SINIESTRO ${siniestro}</small></div>
-                <ul class="list-group list-group-flush">${tramitesHtml}</ul>
-            </div>
-        `;
+        panels += `
+            <div class="data-card">
+                <div class="data-card__body" style="width:100%">
+                    <div class="data-card__title">Siniestro ${siniestro}</div>
+                    <div class="siniestro-timeline">${items}</div>
+                </div>
+            </div>`;
     });
 
-    // Llamada única a addMessageToChat
+    const html = `
+        <div class="data-panel">
+            <div class="data-panel__header"><i class="bi bi-clock-history"></i> Trámites</div>
+            ${panels}
+        </div>`;
+
     addMessageToChat('bot', html);
 }
-
-

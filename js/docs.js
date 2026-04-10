@@ -1,12 +1,13 @@
 // js/docs.js
 // documentos
 import { addMessageToChat } from './chat.js';
+import { initInlinePicker } from './forms.js';
 
 // Mostrar documentos filtrados directamente (usado desde polizas.js y siniestros.js al pulsar "Docs")
 export function renderDocumentos(id = null) {
-    const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
-    if (!data || !data.documentos || !data.documentos.length) {
-        addMessageToChat('bot', '<div>No hay documentos disponibles.</div>');
+    const data = JSON.parse(localStorage.getItem('clienteData') || 'null');
+    if (!data?.documentos?.length) {
+        addMessageToChat('bot', '<div class="data-empty"><i class="bi bi-folder-x"></i> No hay documentos disponibles</div>');
         return;
     }
 
@@ -15,37 +16,49 @@ export function renderDocumentos(id = null) {
         : data.documentos;
 
     if (!docsFiltrados.length) {
-        addMessageToChat('bot', '<div>No hay documentos disponibles.</div>');
+        addMessageToChat('bot', '<div class="data-empty"><i class="bi bi-folder-x"></i> No hay documentos disponibles</div>');
         return;
     }
 
     addMessageToChat('bot', buildDocsHTML(docsFiltrados));
 }
 
-// Flujo con selects: entidad → item → documentos
+// Flujo con pickers: entidad → item → documentos
 export function renderDocumentosConFiltro() {
-    const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
-    if (!data || !data.documentos || !data.documentos.length) {
-        addMessageToChat('bot', '<div>No hay documentos disponibles.</div>');
+    const data = JSON.parse(localStorage.getItem('clienteData') || 'null');
+    if (!data?.documentos?.length) {
+        addMessageToChat('bot', '<div class="data-empty"><i class="bi bi-folder-x"></i> No hay documentos disponibles</div>');
         return;
     }
 
     const allPolizas = data.polizas || [];
-    const siniestros = data.siniestros || [];
+    const allSiniestros = data.siniestros || [];
+
+    const entidadLabels = {
+        'cliente': 'Cliente', 'poliza': 'Póliza',
+        'siniestro': 'Siniestro', 'recibo': 'Recibo',
+    };
+    const entidadIcons = {
+        'cliente': 'bi-person', 'poliza': 'bi-shield-check',
+        'siniestro': 'bi-exclamation-triangle', 'recibo': 'bi-receipt',
+    };
 
     // Entidades que tienen documentos
     const entidades = [...new Set(data.documentos.map(d => d.entidad.toLowerCase()))];
+    const entidadItems = entidades.map(e => ({
+        _value: e,
+        label: entidadLabels[e] || e,
+        icon: entidadIcons[e] || 'bi-folder',
+        count: data.documentos.filter(d => d.entidad.toLowerCase() === e).length,
+    }));
 
-    const entidadLabels = {
-        'cliente': 'Cliente',
-        'poliza': 'Póliza',
-        'siniestro': 'Siniestro',
-        'recibo': 'Recibo',
-    };
-
-    const entidadOpts = entidades.map(e =>
-        `<option value="${e}">${entidadLabels[e] || e} (${data.documentos.filter(d => d.entidad.toLowerCase() === e).length})</option>`
-    ).join('');
+    const pickerHTML = `
+        <div class="inline-poliza-picker">
+            <input type="hidden" name="%%NAME%%" required>
+            <input type="text" class="inline-input inline-picker-search" autocomplete="off">
+            <ul class="inline-poliza-list inline-picker-list"></ul>
+            <div class="inline-picker-selected" style="display:none"></div>
+        </div>`;
 
     const html = `
         <div class="chat-inline-form">
@@ -53,16 +66,11 @@ export function renderDocumentosConFiltro() {
             <form class="js-docs-form" novalidate>
                 <div class="inline-form-group">
                     <label>Entidad</label>
-                    <select name="entidad" class="inline-input" required>
-                        <option value="">Selecciona una entidad</option>
-                        ${entidadOpts}
-                    </select>
+                    ${pickerHTML.replace('%%NAME%%', 'entidad')}
                 </div>
                 <div class="inline-form-group js-docs-item-group" style="display:none">
                     <label class="js-docs-item-label">Elemento</label>
-                    <select name="item" class="inline-input">
-                        <option value="">Todos</option>
-                    </select>
+                    ${pickerHTML.replace('%%NAME%%', 'item')}
                 </div>
                 <div class="inline-form-actions">
                     <button type="button" class="inline-btn-submit js-form-btn"><i class="bi bi-search"></i> Consultar</button>
@@ -74,60 +82,90 @@ export function renderDocumentosConFiltro() {
     const msgEl = addMessageToChat('bot', html);
     const container = msgEl || document;
     const form = container.querySelector('.js-docs-form');
-    const entidadSelect = form.querySelector('[name="entidad"]');
     const itemGroup = form.querySelector('.js-docs-item-group');
     const itemLabel = form.querySelector('.js-docs-item-label');
-    const itemSelect = form.querySelector('[name="item"]');
     const resultDiv = container.querySelector('.js-docs-result');
 
     // Bloquear Enter
-    form.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
+    form.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.target.classList.contains('inline-picker-search')) e.preventDefault();
+    });
 
-    // Al cambiar entidad → poblar segundo select
-    entidadSelect.addEventListener('change', () => {
-        const entidad = entidadSelect.value;
+    // Picker Entidad
+    const entidadPicker = initInlinePicker(
+        form.querySelectorAll('.inline-poliza-picker')[0],
+        entidadItems,
+        {
+            placeholder: 'Busca una entidad...',
+            searchFields: e => `${e.label} ${e._value}`,
+            renderItem: e => `<li class="inline-poliza-item inline-picker-item" data-value="${e._value}">
+                <i class="bi ${e.icon} me-1"></i> ${e.label} <span class="text-muted">(${e.count})</span>
+            </li>`,
+            renderChip: e => `<i class="bi ${e.icon} me-1"></i> ${e.label}`,
+        }
+    );
+
+    // Picker Item (se configura dinámicamente al elegir entidad)
+    const itemPicker = initInlinePicker(
+        form.querySelectorAll('.inline-poliza-picker')[1],
+        [],
+        {
+            placeholder: 'Busca...',
+            searchFields: i => i.label,
+            renderItem: i => `<li class="inline-poliza-item inline-picker-item" data-value="${i._value}">
+                ${i.label} <span class="text-muted">(${i.count})</span>
+            </li>`,
+            renderChip: i => i.label,
+        }
+    );
+
+    // Al elegir entidad → poblar picker de items
+    entidadPicker.onPick((entidad) => {
         resultDiv.innerHTML = '';
 
         if (!entidad) {
             itemGroup.style.display = 'none';
+            itemPicker.setItems([]);
             return;
         }
+
+        const key = entidad._value;
 
         // Cliente no tiene sub-items
-        if (entidad === 'cliente') {
+        if (key === 'cliente') {
             itemGroup.style.display = 'none';
+            itemPicker.setItems([]);
             return;
         }
 
-        const docsEntidad = data.documentos.filter(d => d.entidad.toLowerCase() === entidad);
+        const docsEntidad = data.documentos.filter(d => d.entidad.toLowerCase() === key);
         const docIds = [...new Set(docsEntidad.map(d => d.documento))];
 
-        itemLabel.textContent = entidadLabels[entidad] || entidad;
+        itemLabel.textContent = entidadLabels[key] || key;
 
-        let options = '<option value="">Todos</option>';
-        docIds.forEach(id => {
+        const subItems = docIds.map(id => {
             const count = docsEntidad.filter(d => d.documento == id).length;
-            let label = id;
-            if (entidad === 'poliza') {
+            let label = String(id);
+            if (key === 'poliza') {
                 const p = allPolizas.find(x => x.poliza == id);
-                label = p ? `${p.cia_poliza} · ${p.compania}` : id;
-            } else if (entidad === 'siniestro') {
-                const s = siniestros.find(x => x.id == id);
-                label = s ? `${id} · ${s.compania}` : id;
+                label = p ? `${p.cia_poliza} · ${p.compania}` : label;
+            } else if (key === 'siniestro') {
+                const s = allSiniestros.find(x => x.id == id);
+                label = s ? `${id} · ${s.compania}` : label;
             }
-            options += `<option value="${id}">${label} (${count})</option>`;
+            return { _value: id, label, count };
         });
 
-        itemSelect.innerHTML = options;
+        itemPicker.setItems(subItems);
         itemGroup.style.display = '';
     });
 
     // Botón consultar
     form.querySelector('.js-form-btn').addEventListener('click', () => {
-        const entidad = entidadSelect.value;
+        const entidad = entidadPicker.rawValue;
         if (!entidad) return;
 
-        const itemValue = itemSelect.value;
+        const itemValue = itemPicker.rawValue;
         let docsFiltrados;
 
         if (entidad === 'cliente') {
@@ -139,11 +177,11 @@ export function renderDocumentosConFiltro() {
         }
 
         if (!docsFiltrados.length) {
-            resultDiv.innerHTML = '<div class="mt-2" style="font-size:0.85rem;color:var(--staff-text-muted)">No hay documentos.</div>';
+            resultDiv.innerHTML = '<div class="data-empty" style="margin-top:8px"><i class="bi bi-folder-x"></i> No hay documentos</div>';
             return;
         }
 
-        resultDiv.innerHTML = '<div class="mt-2">' + buildDocsHTML(docsFiltrados) + '</div>';
+        resultDiv.innerHTML = '<div style="margin-top:8px">' + buildDocsHTML(docsFiltrados) + '</div>';
     });
 }
 
@@ -160,20 +198,19 @@ function buildDocsHTML(docs) {
     Object.entries(grouped).forEach(([key, items]) => {
         const [entidad, documento] = key.split('-');
         const itemsHtml = items.map(s => `
-            <li class="list-group-item">
-                <div class="d-flex justify-content-between w-100">
-                    <small><a href="#">${s.descripcion}</a></small>
-                    <span class="small text-muted">${s.fecha}</span>
+            <div class="data-card">
+                <div class="data-card__icon"><i class="bi bi-file-earmark-text"></i></div>
+                <div class="data-card__body">
+                    <div class="data-card__title">${s.descripcion}</div>
+                    <div class="data-card__meta"><span><i class="bi bi-calendar3"></i> ${s.fecha}</span></div>
                 </div>
-            </li>
-        `).join('');
+            </div>`).join('');
 
         html += `
-            <div>
-                <div><small class="fw-bold">${entidad.toUpperCase()} ${documento}</small></div>
-                <ul class="list-group list-group-flush">${itemsHtml}</ul>
-            </div>
-        `;
+            <div class="data-panel" style="margin-top:8px">
+                <div class="data-panel__header"><i class="bi bi-folder2-open"></i> ${entidad.toUpperCase()} ${documento} <span class="data-panel__count">${items.length}</span></div>
+                ${itemsHtml}
+            </div>`;
     });
 
     return html;

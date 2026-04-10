@@ -250,7 +250,7 @@ export function renderEmailInline() {
 
 // ===== PRESINIESTRO =====
 // Componente picker reutilizable: buscador con lista, teclado, chip seleccionado
-function initInlinePicker(container, items, { placeholder, renderItem, renderChip, searchFields }) {
+export function initInlinePicker(container, items, { placeholder, renderItem, renderChip, searchFields }) {
     const hidden = container.querySelector('input[type="hidden"]');
     const searchInput = container.querySelector('.inline-picker-search');
     const listEl = container.querySelector('.inline-picker-list');

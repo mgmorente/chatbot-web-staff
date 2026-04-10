@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PACCMAN Staff — Sin conexión</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0f1d15;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            text-align: center;
+            padding: 20px;
+        }
+        .offline-box {
+            max-width: 360px;
+        }
+        .offline-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.6;
+        }
+        h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        p {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #22c55e;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:hover { background: #16a34a; }
+    </style>
+</head>
+<body>
+    <div class="offline-box">
+        <div class="offline-icon">📡</div>
+        <h1>Sin conexión</h1>
+        <p>PACCMAN Staff necesita conexión a internet para funcionar. Comprueba tu conexión e inténtalo de nuevo.</p>
+        <button onclick="location.reload()">Reintentar</button>
+    </div>
+</body>
+</html>

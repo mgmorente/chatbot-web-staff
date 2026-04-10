@@ -1,16 +1,14 @@
 import { addMessageToChat } from './chat.js';
 import { getCompanias } from './storage.js';
 
-// Función para obtener y almacenar companias desde la API
 export async function storeCompaniasList() {
     const token = localStorage.getItem('userToken');
-    const data = await fetchCompaniasList(token); // <-- await aquí
+    const data = await fetchCompaniasList(token);
     if (data) {
         localStorage.setItem('companias', JSON.stringify(data));
     }
 }
 
-// Llamada a la API para obtener la lista de companias
 async function fetchCompaniasList(token) {
     try {
         const response = await fetch(`${ENV.API_URL}/companias`, {
@@ -22,7 +20,7 @@ async function fetchCompaniasList(token) {
                 'Device': ENV.DEVICE
             }
         });
-        if (!response.ok) throw new Error('Error al obtener datos de companias');
+        if (!response.ok) throw new Error('Error al obtener datos de compañías');
         return await response.json();
     } catch (err) {
         console.error(err);
@@ -33,45 +31,44 @@ async function fetchCompaniasList(token) {
 export function renderTelefonosCompanias(d = []) {
     const data = getCompanias();
 
-    // Filtrar por d.args.compania si existe (coincidencia parcial, case-insensitive)
     const filteredData = (d?.args?.compania)
         ? data.filter(c => c.nombre.toLowerCase().includes(d.args.compania.toLowerCase()))
         : data;
 
-    // Agrupar por nombre
     const groupedData = filteredData.reduce((acc, s) => {
         if (!acc[s.nombre]) acc[s.nombre] = [];
         acc[s.nombre].push(s);
         return acc;
     }, {});
 
-    // Construir HTML por grupo
-    const htmlParts = Object.entries(groupedData).map(([nombre, items]) => {
-        const itemsHtml = items.map(i => `
-            <div class="small text-secondary mb-1">
-                ${i.area} · <a href="tel:${i.telefono}">${i.telefono}</a>
-            </div>
-        `).join('');
+    if (!Object.keys(groupedData).length) {
+        addMessageToChat('bot', `<div class="data-empty"><i class="bi bi-building-x"></i> No se encontraron compañías${d?.args?.compania ? ` que coincidan con "${d.args.compania}"` : ''}</div>`);
+        return;
+    }
+
+    const items = Object.entries(groupedData).map(([nombre, phones]) => {
+        const phonesHtml = phones.map(i => `
+            <div class="data-card__phone">
+                <span class="data-card__phone-area">${i.area}</span>
+                <a href="tel:${i.telefono}" class="data-card__phone-num"><i class="bi bi-telephone"></i> ${i.telefono}</a>
+            </div>`).join('');
 
         return `
-            <li class="list-group-item">
-                <strong class="small d-block mb-1">${nombre}</strong>
-                ${itemsHtml}
-            </li>
-        `;
-    });
+        <div class="data-card">
+            <div class="data-card__icon"><i class="bi bi-building"></i></div>
+            <div class="data-card__body">
+                <div class="data-card__title">${nombre}</div>
+                ${phonesHtml}
+            </div>
+        </div>`;
+    }).join('');
 
+    const count = Object.keys(groupedData).length;
     const html = `
-        <div><small class="text-success fst-italic">Teléfonos compañías</small></div>
-        <ul class="list-group list-group-flush">${htmlParts.join('')}</ul>
-    `;
+        <div class="data-panel">
+            <div class="data-panel__header"><i class="bi bi-telephone"></i> Compañías <span class="data-panel__count">${count}</span></div>
+            ${items}
+        </div>`;
 
-    if (htmlParts.length === 0) {
-        addMessageToChat('bot', `<div class="text-muted small">No se encontraron compañías que coincidan con "${d.args.compania}"</div>`);
-    } else {
-        addMessageToChat('bot', html);
-    }
+    addMessageToChat('bot', html);
 }
-
-
-

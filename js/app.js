@@ -90,6 +90,22 @@ document.addEventListener('DOMContentLoaded', () => {
         renderQuickActions();
         const agendaOk = e.detail?.agendaDisponible ?? (localStorage.getItem('agendaDisponible') === '1');
         updateAgendaAvailability(agendaOk);
+
+        // Aviso de recibos pendientes
+        const data = JSON.parse(localStorage.getItem('clienteData') || 'null');
+        if (data?.recibos) {
+            const pendientes = data.recibos.filter(r => r.situacion !== 'Cobrado');
+            if (pendientes.length > 0) {
+                const total = pendientes.reduce((sum, r) => sum + (parseFloat(r.prima_total) || 0), 0);
+                addMessageToChat('bot', `
+                    <div class="alert-recibos">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>Este cliente tiene <strong>${pendientes.length} recibo${pendientes.length > 1 ? 's' : ''} pendiente${pendientes.length > 1 ? 's' : ''}</strong> por un total de <strong>${total.toFixed(2)}€</strong></span>
+                        <button class="alert-recibos-btn js-ver-pendientes">Ver recibos</button>
+                    </div>
+                `);
+            }
+        }
     });
 
     function updateAgendaAvailability(disponible) {
@@ -414,6 +430,90 @@ document.addEventListener('DOMContentLoaded', () => {
         addMessageToChat('bot', html);
     }
 
+    // --- Instalar App (PWA) ---
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    document.getElementById('installApp').addEventListener('click', (e) => {
+        e.preventDefault();
+
+        // Cerrar sidebar en móvil
+        if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (overlay) overlay.remove();
+        }
+
+        // Si hay prompt nativo (Chrome/Edge Android/Desktop)
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+            return;
+        }
+
+        // Detectar plataforma y mostrar instrucciones
+        const ua = navigator.userAgent;
+        const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isAndroid = /Android/.test(ua);
+        const isMac = /Macintosh/.test(ua) && !isIOS;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+
+        let html = '';
+        if (isStandalone) {
+            html = `
+                <div class="help-panel">
+                    <div class="help-panel-header"><i class="bi bi-check-circle"></i> <span>App ya instalada</span></div>
+                    <div class="help-section">
+                        <div class="help-item">Ya estás usando PACCMAN como aplicación instalada.</div>
+                    </div>
+                </div>`;
+        } else if (isIOS) {
+            html = `
+                <div class="help-panel">
+                    <div class="help-panel-header"><i class="bi bi-phone"></i> <span>Instalar en iPhone / iPad</span></div>
+                    <div class="help-section">
+                        <div class="help-item"><strong>1.</strong> Abre esta web en <strong>Safari</strong> (no funciona desde Chrome u otros navegadores en iOS)</div>
+                        <div class="help-item"><strong>2.</strong> Pulsa el botón <strong>Compartir</strong> <i class="bi bi-box-arrow-up"></i> (abajo en iPhone, arriba en iPad)</div>
+                        <div class="help-item"><strong>3.</strong> Desplázate y selecciona <strong>"Añadir a pantalla de inicio"</strong></div>
+                        <div class="help-item"><strong>4.</strong> Pulsa <strong>Añadir</strong> — aparecerá el icono de PACCMAN en tu pantalla</div>
+                    </div>
+                    <div class="help-tip"><i class="bi bi-info-circle"></i> Requiere iOS 16.4 o superior para la mejor experiencia.</div>
+                </div>`;
+        } else if (isAndroid) {
+            html = `
+                <div class="help-panel">
+                    <div class="help-panel-header"><i class="bi bi-phone"></i> <span>Instalar en Android</span></div>
+                    <div class="help-section">
+                        <div class="help-item"><strong>1.</strong> Abre esta web en <strong>Chrome</strong></div>
+                        <div class="help-item"><strong>2.</strong> Pulsa el menú <i class="bi bi-three-dots-vertical"></i> (arriba a la derecha)</div>
+                        <div class="help-item"><strong>3.</strong> Selecciona <strong>"Instalar aplicación"</strong> o <strong>"Añadir a pantalla de inicio"</strong></div>
+                        <div class="help-item"><strong>4.</strong> Confirma — la app se instalará como una aplicación nativa</div>
+                    </div>
+                    <div class="help-tip"><i class="bi bi-info-circle"></i> Si no ves la opción, asegúrate de estar usando Chrome actualizado.</div>
+                </div>`;
+        } else {
+            html = `
+                <div class="help-panel">
+                    <div class="help-panel-header"><i class="bi bi-laptop"></i> <span>Instalar en escritorio</span></div>
+                    <div class="help-section">
+                        <div class="help-section-title">Chrome / Edge</div>
+                        <div class="help-item"><strong>1.</strong> Haz clic en el icono de instalación <i class="bi bi-download"></i> en la barra de direcciones (a la derecha)</div>
+                        <div class="help-item"><strong>2.</strong> Confirma <strong>"Instalar"</strong> — se abrirá como ventana independiente</div>
+                    </div>
+                    <div class="help-section">
+                        <div class="help-section-title">Safari (macOS Sonoma+)</div>
+                        <div class="help-item"><strong>1.</strong> Ve a <strong>Archivo → Añadir al Dock</strong></div>
+                        <div class="help-item"><strong>2.</strong> La app aparecerá en tu Dock como aplicación</div>
+                    </div>
+                    <div class="help-tip"><i class="bi bi-info-circle"></i> Firefox escritorio no soporta la instalación de aplicaciones web.</div>
+                </div>`;
+        }
+        addMessageToChat('bot', html);
+    });
+
     // --- Logout ---
     document.getElementById('logout').addEventListener('click', (e) => {
         e.preventDefault();
@@ -429,6 +529,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target && e.target.classList.contains('email-cliente')) {
             e.preventDefault();
             renderEmailInline();
+        }
+    });
+
+    // --- Ver recibos pendientes (desde alerta) ---
+    document.addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('js-ver-pendientes')) {
+            e.preventDefault();
+            renderRecibosCliente({ soloPendientes: true });
         }
     });
 

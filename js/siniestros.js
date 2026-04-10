@@ -27,8 +27,30 @@ export function renderSiniestrosCliente(d = {}) {
         const textoClase = estado.toLowerCase() === 'cerrado' ? 'text-secondary' : '';
 
         // comprobar si hay trámites o documentos para este siniestro
-        const tieneTramites = data.tramites && data.tramites.some(t => t.siniestro == s.id);
+        const tramitesSiniestro = data.tramites ? data.tramites.filter(t => t.siniestro == s.id) : [];
         const tieneDocs = data.documentos && data.documentos.some(d => d.entidad.toLowerCase() === 'siniestro' && d.documento == s.id);
+
+        // Construir timeline de trámites inline
+        let timelineHtml = '';
+        if (tramitesSiniestro.length) {
+            const items = tramitesSiniestro.map(t => {
+                const adjuntosJson = t.adjuntos ? JSON.parse(t.adjuntos) : null;
+                const adjuntoHtml = adjuntosJson && adjuntosJson.descripcion
+                    ? `<span class="timeline-adjunto"><i class="bi bi-paperclip"></i> ${adjuntosJson.descripcion}</span>`
+                    : '';
+                return `
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">${t.fecha_creacion || ''}</div>
+                            <div class="timeline-traza">${t.traza || ''}</div>
+                            ${t.mensaje ? `<div class="timeline-mensaje">${t.mensaje}</div>` : ''}
+                            ${adjuntoHtml}
+                        </div>
+                    </div>`;
+            }).join('');
+            timelineHtml = `<div class="siniestro-timeline">${items}</div>`;
+        }
 
         return `
             <li class="list-group-item ${textoClase}">
@@ -37,17 +59,16 @@ export function renderSiniestrosCliente(d = {}) {
                         <strong>${s.id || 'N/D'}</strong> · ${s.compania || 'N/D'}
                     </small>
                     <div>
-                        ${tieneTramites ? `<span class="badge text-bg-primary ver-tramites-btn" role="button" data-siniestro="${s.id}">Trámites</span>` : ''}
                         ${tieneDocs ? `<span class="badge text-bg-secondary ver-documentos-btn" role="button" data-siniestro="${s.id}">Docs</span>` : ''}
-                        ${textoClase ? `<span class="badge text-bg-danger"><i class="bi bi-lock"></i></span>` : ''}  
+                        ${textoClase ? `<span class="badge text-bg-danger"><i class="bi bi-lock"></i></span>` : ''}
                     </div>
                 </div>
                 <small class="d-block mt-1">
-                    <i class="bi bi-calendar me-2"></i>Apertura: ${s.fecha_apertura || 'N/D'} 
-                    ${s.causa ? ' · Causa: ' + s.causa : ''} · 
+                    <i class="bi bi-calendar me-2"></i>Apertura: ${s.fecha_apertura || 'N/D'}
+                    ${s.causa ? ' · Causa: ' + s.causa : ''} ·
                     Póliza: ${s.cia_poliza || 'N/D'}
                 </small>
-                <div class="tramites-container" id="tramites-${s.id}"></div>
+                ${timelineHtml}
                 <div class="documentos-container" id="documentos-${s.id}"></div>
             </li>
         `;
@@ -60,13 +81,6 @@ export function renderSiniestrosCliente(d = {}) {
     addMessageToChat('bot', html);
 
     // Listeners
-    document.querySelectorAll('.ver-tramites-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const siniestroId = e.currentTarget.getAttribute('data-siniestro');
-            renderSiniestrosTramites(siniestroId);
-        });
-    });
-
     document.querySelectorAll('.ver-documentos-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const siniestroId = e.currentTarget.getAttribute('data-siniestro');

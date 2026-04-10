@@ -1832,6 +1832,83 @@ a.contact-value:hover {
     color: var(--staff-text-muted);
 }
 
+/* ---- Siniestros Timeline ---- */
+.siniestro-timeline {
+    margin-top: 10px;
+    padding-left: 14px;
+    border-left: 2px solid var(--staff-accent);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding: 6px 0 10px 16px;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -7px;
+    top: 12px;
+    width: 10px;
+    height: 10px;
+    background: var(--staff-accent);
+    border-radius: 50%;
+    border: 2px solid var(--staff-surface);
+    box-shadow: 0 0 0 2px var(--staff-accent);
+}
+
+.timeline-item:first-child .timeline-dot {
+    width: 12px;
+    height: 12px;
+    left: -8px;
+    top: 11px;
+}
+
+.timeline-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.timeline-date {
+    font-size: 0.72rem;
+    color: var(--staff-text-muted);
+    font-weight: 500;
+}
+
+.timeline-traza {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--staff-text);
+}
+
+.timeline-mensaje {
+    font-size: 0.78rem;
+    color: var(--staff-text-muted);
+    background: var(--staff-primary);
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-top: 2px;
+    line-height: 1.4;
+}
+
+.timeline-adjunto {
+    font-size: 0.75rem;
+    color: var(--staff-accent);
+    margin-top: 2px;
+}
+
+.timeline-adjunto i {
+    font-size: 0.7rem;
+    margin-right: 2px;
+}
+
 /* ============================================
    Help Panel (esquema funcionalidades)
    ============================================ */

@@ -61,6 +61,7 @@ body {
     overflow: hidden;
     height: 100vh;
     height: 100dvh;
+    overscroll-behavior-y: contain;
 }
 
 /* ============================================

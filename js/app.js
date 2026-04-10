@@ -10,6 +10,7 @@ import { renderAgenda } from './agenda.js';
 import { renderSubirDocumento, renderDocumentos } from './docs.js';
 import { updateHeaderClient } from './header.js';
 import { showLoading } from './utils.js';
+import { initAutocomplete } from './autocomplete.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -171,6 +172,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('email_to').value = data.cliente.email;
     }
+
+    // --- Autocomplete ---
+    const chatInput = document.getElementById('chat-message');
+    initAutocomplete(chatInput, (text) => {
+        // Auto-send: simular envío del form
+        chatInput.value = text;
+        document.getElementById('chat-form').dispatchEvent(new Event('submit', { cancelable: true }));
+    });
 
     // --- Form chat ---
     document.getElementById('chat-form').addEventListener('submit', async (e) => {

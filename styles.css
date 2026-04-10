@@ -1179,7 +1179,7 @@ body {
     }
 
     .header-client-pill {
-        max-width: 180px;
+        max-width: calc(100vw - 160px);
         padding: 3px 10px;
         font-size: 0.75rem;
     }

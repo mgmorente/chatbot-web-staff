@@ -10,6 +10,14 @@ export function addMessageToChat(type, message, thinking = false) {
     if (type === 'bot') textDiv.classList.add('w-100');
     textDiv.innerHTML = message;
 
+    // Hora del mensaje (no en thinking)
+    if (!thinking) {
+        const time = document.createElement('span');
+        time.className = 'message-time';
+        time.textContent = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        textDiv.appendChild(time);
+    }
+
     messageDiv.appendChild(textDiv);
     chatBox.appendChild(messageDiv);
     chatBox.scrollTop = chatBox.scrollHeight;

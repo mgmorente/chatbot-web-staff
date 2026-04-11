@@ -73,9 +73,26 @@ let activeShareMenu = null;
 
 function getMessageText(textDiv) {
     const clone = textDiv.cloneNode(true);
-    // Eliminar footer, botones y elementos no textuales
-    clone.querySelectorAll('.message-footer, .message-share-btn, .share-menu, button, .message-time').forEach(el => el.remove());
-    return (clone.innerText || clone.textContent || '').trim();
+    // Eliminar elementos no deseados
+    clone.querySelectorAll('.message-footer, .message-share-btn, .share-menu, button, input, select, .message-time, .timeline-dot').forEach(el => el.remove());
+
+    // Añadir separadores antes de procesar
+    clone.querySelectorAll('.data-panel__header').forEach(el => { el.prepend('\n━━━ '); el.append(' ━━━\n'); });
+    clone.querySelectorAll('.data-card').forEach(el => el.prepend('\n'));
+    clone.querySelectorAll('.data-card__sep').forEach(el => el.textContent = ' · ');
+    clone.querySelectorAll('.data-card__meta span').forEach(el => el.prepend(' | '));
+    clone.querySelectorAll('.data-card__count, .data-panel__count').forEach(el => { el.prepend('('); el.append(')'); });
+    clone.querySelectorAll('.timeline-item').forEach(el => el.prepend('\n  ▸ '));
+    clone.querySelectorAll('.inline-form-summary div').forEach(el => el.prepend('\n  • '));
+
+    const raw = (clone.innerText || clone.textContent || '');
+
+    // Limpiar espacios múltiples y líneas vacías excesivas
+    return raw
+        .replace(/[ \t]+/g, ' ')           // múltiples espacios → uno
+        .replace(/ ?\n ?/g, '\n')           // espacios alrededor de saltos
+        .replace(/\n{3,}/g, '\n\n')         // máximo 2 saltos seguidos
+        .trim();
 }
 
 function toggleShareMenu(btn, textDiv) {

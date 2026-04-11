@@ -655,92 +655,14 @@ body {
     border-bottom-color: var(--staff-accent-hover);
 }
 
-.message-footer {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    margin-top: 4px;
-    position: relative;
-}
-
 .message-time {
+    display: block;
+    text-align: right;
     font-size: 10px;
     opacity: 0.55;
+    margin-top: 4px;
     line-height: 1;
 }
-
-.message-share-btn {
-    background: none;
-    border: none;
-    color: var(--staff-text-muted);
-    cursor: pointer;
-    font-size: 13px;
-    padding: 2px;
-    opacity: 0;
-    transition: opacity 0.2s, color 0.2s;
-    line-height: 1;
-}
-
-.message:hover .message-share-btn,
-.message-share-btn:focus {
-    opacity: 0.6;
-}
-
-.message-share-btn:hover {
-    opacity: 1;
-    color: var(--staff-accent);
-}
-
-/* Menú compartir */
-.share-menu {
-    position: absolute;
-    bottom: calc(100% + 4px);
-    right: 0;
-    background: var(--staff-surface);
-    border: 1px solid var(--staff-border);
-    border-radius: 12px;
-    padding: 6px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 170px;
-    z-index: 100;
-    animation: shareMenuIn 0.15s ease-out;
-}
-
-@keyframes shareMenuIn {
-    from { opacity: 0; transform: translateY(4px) scale(0.96); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.share-menu-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    background: transparent;
-    border-radius: 8px;
-    font-size: 13px;
-    font-family: inherit;
-    color: var(--staff-text);
-    cursor: pointer;
-    transition: background 0.12s;
-    white-space: nowrap;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-}
-
-.share-menu-item:hover,
-.share-menu-item:active {
-    background: var(--staff-badge-bg);
-}
-
-.share-menu-item .bi-whatsapp { color: #25d366; }
-.share-menu-item .bi-envelope { color: #6366f1; }
-.share-menu-item .bi-download { color: var(--staff-accent); }
-.share-menu-item .bi-hourglass-split { color: var(--staff-text-muted); }
 
 /* Tables inside chat */
 .message .text table {

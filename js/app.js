@@ -365,51 +365,141 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Clonar chat para el PDF
-        const clone = chatBox.cloneNode(true);
-        // Limpiar elementos interactivos
-        clone.querySelectorAll('.message-share-btn, .share-menu, button, input, select, textarea, details summary').forEach(el => {
-            if (el.tagName === 'SUMMARY') { el.closest('details')?.setAttribute('open', ''); return; }
-            el.remove();
-        });
-
-        // Wrapper con estilos para el PDF
+        // Construir PDF con contenido limpio (sin clonar estilos problemáticos)
         const clientName = document.getElementById('selected-client')?.textContent || '';
         const now = new Date();
         const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
         const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'padding: 20px; font-family: Inter, sans-serif; font-size: 12px; color: #333;';
+        wrapper.style.cssText = 'padding:20px; font-family:Inter,sans-serif; font-size:12px; color:#333; background:#fff;';
+
+        // Cabecera
         wrapper.innerHTML = `
-            <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #1a8d4f; padding-bottom:12px; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #1a8d4f; padding-bottom:12px; margin-bottom:20px;">
                 <div>
                     <div style="font-size:16px; font-weight:700; color:#1a8d4f;">PACCMAN STAFF</div>
                     ${clientName && clientName !== 'Sin seleccionar' ? `<div style="font-size:11px; color:#666; margin-top:2px;">Cliente: ${clientName}</div>` : ''}
                 </div>
-                <div style="text-align:right; font-size:10px; color:#999;">
-                    <div>${dateStr} · ${timeStr}</div>
-                </div>
-            </div>
-        `;
+                <div style="text-align:right; font-size:10px; color:#999;">${dateStr} · ${timeStr}</div>
+            </div>`;
 
-        // Aplicar estilos inline al clon para el PDF
-        clone.style.cssText = 'overflow:visible; max-height:none; height:auto;';
-        clone.querySelectorAll('.message').forEach(msg => {
-            msg.style.cssText = 'display:flex; margin-bottom:8px; page-break-inside:avoid;';
-            if (msg.classList.contains('user')) msg.style.justifyContent = 'flex-end';
-        });
-        clone.querySelectorAll('.text').forEach(text => {
-            text.style.cssText = 'padding:8px 12px; border-radius:10px; max-width:85%; font-size:12px; line-height:1.5;';
-            const msg = text.closest('.message');
-            if (msg?.classList.contains('user')) {
-                text.style.background = '#dcfce7';
-            } else {
-                text.style.background = '#f3f4f6';
-            }
+        // Recorrer mensajes y generar HTML limpio
+        chatBox.querySelectorAll('.message').forEach(msg => {
+            const isUser = msg.classList.contains('user');
+            const textEl = msg.querySelector('.text');
+            if (!textEl) return;
+
+            // Clonar solo el contenido del texto
+            const clone = textEl.cloneNode(true);
+            clone.querySelectorAll('.message-footer, .message-share-btn, .share-menu, .message-time').forEach(el => el.remove());
+            // Abrir details
+            clone.querySelectorAll('details').forEach(d => d.setAttribute('open', ''));
+            // Quitar botones e inputs
+            clone.querySelectorAll('button, input, select, textarea').forEach(el => el.remove());
+
+            const align = isUser ? 'flex-end' : 'flex-start';
+            const bg = isUser ? '#dcfce7' : '#f8f9fa';
+            const border = isUser ? '1px solid #bbf7d0' : '1px solid #e9ecef';
+
+            const msgDiv = document.createElement('div');
+            msgDiv.style.cssText = `display:flex; justify-content:${align}; margin-bottom:10px; page-break-inside:avoid;`;
+
+            const bubble = document.createElement('div');
+            bubble.style.cssText = `background:${bg}; border:${border}; border-radius:10px; padding:10px 14px; max-width:85%; font-size:12px; line-height:1.6; color:#333;`;
+
+            // Aplicar estilos inline a elementos internos del clon
+            clone.querySelectorAll('.data-panel').forEach(el => {
+                el.style.cssText = 'margin:8px 0; border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;';
+            });
+            clone.querySelectorAll('.data-panel__header').forEach(el => {
+                el.style.cssText = 'background:#f3f4f6; padding:8px 12px; font-weight:600; font-size:12px; color:#374151; border-bottom:1px solid #e5e7eb;';
+            });
+            clone.querySelectorAll('.data-panel__count').forEach(el => {
+                el.style.cssText = 'background:#e5e7eb; color:#6b7280; font-size:10px; padding:1px 6px; border-radius:9999px; margin-left:6px;';
+            });
+            clone.querySelectorAll('.data-card').forEach(el => {
+                el.style.cssText = 'display:flex; align-items:flex-start; gap:10px; padding:8px 12px; border-bottom:1px solid #f3f4f6;';
+            });
+            clone.querySelectorAll('.data-card__icon').forEach(el => {
+                el.style.cssText = 'color:#1a8d4f; font-size:14px; flex-shrink:0; padding-top:2px;';
+            });
+            clone.querySelectorAll('.data-card__title').forEach(el => {
+                el.style.cssText = 'font-weight:600; font-size:12px; color:#1f2937;';
+            });
+            clone.querySelectorAll('.data-card__sub').forEach(el => {
+                el.style.cssText = 'font-size:11px; color:#6b7280; margin-top:2px;';
+            });
+            clone.querySelectorAll('.data-card__meta').forEach(el => {
+                el.style.cssText = 'font-size:11px; color:#6b7280; margin-top:2px;';
+            });
+            clone.querySelectorAll('.data-card__meta span').forEach(el => {
+                el.style.cssText = 'margin-right:8px;';
+            });
+            clone.querySelectorAll('.data-card__status').forEach(el => {
+                el.style.cssText = 'font-size:11px; margin-top:4px;';
+            });
+            clone.querySelectorAll('.status-dot--ok').forEach(el => {
+                el.style.cssText = 'display:inline-block; width:7px; height:7px; border-radius:50%; background:#22c55e; margin-right:4px; vertical-align:middle;';
+            });
+            clone.querySelectorAll('.status-dot--ko').forEach(el => {
+                el.style.cssText = 'display:inline-block; width:7px; height:7px; border-radius:50%; background:#ef4444; margin-right:4px; vertical-align:middle;';
+            });
+            clone.querySelectorAll('.data-card__badge').forEach(el => {
+                el.style.cssText = 'display:none;';
+            });
+            // Timeline / trámites
+            clone.querySelectorAll('.siniestro-timeline').forEach(el => {
+                el.style.cssText = 'padding:6px 0 0 12px; border-left:2px solid #e5e7eb; margin:6px 0 0 6px;';
+            });
+            clone.querySelectorAll('.timeline-item').forEach(el => {
+                el.style.cssText = 'padding:4px 0 8px 10px; font-size:11px; position:relative;';
+            });
+            clone.querySelectorAll('.timeline-date').forEach(el => {
+                el.style.cssText = 'font-size:10px; color:#9ca3af;';
+            });
+            clone.querySelectorAll('.timeline-traza').forEach(el => {
+                el.style.cssText = 'font-weight:500; color:#374151;';
+            });
+            clone.querySelectorAll('.timeline-mensaje').forEach(el => {
+                el.style.cssText = 'color:#6b7280; font-size:11px;';
+            });
+            // Client card
+            clone.querySelectorAll('.client-card').forEach(el => {
+                el.style.cssText = 'border:1px solid #e5e7eb; border-radius:8px; overflow:hidden;';
+            });
+            clone.querySelectorAll('.client-card-header').forEach(el => {
+                el.style.cssText = 'background:#f3f4f6; padding:12px; text-align:center;';
+            });
+            // Tablas
+            clone.querySelectorAll('table').forEach(el => {
+                el.style.cssText = 'width:100%; border-collapse:collapse; font-size:11px; margin:6px 0;';
+            });
+            clone.querySelectorAll('th').forEach(el => {
+                el.style.cssText = 'background:#f3f4f6; padding:6px 8px; text-align:left; font-weight:600; border-bottom:1px solid #e5e7eb; font-size:11px;';
+            });
+            clone.querySelectorAll('td').forEach(el => {
+                el.style.cssText = 'padding:5px 8px; border-bottom:1px solid #f3f4f6; font-size:11px;';
+            });
+            // Badges
+            clone.querySelectorAll('.badge').forEach(el => {
+                el.style.cssText = 'font-size:10px; padding:2px 6px; border-radius:4px; font-weight:500;';
+            });
+            // Data empty
+            clone.querySelectorAll('.data-empty').forEach(el => {
+                el.style.cssText = 'text-align:center; padding:12px; color:#9ca3af; font-size:12px;';
+            });
+
+            bubble.appendChild(clone);
+            msgDiv.appendChild(bubble);
+            wrapper.appendChild(msgDiv);
         });
 
-        wrapper.appendChild(clone);
+        // Pie de página
+        const footer = document.createElement('div');
+        footer.style.cssText = 'text-align:center; font-size:9px; color:#ccc; margin-top:20px; padding-top:10px; border-top:1px solid #f3f4f6;';
+        footer.textContent = 'Generado por PACCMAN STAFF';
+        wrapper.appendChild(footer);
 
         Swal.fire({ title: 'Generando PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 

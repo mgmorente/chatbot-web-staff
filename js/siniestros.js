@@ -42,6 +42,11 @@ export function renderSiniestrosCliente(d = {}) {
     });
 
     const allPolizas = data.polizas || [];
+    const ramoIcons = {
+        "AUTOS": "bi-car-front", "HOGAR": "bi-house", "SALUD": "bi-heart-pulse",
+        "VIDA": "bi-heart", "ACCIDENTES": "bi-bandaid", "PYME": "bi-building",
+        "COMERCIOS": "bi-shop"
+    };
 
     function buildSiniestroCard(s) {
         const cerrado = (s.estado || '').toLowerCase() === 'cerrado';
@@ -49,6 +54,7 @@ export function renderSiniestrosCliente(d = {}) {
         const tieneDocs = data.documentos?.some(doc => doc.entidad.toLowerCase() === 'siniestro' && doc.documento == s.id);
         const poliza = allPolizas.find(p => p.cia_poliza == s.cia_poliza);
         const ramo = poliza?.ramo || poliza?.tipo_producto || '';
+        const ramoIcon = ramoIcons[ramo?.toUpperCase()] || (cerrado ? 'bi-lock' : 'bi-exclamation-triangle');
         const riesgo = poliza?.riesgo || poliza?.objeto || '';
         const searchable = `${s.id} ${s.compania || ''} ${s.causa || ''} ${s.cia_poliza || ''} ${ramo} ${riesgo}`.toLowerCase();
 
@@ -79,7 +85,7 @@ export function renderSiniestrosCliente(d = {}) {
 
         return `
         <div class="data-card${cerrado ? ' data-card--muted' : ''}" data-searchable="${searchable}">
-            <div class="data-card__icon"><i class="bi ${cerrado ? 'bi-lock' : 'bi-exclamation-triangle'}"></i></div>
+            <div class="data-card__icon"><i class="bi ${ramoIcon}"></i></div>
             <div class="data-card__body">
                 <div class="data-card__title">${s.id || 'N/D'} <span class="data-card__sep">·</span> ${s.compania || 'N/D'}</div>
                 <div class="data-card__meta">

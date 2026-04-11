@@ -695,18 +695,18 @@ body {
 /* Menú compartir */
 .share-menu {
     position: absolute;
-    bottom: calc(100% + 6px);
+    bottom: calc(100% + 4px);
     right: 0;
     background: var(--staff-surface);
     border: 1px solid var(--staff-border);
     border-radius: 12px;
     padding: 6px;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     display: flex;
     flex-direction: column;
     gap: 2px;
-    min-width: 160px;
-    z-index: 50;
+    min-width: 170px;
+    z-index: 100;
     animation: shareMenuIn 0.15s ease-out;
 }
 
@@ -719,8 +719,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 12px;
-    border: none;
+    padding: 10px 14px;
     background: transparent;
     border-radius: 8px;
     font-size: 13px;
@@ -729,16 +728,19 @@ body {
     cursor: pointer;
     transition: background 0.12s;
     white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
 }
 
-.share-menu-item:hover {
+.share-menu-item:hover,
+.share-menu-item:active {
     background: var(--staff-badge-bg);
 }
 
 .share-menu-item .bi-whatsapp { color: #25d366; }
 .share-menu-item .bi-envelope { color: #6366f1; }
-.share-menu-item .bi-clipboard,
-.share-menu-item .bi-check-lg { color: var(--staff-accent); }
+.share-menu-item .bi-download { color: var(--staff-accent); }
+.share-menu-item .bi-hourglass-split { color: var(--staff-text-muted); }
 
 /* Tables inside chat */
 .message .text table {
@@ -2031,9 +2033,10 @@ select.inline-input {
 /* Fila editable inline (modificar cliente) */
 .inline-edit-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 10px;
-    padding: 10px 0;
+    gap: 8px;
+    padding: 12px 0;
     border-bottom: 1px solid var(--staff-border);
 }
 
@@ -2095,10 +2098,11 @@ select.inline-input {
 }
 
 .inline-edit-row__input {
-    flex: 1;
+    flex-basis: 100%;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    margin-top: 4px;
 }
 
 .inline-edit-row__input.hidden {
@@ -2107,6 +2111,7 @@ select.inline-input {
 
 .inline-edit-row__input .inline-input {
     flex: 1;
+    min-width: 0;
 }
 
 .inline-edit-row__cancel {

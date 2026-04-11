@@ -177,11 +177,11 @@ export function renderDocumentosConFiltro() {
         }
 
         if (!docsFiltrados.length) {
-            resultDiv.innerHTML = '<div class="data-empty" style="margin-top:8px"><i class="bi bi-folder-x"></i> No hay documentos</div>';
+            resultDiv.innerHTML = '<div class="data-empty" style="margin-top:16px"><i class="bi bi-folder-x"></i> No hay documentos</div>';
             return;
         }
 
-        resultDiv.innerHTML = '<div style="margin-top:8px">' + buildDocsHTML(docsFiltrados) + '</div>';
+        resultDiv.innerHTML = `<div style="margin-top:16px">${buildDocsHTML(docsFiltrados)}</div>`;
     });
 }
 
@@ -208,7 +208,7 @@ function buildDocsHTML(docs) {
 
         html += `
             <div class="data-panel" style="margin-top:8px">
-                <div class="data-panel__header"><i class="bi bi-folder2-open"></i> ${entidad.toUpperCase()} ${documento} <span class="data-panel__count">${items.length}</span></div>
+                <div class="data-panel__header"><i class="bi bi-folder2-open"></i> Documentos <span class="data-card__sep">·</span> ${entidad.toUpperCase()} ${documento} <span class="data-panel__count">${items.length}</span></div>
                 ${itemsHtml}
             </div>`;
     });

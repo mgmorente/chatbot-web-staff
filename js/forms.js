@@ -2,6 +2,7 @@
 import { addMessageToChat } from './chat.js';
 import { showLoading } from './utils.js';
 import { getStoredToken } from './storage.js';
+import { recargarDatosCliente } from './clientes.js';
 
 
 function getToken() {
@@ -32,29 +33,37 @@ export function renderModClienteInline() {
     const data = getClienteData();
     if (!data?.cliente) return;
 
+    const movilActual = data.cliente.telefono || '';
+    const emailActual = data.cliente.email || '';
+
     const html = `
         <div class="chat-inline-form">
             <div class="inline-form-title"><i class="bi bi-pencil-square"></i> Modificar datos de contacto</div>
             <form id="inlineModClienteForm" novalidate>
-                <div class="inline-form-group">
-                    <label>Móvil actual</label>
-                    <input type="text" class="inline-input" value="${data.cliente.telefono || ''}" disabled>
+                <div class="inline-edit-row">
+                    <div class="inline-edit-row__info">
+                        <div class="inline-edit-row__label"><i class="bi bi-phone"></i> Móvil</div>
+                        <div class="inline-edit-row__value js-movil-display">${movilActual || '—'}</div>
+                    </div>
+                    <button type="button" class="inline-edit-row__btn js-edit-movil" title="Editar"><i class="bi bi-pencil"></i></button>
+                    <div class="inline-edit-row__input hidden js-movil-input-wrap">
+                        <input type="text" name="movil" class="inline-input" pattern="^[67]\\d{8}$" placeholder="Ej: 612345678" value="">
+                        <button type="button" class="inline-edit-row__cancel js-cancel-movil"><i class="bi bi-x-lg"></i></button>
+                    </div>
                 </div>
-                <div class="inline-form-group">
-                    <label>Nuevo móvil</label>
-                    <input type="text" name="movil" class="inline-input" pattern="^[67]\\d{8}$" required
-                        placeholder="Ej: 612345678">
-                </div>
-                <div class="inline-form-group">
-                    <label>Email actual</label>
-                    <input type="email" class="inline-input" value="${data.cliente.email || ''}" disabled>
-                </div>
-                <div class="inline-form-group">
-                    <label>Nuevo email</label>
-                    <input type="email" name="email" class="inline-input" required placeholder="ejemplo@correo.com">
+                <div class="inline-edit-row">
+                    <div class="inline-edit-row__info">
+                        <div class="inline-edit-row__label"><i class="bi bi-envelope"></i> Email</div>
+                        <div class="inline-edit-row__value js-email-display">${emailActual || '—'}</div>
+                    </div>
+                    <button type="button" class="inline-edit-row__btn js-edit-email" title="Editar"><i class="bi bi-pencil"></i></button>
+                    <div class="inline-edit-row__input hidden js-email-input-wrap">
+                        <input type="email" name="email" class="inline-input" placeholder="ejemplo@correo.com" value="">
+                        <button type="button" class="inline-edit-row__cancel js-cancel-email"><i class="bi bi-x-lg"></i></button>
+                    </div>
                 </div>
                 <div class="inline-form-actions">
-                    <button type="button" class="inline-btn-submit js-form-btn"><i class="bi bi-check-lg"></i> Guardar</button>
+                    <button type="button" class="inline-btn-submit js-form-btn" disabled><i class="bi bi-check-lg"></i> Guardar cambios</button>
                 </div>
             </form>
         </div>`;
@@ -62,26 +71,97 @@ export function renderModClienteInline() {
     const msgEl = addMessageToChat('bot', html);
     const container = msgEl || document;
     const form = container.querySelector('#inlineModClienteForm');
+    const submitBtn = form.querySelector('.js-form-btn');
 
     form.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
 
-    form.querySelector('.js-form-btn').addEventListener('click', async () => {
-        if (!form.checkValidity()) { form.classList.add('was-validated'); return; }
+    function setupField(field) {
+        const editBtn = form.querySelector(`.js-edit-${field}`);
+        const inputWrap = form.querySelector(`.js-${field}-input-wrap`);
+        const cancelBtn = form.querySelector(`.js-cancel-${field}`);
+        const display = form.querySelector(`.js-${field}-display`);
+        const input = inputWrap.querySelector('input');
+
+        editBtn.addEventListener('click', () => {
+            editBtn.classList.add('hidden');
+            display.classList.add('hidden');
+            inputWrap.classList.remove('hidden');
+            input.focus();
+            updateSubmitState();
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            input.value = '';
+            inputWrap.classList.add('hidden');
+            editBtn.classList.remove('hidden');
+            display.classList.remove('hidden');
+            updateSubmitState();
+        });
+
+        input.addEventListener('input', updateSubmitState);
+    }
+
+    function updateSubmitState() {
+        const movilInput = form.querySelector('[name="movil"]');
+        const emailInput = form.querySelector('[name="email"]');
+        const movilVisible = !form.querySelector('.js-movil-input-wrap').classList.contains('hidden');
+        const emailVisible = !form.querySelector('.js-email-input-wrap').classList.contains('hidden');
+        const movilFilled = movilVisible && movilInput.value.trim();
+        const emailFilled = emailVisible && emailInput.value.trim();
+        submitBtn.disabled = !(movilFilled || emailFilled);
+    }
+
+    setupField('movil');
+    setupField('email');
+
+    submitBtn.addEventListener('click', async () => {
+        const movilInput = form.querySelector('[name="movil"]');
+        const emailInput = form.querySelector('[name="email"]');
+        const movilVisible = !form.querySelector('.js-movil-input-wrap').classList.contains('hidden');
+        const emailVisible = !form.querySelector('.js-email-input-wrap').classList.contains('hidden');
+
+        // Validar solo los campos visibles
+        if (movilVisible && movilInput.value.trim() && !movilInput.checkValidity()) {
+            form.classList.add('was-validated');
+            return;
+        }
+        if (emailVisible && emailInput.value.trim() && !emailInput.checkValidity()) {
+            form.classList.add('was-validated');
+            return;
+        }
 
         const nif = data.cliente.nif;
-        const movil = form.querySelector('[name="movil"]').value.trim();
-        const email = form.querySelector('[name="email"]').value.trim();
+        const payload = { nif };
+        const changes = [];
+        if (movilVisible && movilInput.value.trim()) {
+            payload.movil = movilInput.value.trim();
+            changes.push(`Móvil: ${payload.movil}`);
+        }
+        if (emailVisible && emailInput.value.trim()) {
+            payload.email = emailInput.value.trim();
+            changes.push(`Email: ${payload.email}`);
+        }
+
+        if (!changes.length) return;
 
         showLoading();
         try {
             const res = await fetch(`${ENV.API_URL}/update-cliente`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${getToken()}`, 'empresa': ENV.EMPRESA, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nif, movil, email })
+                body: JSON.stringify(payload)
             });
             if (!res.ok) throw new Error();
             Swal.close();
-            form.closest('.chat-inline-form').innerHTML = '<div class="inline-form-success"><i class="bi bi-check-circle"></i> Datos modificados correctamente</div>';
+            form.closest('.chat-inline-form').innerHTML = `
+                <div class="inline-form-success">
+                    <div class="mb-2"><i class="bi bi-check-circle"></i> Datos modificados correctamente</div>
+                    <div class="inline-form-summary">
+                        ${changes.map(c => `<div>${c}</div>`).join('')}
+                    </div>
+                </div>`;
+            // Refrescar datos del cliente
+            recargarDatosCliente();
         } catch {
             Swal.close();
             Swal.fire('Error', 'No se pudo realizar el proceso', 'error');

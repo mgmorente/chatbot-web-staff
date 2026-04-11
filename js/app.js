@@ -348,6 +348,87 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // --- Exportar chat a PDF ---
+    document.getElementById('exportChat').addEventListener('click', (e) => {
+        e.preventDefault();
+
+        // Cerrar sidebar en móvil
+        if (sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (overlay) overlay.remove();
+        }
+
+        const chatBox = document.getElementById('chat-box');
+        if (!chatBox.children.length) {
+            Swal.fire('Chat vacío', 'No hay mensajes para exportar', 'info');
+            return;
+        }
+
+        // Clonar chat para el PDF
+        const clone = chatBox.cloneNode(true);
+        // Limpiar elementos interactivos
+        clone.querySelectorAll('.message-share-btn, .share-menu, button, input, select, textarea, details summary').forEach(el => {
+            if (el.tagName === 'SUMMARY') { el.closest('details')?.setAttribute('open', ''); return; }
+            el.remove();
+        });
+
+        // Wrapper con estilos para el PDF
+        const clientName = document.getElementById('selected-client')?.textContent || '';
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'padding: 20px; font-family: Inter, sans-serif; font-size: 12px; color: #333;';
+        wrapper.innerHTML = `
+            <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #1a8d4f; padding-bottom:12px; margin-bottom:16px;">
+                <div>
+                    <div style="font-size:16px; font-weight:700; color:#1a8d4f;">PACCMAN STAFF</div>
+                    ${clientName && clientName !== 'Sin seleccionar' ? `<div style="font-size:11px; color:#666; margin-top:2px;">Cliente: ${clientName}</div>` : ''}
+                </div>
+                <div style="text-align:right; font-size:10px; color:#999;">
+                    <div>${dateStr} · ${timeStr}</div>
+                </div>
+            </div>
+        `;
+
+        // Aplicar estilos inline al clon para el PDF
+        clone.style.cssText = 'overflow:visible; max-height:none; height:auto;';
+        clone.querySelectorAll('.message').forEach(msg => {
+            msg.style.cssText = 'display:flex; margin-bottom:8px; page-break-inside:avoid;';
+            if (msg.classList.contains('user')) msg.style.justifyContent = 'flex-end';
+        });
+        clone.querySelectorAll('.text').forEach(text => {
+            text.style.cssText = 'padding:8px 12px; border-radius:10px; max-width:85%; font-size:12px; line-height:1.5;';
+            const msg = text.closest('.message');
+            if (msg?.classList.contains('user')) {
+                text.style.background = '#dcfce7';
+            } else {
+                text.style.background = '#f3f4f6';
+            }
+        });
+
+        wrapper.appendChild(clone);
+
+        Swal.fire({ title: 'Generando PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        html2pdf().set({
+            margin: [10, 10, 10, 10],
+            filename: `chat_paccman_${dateStr.replace(/\//g, '-')}.pdf`,
+            image: { type: 'jpeg', quality: 0.95 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        }).from(wrapper).save().then(() => {
+            Swal.close();
+            Swal.fire({ icon: 'success', title: 'PDF exportado', text: 'El chat se ha descargado correctamente', timer: 2000, showConfirmButton: false });
+        }).catch(() => {
+            Swal.close();
+            Swal.fire('Error', 'No se pudo generar el PDF', 'error');
+        });
+    });
+
     // --- Botón Ayuda / Funcionalidades ---
     document.getElementById('showHelp').addEventListener('click', (e) => {
         e.preventDefault();
@@ -525,6 +606,15 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             renderRecibosCliente({ soloPendientes: true });
         }
+    });
+
+    // --- Botón adjuntar documentos (clip) ---
+    document.getElementById('btn-attach').addEventListener('click', () => {
+        if (!getSelectedClient()) {
+            clienteModal.show();
+            return;
+        }
+        renderSubirDocInline();
     });
 
 });

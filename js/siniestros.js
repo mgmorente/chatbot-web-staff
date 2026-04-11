@@ -41,11 +41,16 @@ export function renderSiniestrosCliente(d = {}) {
         return parseDate(b.fecha_apertura) - parseDate(a.fecha_apertura);
     });
 
+    const allPolizas = data.polizas || [];
+
     function buildSiniestroCard(s) {
         const cerrado = (s.estado || '').toLowerCase() === 'cerrado';
         const tramites = data.tramites ? data.tramites.filter(t => t.siniestro == s.id) : [];
         const tieneDocs = data.documentos?.some(doc => doc.entidad.toLowerCase() === 'siniestro' && doc.documento == s.id);
-        const searchable = `${s.id} ${s.compania || ''} ${s.causa || ''} ${s.cia_poliza || ''}`.toLowerCase();
+        const poliza = allPolizas.find(p => p.cia_poliza == s.cia_poliza);
+        const ramo = poliza?.ramo || poliza?.tipo_producto || '';
+        const riesgo = poliza?.riesgo || poliza?.objeto || '';
+        const searchable = `${s.id} ${s.compania || ''} ${s.causa || ''} ${s.cia_poliza || ''} ${ramo} ${riesgo}`.toLowerCase();
 
         let timelineHtml = '';
         if (tramites.length) {
@@ -81,6 +86,8 @@ export function renderSiniestrosCliente(d = {}) {
                     ${s.fecha_apertura ? `<span><i class="bi bi-calendar3"></i> ${s.fecha_apertura}</span>` : ''}
                     ${s.causa ? `<span>${s.causa}</span>` : ''}
                     ${s.cia_poliza ? `<span>Póliza ${s.cia_poliza}</span>` : ''}
+                    ${ramo ? `<span><i class="bi bi-shield-check"></i> ${ramo}</span>` : ''}
+                    ${riesgo ? `<span><i class="bi bi-geo-alt"></i> ${riesgo}</span>` : ''}
                 </div>
                 <div class="data-card__status">${cerrado
                     ? '<span class="status-dot status-dot--ko"></span> Cerrado'

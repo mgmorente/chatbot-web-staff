@@ -316,8 +316,9 @@ body {
     padding: 0 20px;
     height: 60px;
     min-height: 60px;
-    background: #1a8d4f;
-    color: #fff;
+    background: #f0f0f0;
+    color: #333;
+    border-bottom: 1px solid var(--staff-border);
     flex-shrink: 0;
 }
 
@@ -343,7 +344,7 @@ body {
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid var(--staff-border);
 }
 
 .header-status-dot {
@@ -354,22 +355,22 @@ body {
     height: 10px;
     background: #4ade80;
     border-radius: 50%;
-    border: 2px solid #1a8d4f;
+    border: 2px solid #f0f0f0;
 }
 
 .header-brand-name {
     font-size: 1rem;
     font-weight: 600;
     line-height: 1.2;
-    color: #fff;
+    color: var(--staff-strong);
     margin: 0;
 }
 
 .header-badge {
     font-size: 0.55rem;
-    background: rgba(34, 197, 94, 0.25);
-    border: 1px solid rgba(34, 197, 94, 0.35);
-    color: #4ade80;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #16a34a;
     padding: 1px 6px;
     border-radius: 3px;
     letter-spacing: 1.5px;
@@ -380,7 +381,7 @@ body {
 
 .header-status-text {
     font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--staff-text-muted);
 }
 
 .header-brand-info {
@@ -394,17 +395,17 @@ body {
     align-items: center;
     gap: 6px;
     padding: 5px 14px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--staff-border);
     border-radius: 9999px;
     font-size: 0.82rem;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--staff-text);
     max-width: 240px;
     transition: all 0.2s ease;
 }
 
 .header-client-pill:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.08);
 }
 
 .header-client-pill i {
@@ -427,9 +428,9 @@ body {
 }
 
 .btn-header {
-    background: rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.75);
+    background: transparent;
+    border: 1px solid var(--staff-border);
+    color: var(--staff-text-muted);
     width: 36px;
     height: 36px;
     border-radius: 8px;
@@ -449,9 +450,9 @@ body {
 }
 
 .btn-header:hover {
-    background: rgba(255, 255, 255, 0.18);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #fff;
+    background: rgba(0, 0, 0, 0.06);
+    border-color: var(--staff-border);
+    color: var(--staff-accent);
     transform: scale(1.05);
 }
 
@@ -527,7 +528,7 @@ body {
 /* Botón scroll al final */
 .btn-scroll-down {
     position: absolute;
-    bottom: 130px;
+    bottom: 100px;
     right: 24px;
     z-index: 10;
     width: 36px;
@@ -654,14 +655,90 @@ body {
     border-bottom-color: var(--staff-accent-hover);
 }
 
+.message-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+    position: relative;
+}
+
 .message-time {
-    display: block;
-    text-align: right;
     font-size: 10px;
     opacity: 0.55;
-    margin-top: 4px;
     line-height: 1;
 }
+
+.message-share-btn {
+    background: none;
+    border: none;
+    color: var(--staff-text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px;
+    opacity: 0;
+    transition: opacity 0.2s, color 0.2s;
+    line-height: 1;
+}
+
+.message:hover .message-share-btn,
+.message-share-btn:focus {
+    opacity: 0.6;
+}
+
+.message-share-btn:hover {
+    opacity: 1;
+    color: var(--staff-accent);
+}
+
+/* Menú compartir */
+.share-menu {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    right: 0;
+    background: var(--staff-surface);
+    border: 1px solid var(--staff-border);
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 160px;
+    z-index: 50;
+    animation: shareMenuIn 0.15s ease-out;
+}
+
+@keyframes shareMenuIn {
+    from { opacity: 0; transform: translateY(4px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.share-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--staff-text);
+    cursor: pointer;
+    transition: background 0.12s;
+    white-space: nowrap;
+}
+
+.share-menu-item:hover {
+    background: var(--staff-badge-bg);
+}
+
+.share-menu-item .bi-whatsapp { color: #25d366; }
+.share-menu-item .bi-envelope { color: #6366f1; }
+.share-menu-item .bi-clipboard,
+.share-menu-item .bi-check-lg { color: var(--staff-accent); }
 
 /* Tables inside chat */
 .message .text table {
@@ -807,7 +884,7 @@ body {
     background: var(--staff-primary);
     border: 2px solid var(--staff-border);
     border-radius: 9999px;
-    padding: 4px 4px 4px 18px;
+    padding: 4px 4px 4px 4px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -854,6 +931,33 @@ body {
 
 .btn-send:active {
     transform: scale(0.95);
+}
+
+/* Botón adjuntar (clip) */
+.btn-attach {
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    color: var(--staff-text-muted);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.btn-attach:hover {
+    color: var(--staff-accent);
+    background: var(--staff-badge-bg);
+}
+
+.btn-attach:active {
+    transform: scale(0.92);
 }
 
 .input-wrapper {
@@ -1922,6 +2026,103 @@ select.inline-input {
     font-size: 0.8rem;
     padding: 8px 0;
     opacity: 0.7;
+}
+
+/* Fila editable inline (modificar cliente) */
+.inline-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--staff-border);
+}
+
+.inline-edit-row:last-of-type {
+    border-bottom: none;
+}
+
+.inline-edit-row__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.inline-edit-row__label {
+    font-size: 0.7rem;
+    color: var(--staff-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.inline-edit-row__label i {
+    font-size: 0.75rem;
+}
+
+.inline-edit-row__value {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--staff-text);
+    word-break: break-all;
+}
+
+.inline-edit-row__btn {
+    background: none;
+    border: 1px solid var(--staff-border);
+    color: var(--staff-text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+    transition: all 0.15s;
+}
+
+.inline-edit-row__btn:hover {
+    color: var(--staff-accent);
+    border-color: var(--staff-accent);
+    background: var(--staff-badge-bg);
+}
+
+.inline-edit-row__btn.hidden {
+    display: none;
+}
+
+.inline-edit-row__input {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.inline-edit-row__input.hidden {
+    display: none;
+}
+
+.inline-edit-row__input .inline-input {
+    flex: 1;
+}
+
+.inline-edit-row__cancel {
+    background: none;
+    border: none;
+    color: var(--staff-text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 6px;
+    transition: color 0.15s;
+    flex-shrink: 0;
+}
+
+.inline-edit-row__cancel:hover {
+    color: #ef4444;
 }
 
 .alert-recibos {

@@ -156,6 +156,9 @@
             </nav>
 
             <div class="sidebar-footer">
+                <button id="exportChat" class="sidebar-logout">
+                    <i class="bi bi-file-earmark-pdf"></i> Exportar chat
+                </button>
                 <button id="showHelp" class="sidebar-logout">
                     <i class="bi bi-question-circle"></i> Funcionalidades
                 </button>
@@ -212,6 +215,9 @@
             <footer class="chat-input-area">
                 <form id="chat-form" class="chat-form">
                     <div class="input-wrapper">
+                        <button type="button" class="btn-attach" id="btn-attach" title="Enviar documentos">
+                            <i class="bi bi-paperclip"></i>
+                        </button>
                         <input type="text" id="chat-message"
                             placeholder="Escribe tu consulta..."
                             autocomplete="off">
@@ -249,6 +255,9 @@
     <!-- SweetAlert2 -->
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.27/dist/sweetalert2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.27/dist/sweetalert2.all.min.js"></script>
+
+    <!-- html2pdf para exportar chat -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <!-- Variables de entorno -->
     <script src="env.js"></script>

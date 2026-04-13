@@ -83,6 +83,33 @@
                     <span id="btn-spinner" class="spinner hidden"></span>
                 </button>
             </form>
+
+            <!-- Formulario 2FA (oculto por defecto) -->
+            <form id="otp-form" class="login-form hidden">
+                <h2>Verificación</h2>
+                <p id="otp-subtitle" class="login-subtitle">Introduce el código de tu app de autenticación</p>
+
+                <div class="form-group">
+                    <label for="otp-code">
+                        <i class="bi bi-shield-lock"></i> Código
+                    </label>
+                    <input type="text" id="otp-code" required pattern="^[0-9]{6}$"
+                        maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+                        placeholder="000000"
+                        style="text-align:center;font-size:24px;letter-spacing:8px;">
+                </div>
+
+                <div id="otp-errors" class="error-message hidden"></div>
+
+                <button id="otpSubmitButton" type="submit" class="btn-login">
+                    <span id="otpButtonText">Verificar</span>
+                    <span id="otpSpinner" class="spinner hidden"></span>
+                </button>
+
+                <button type="button" id="otp-back" class="btn-otp-back">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </button>
+            </form>
         </div>
 
         <!-- Banner instalación PWA -->
@@ -125,13 +152,105 @@
             window.location.href = 'index.html';
         }
 
-        const form = document.getElementById('login-form');
-        const errorDiv = document.getElementById('login-error');
-        const submitButton = document.getElementById('submitButton');
-        const btnText = document.getElementById('btn-text');
-        const btnSpinner = document.getElementById('btn-spinner');
+        // --- URL base de la API (sin /chatbot-staff) para rutas globales como verify2fa ---
+        const API_BASE = ENV.API_URL.replace(/\/chatbot-staff$/, '');
 
-        form.addEventListener('submit', async (e) => {
+        // --- Device ID persistente (identifica este navegador/dispositivo) ---
+        function getDeviceId() {
+            let id = localStorage.getItem('staff_device_id');
+            if (!id) {
+                id = crypto.randomUUID ? crypto.randomUUID() : 'dev-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+                localStorage.setItem('staff_device_id', id);
+            }
+            return id;
+        }
+
+        // --- DOM refs ---
+        const loginForm     = document.getElementById('login-form');
+        const errorDiv      = document.getElementById('login-error');
+        const submitButton  = document.getElementById('submitButton');
+        const btnText       = document.getElementById('btn-text');
+        const btnSpinner    = document.getElementById('btn-spinner');
+
+        const otpForm       = document.getElementById('otp-form');
+        const otpCode       = document.getElementById('otp-code');
+        const otpErrors     = document.getElementById('otp-errors');
+        const otpSubtitle   = document.getElementById('otp-subtitle');
+        const otpSubmitBtn  = document.getElementById('otpSubmitButton');
+        const otpButtonText = document.getElementById('otpButtonText');
+        const otpSpinner    = document.getElementById('otpSpinner');
+        const otpBack       = document.getElementById('otp-back');
+
+        const SESSION_DURATION = 2 * 60 * 60 * 1000;
+
+        // Estado pendiente para 2FA
+        let _pendingUsuario = null;
+        let _pendingPassword = null;
+
+        // --- Headers comunes ---
+        const baseHeaders = {
+            'Content-Type': 'application/json',
+            'Empresa': ENV.EMPRESA,
+            'Device': ENV.DEVICE
+        };
+
+        // --- Función para completar login (cargar datos y redirigir) ---
+        async function completeLogin(accessToken, user) {
+            storeToken(accessToken, SESSION_DURATION);
+
+            if (user) {
+                localStorage.setItem('user', user.name);
+            }
+
+            const headers = {
+                ...baseHeaders,
+                'Authorization': `Bearer ${accessToken}`
+            };
+
+            const [clientesRes, companiasRes, descriptoresRes] = await Promise.all([
+                fetch(`${ENV.API_URL}/clientes`, { headers }),
+                fetch(`${ENV.API_URL}/companias`, { headers }),
+                fetch(`${ENV.API_URL}/descriptores`, { headers })
+            ]);
+
+            const clientes = await clientesRes.json();
+            const companias = await companiasRes.json();
+            const descriptores = await descriptoresRes.json();
+
+            localStorage.setItem('clientes', JSON.stringify(clientes));
+            localStorage.setItem('companias', JSON.stringify(companias));
+            localStorage.setItem('descriptores', JSON.stringify(descriptores));
+
+            window.location.href = 'index.html';
+        }
+
+        // --- Llamada login reutilizable ---
+        async function doLogin(usuario_pacc, password) {
+            const response = await fetch(`${ENV.API_URL}/login`, {
+                method: 'POST',
+                headers: baseHeaders,
+                body: JSON.stringify({
+                    usuario_pacc,
+                    password,
+                    dispositivo: getDeviceId()
+                }),
+            });
+            const data = await response.json();
+            return { response, data };
+        }
+
+        // --- Mostrar pantalla 2FA ---
+        function show2FA() {
+            loginForm.classList.add('hidden');
+            otpForm.classList.remove('hidden');
+            otpSubtitle.textContent = 'Introduce el código de tu app de autenticación';
+            otpCode.value = '';
+            otpErrors.classList.add('hidden');
+            otpCode.focus();
+        }
+
+        // --- Login form ---
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             errorDiv.classList.add('hidden');
 
@@ -143,51 +262,22 @@
             btnSpinner.classList.remove('hidden');
 
             try {
-                const SESSION_DURATION = 2 * 60 * 60 * 1000;
-
-                const response = await fetch(`${ENV.API_URL}/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Empresa': ENV.EMPRESA,
-                        'Device': ENV.DEVICE
-                    },
-                    body: JSON.stringify({ usuario_pacc, password }),
-                });
-
-                const data = await response.json();
+                const { response, data } = await doLogin(usuario_pacc, password);
 
                 if (data.access_token) {
-                    storeToken(data.access_token, SESSION_DURATION);
+                    // Dispositivo registrado o sin 2FA → acceso directo
+                    await completeLogin(data.access_token, data.user);
 
-                    // Guardar datos iniciales
-                    if (data.user) {
-                        localStorage.setItem('user', data.user.name);
-                    }
+                } else if (data.config_auth_2fa) {
+                    // Primera vez sin 2FA configurado → debe configurarlo en Pacconline
+                    throw new Error('Debes configurar la autenticación en dos pasos desde Pacconline antes de acceder.');
 
-                    // Cargar clientes, compañías y descriptores
-                    const headers = {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${data.access_token}`,
-                        'Empresa': ENV.EMPRESA,
-                        'Device': ENV.DEVICE
-                    };
+                } else if (data.dispositivo_no_registrado) {
+                    // Dispositivo nuevo: pedir código TOTP
+                    _pendingUsuario = usuario_pacc;
+                    _pendingPassword = password;
+                    show2FA();
 
-                    const [clientesRes, companiasRes, descriptoresRes] = await Promise.all([
-                        fetch(`${ENV.API_URL}/clientes`, { headers }),
-                        fetch(`${ENV.API_URL}/companias`, { headers }),
-                        fetch(`${ENV.API_URL}/descriptores`, { headers })
-                    ]);
-
-                    const clientes = await clientesRes.json();
-                    const companias = await companiasRes.json();
-                    const descriptores = await descriptoresRes.json();
-
-                    localStorage.setItem('clientes', JSON.stringify(clientes));
-                    localStorage.setItem('companias', JSON.stringify(companias));
-                    localStorage.setItem('descriptores', JSON.stringify(descriptores));
-
-                    window.location.href = 'index.html';
                 } else {
                     throw new Error(data.error || 'Credenciales incorrectas');
                 }
@@ -199,6 +289,76 @@
                 btnText.classList.remove('hidden');
                 btnSpinner.classList.add('hidden');
             }
+        });
+
+        // --- 2FA verify form ---
+        otpForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const code = otpCode.value.trim();
+            if (code.length !== 6) return;
+
+            otpErrors.classList.add('hidden');
+            otpSubmitBtn.disabled = true;
+            otpButtonText.textContent = 'Verificando...';
+            otpSpinner.classList.remove('hidden');
+
+            try {
+                // Paso 1: Verificar código TOTP y registrar dispositivo
+                const res = await fetch(`${API_BASE}/auth/verify2fa`, {
+                    method: 'POST',
+                    headers: baseHeaders,
+                    body: JSON.stringify({
+                        usuario_pacc: _pendingUsuario,
+                        codigo: code,
+                        dispositivo: getDeviceId()
+                    })
+                });
+
+                let verifyData;
+                try {
+                    verifyData = await res.json();
+                } catch {
+                    verifyData = {};
+                }
+
+                if (verifyData.valid) {
+                    // Paso 2: Re-login (ahora el dispositivo está registrado → devuelve token)
+                    otpButtonText.textContent = 'Iniciando sesión...';
+
+                    const { data: loginData } = await doLogin(_pendingUsuario, _pendingPassword);
+
+                    if (loginData.access_token) {
+                        await completeLogin(loginData.access_token, loginData.user);
+                        _pendingUsuario = null;
+                        _pendingPassword = null;
+                    } else {
+                        throw new Error('No se pudo completar el inicio de sesión tras la verificación.');
+                    }
+                } else {
+                    otpErrors.textContent = 'Código incorrecto. Inténtalo de nuevo.';
+                    otpErrors.classList.remove('hidden');
+                    otpCode.value = '';
+                    otpCode.focus();
+                }
+            } catch (err) {
+                otpErrors.textContent = err.message || 'No se pudo conectar con el servidor.';
+                otpErrors.classList.remove('hidden');
+                console.error('[2FA Error]', err);
+            } finally {
+                otpSubmitBtn.disabled = false;
+                otpButtonText.textContent = 'Verificar';
+                otpSpinner.classList.add('hidden');
+            }
+        });
+
+        // --- 2FA volver ---
+        otpBack.addEventListener('click', () => {
+            otpForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+            otpErrors.classList.add('hidden');
+            otpCode.value = '';
+            _pendingUsuario = null;
+            _pendingPassword = null;
         });
     </script>
 

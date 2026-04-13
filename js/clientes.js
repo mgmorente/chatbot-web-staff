@@ -2,6 +2,7 @@
 import { getClientes, addClienteReciente, getClientesRecientes } from './storage.js';
 import { addMessageToChat } from './chat.js';
 import { updateHeaderClient } from './header.js';
+import { norm } from './utils.js';
 
 // Inicializa el buscador nativo de clientes en el modal
 export function initClienteSearch(clienteModal) {
@@ -30,8 +31,8 @@ export function initClienteSearch(clienteModal) {
         const clientes = getClientes();
         const filtered = term
             ? clientes.filter(c =>
-                c.nombre.toLowerCase().includes(term.toLowerCase()) ||
-                c.nif.toLowerCase().includes(term.toLowerCase()))
+                norm(c.nombre).includes(norm(term)) ||
+                norm(c.nif).includes(norm(term)))
             : clientes;
 
         const visibles = filtered.slice(0, MAX_VISIBLE);
@@ -183,7 +184,9 @@ async function fetchCliente(clientId) {
         localStorage.setItem('clienteData', JSON.stringify(data));
 
         // Agenda: intentar cargar, pero no bloquear si falla
-        const agenda = await fetchClienteAgenda(clientId, token);
+        const agendaRaw = await fetchClienteAgenda(clientId, token);
+        // La API de Outlook devuelve { value: [...] }, extraemos el array
+        const agenda = Array.isArray(agendaRaw) ? agendaRaw : (agendaRaw?.value ?? null);
         const agendaOk = Array.isArray(agenda);
         localStorage.setItem('clienteAgenda', JSON.stringify(agendaOk ? agenda : []));
         localStorage.setItem('agendaDisponible', agendaOk ? '1' : '0');
@@ -215,94 +218,33 @@ export function renderFichaCliente() {
     const polizasVencidas = data.polizas ? data.polizas.filter(p => p.situacion !== 1).length : 0;
     const siniestrosAbiertos = data.siniestros ? data.siniestros.filter(s => s.estado !== 'Cerrado').length : 0;
     const siniestrosCerrados = data.siniestros ? data.siniestros.filter(s => s.estado === 'Cerrado').length : 0;
-    const totalRecibos = data.recibos ? data.recibos.length : 0;
-    const totalDocs = data.documentos ? data.documentos.length : 0;
+
+    // Recibos pendientes
+    const recibosPendientes = data.recibos ? data.recibos.filter(r => r.situacion !== 'Cobrado') : [];
+    const totalPendiente = recibosPendientes.reduce((sum, r) => sum + (parseFloat(r.prima_total) || 0), 0);
+
+    const initials = c.nombre ? c.nombre.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() : '?';
 
     const html = `
-        <div class="client-card">
-            <!-- Cabecera con avatar y nombre -->
-            <div class="client-card-header">
-                <div class="client-avatar">
-                    <i class="bi bi-person-fill"></i>
-                </div>
-                <div class="client-header-info">
-                    <div class="client-name">${c.nombre}</div>
-                    <div class="client-nif"><i class="bi bi-fingerprint"></i> ${c.nif}</div>
-                    <div class="client-tags">
-                        ${c.cliente_fiel ? '<span class="client-tag tag-fiel"><i class="bi bi-heart-fill"></i> FIEL</span>' : ''}
-                        <span class="client-tag tag-tipo">${c.tipo || 'N/A'}</span>
-                    </div>
-                </div>
-                <div class="client-valor">
-                    <div class="client-valor-amount"><i class="bi bi-star-fill"></i> ${c.cod_importancia != null ? c.cod_importancia + '€' : 'N/D'}</div>
-                    <div class="client-valor-label">Importancia</div>
+        <div class="fc">
+            <div class="fc-top">
+                <div class="fc-avatar">${initials}</div>
+                <div class="fc-info">
+                    <div class="fc-name">${c.nombre}${c.cliente_fiel ? ' <i class="bi bi-heart-fill fc-fiel"></i>' : ''}</div>
+                    <div class="fc-sub">${c.nif} · ${c.tipo || 'N/A'}${c.cod_importancia != null ? ` · <i class="bi bi-star-fill fc-star"></i>${c.cod_importancia}` : ''}</div>
                 </div>
             </div>
-
-            <!-- Stats grid -->
-            <div class="client-stats">
-                <div class="client-stat stat-success">
-                    <div class="client-stat-value">${polizasActivas}</div>
-                    <div class="client-stat-label">Pólizas activas</div>
-                </div>
-                <div class="client-stat stat-muted">
-                    <div class="client-stat-value">${polizasVencidas}</div>
-                    <div class="client-stat-label">Pólizas vencidas</div>
-                </div>
-                <div class="client-stat stat-warning">
-                    <div class="client-stat-value">${siniestrosAbiertos}</div>
-                    <div class="client-stat-label">Siniestros abiertos</div>
-                </div>
-                <div class="client-stat stat-closed">
-                    <div class="client-stat-value">${siniestrosCerrados}</div>
-                    <div class="client-stat-label">Siniestros cerrados</div>
-                </div>
+            <div class="fc-stats">
+                <button class="fc-pill fc-pill--green js-ficha-action" data-command="consultar_poliza" data-args='{"estado":"activa"}'>${polizasActivas} activas</button>
+                <button class="fc-pill fc-pill--gray js-ficha-action" data-command="consultar_poliza" data-args='{"estado":"anulada"}'>${polizasVencidas} anuladas</button>
+                <button class="fc-pill fc-pill--orange js-ficha-action" data-command="consultar_siniestro" data-args='{"estado":"abierto"}'>${siniestrosAbiertos} siniestros</button>
+                <button class="fc-pill fc-pill--red js-ficha-action" data-command="consultar_recibo" data-args='{"pendientes":true}'>${recibosPendientes.length} pendientes</button>
             </div>
-
-            <!-- Datos de contacto -->
-            <div class="client-contact">
-                <div class="client-contact-item">
-                    <div class="contact-icon icon-phone"><i class="bi bi-telephone-fill"></i></div>
-                    <div class="contact-data">
-                        <div class="contact-label">Teléfono</div>
-                        ${c.telefono ? `<a href="tel:${c.telefono}" class="contact-value">${c.telefono}</a>` : '<span class="contact-value">N/D</span>'}
-                    </div>
-                </div>
-                ${c.email ? `
-                <div class="client-contact-item">
-                    <div class="contact-icon icon-email"><i class="bi bi-envelope-fill"></i></div>
-                    <div class="contact-data">
-                        <div class="contact-label">Email</div>
-                        <a href="#" class="contact-value email-cliente">${c.email}</a>
-                    </div>
-                </div>
-                ` : ''}
-                <div class="client-contact-item">
-                    <div class="contact-icon icon-address"><i class="bi bi-geo-alt-fill"></i></div>
-                    <div class="contact-data">
-                        <div class="contact-label">Dirección</div>
-                        <div class="contact-value">${c.domicilio || 'N/D'}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Info interna -->
-            <div class="client-internal">
-                <div class="client-internal-item">
-                    <i class="bi bi-building"></i>
-                    <span class="internal-label">Sucursal</span>
-                    <span class="internal-value">${c.sucursal || 'N/D'}</span>
-                </div>
-                <div class="client-internal-item">
-                    <i class="bi bi-people"></i>
-                    <span class="internal-label">Colaborador</span>
-                    <span class="internal-value">${c.colaborador || 'N/D'}</span>
-                </div>
-                <div class="client-internal-item">
-                    <i class="bi bi-person-badge"></i>
-                    <span class="internal-label">ECuentas</span>
-                    <span class="internal-value">${c.ecuentas || 'N/D'}</span>
-                </div>
+            <div class="fc-details">
+                ${c.telefono ? `<a href="tel:${c.telefono}" class="fc-row"><i class="bi bi-telephone"></i>${c.telefono}</a>` : ''}
+                ${c.email ? `<a href="#" class="fc-row email-cliente"><i class="bi bi-envelope"></i>${c.email}</a>` : ''}
+                ${c.domicilio ? `<div class="fc-row"><i class="bi bi-geo-alt"></i>${c.domicilio}</div>` : ''}
+                <div class="fc-row fc-row--muted"><i class="bi bi-building"></i>${c.sucursal || 'N/D'} · ${c.colaborador || 'N/D'} · ${c.ecuentas || 'N/D'}</div>
             </div>
         </div>
     `;
@@ -348,10 +290,11 @@ export function buscarClienteEnChat(message) {
 
     if (!terminoBusqueda) return null;
 
-    // Buscar coincidencias
+    // Buscar coincidencias (sin tildes)
+    const termNorm = norm(terminoBusqueda);
     const resultados = clientes.filter(c =>
-        c.nombre.toLowerCase().includes(terminoBusqueda) ||
-        c.nif.toLowerCase().includes(terminoBusqueda)
+        norm(c.nombre).includes(termNorm) ||
+        norm(c.nif).includes(termNorm)
     );
 
     return { termino: terminoBusqueda, resultados };

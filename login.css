@@ -343,6 +343,32 @@ body {
 .login-features { animation: fadeInUp 0.8s ease 0.1s both; }
 .login-form { animation: fadeInUp 0.6s ease 0.2s both; }
 
+/* ---- Botón volver OTP ---- */
+.btn-otp-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 10px;
+    width: 100%;
+    background: none;
+    border: 2px solid var(--login-border);
+    border-radius: var(--login-radius);
+    color: var(--login-text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color var(--login-transition), color var(--login-transition), background var(--login-transition);
+}
+
+.btn-otp-back:hover {
+    border-color: var(--login-primary);
+    color: var(--login-primary);
+    background: var(--login-primary-50);
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
     .login-container {

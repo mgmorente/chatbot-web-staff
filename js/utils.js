@@ -1,3 +1,8 @@
+// Normalizar texto: quita tildes y pasa a minúsculas (para búsquedas)
+export function norm(text) {
+    return (text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 // Función para mostrar el modal de "Procesando..."
 export function showLoading(message = 'Por favor espere mientras se realiza el proceso.') {
     Swal.fire({

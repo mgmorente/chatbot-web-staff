@@ -1,5 +1,6 @@
 import { addMessageToChat } from './chat.js';
 import { renderDocumentos } from './docs.js';
+import { norm } from './utils.js';
 
 function parseDate(str) {
     if (!str) return 0;
@@ -56,7 +57,7 @@ export function renderSiniestrosCliente(d = {}) {
         const ramo = poliza?.ramo || poliza?.tipo_producto || '';
         const ramoIcon = ramoIcons[ramo?.toUpperCase()] || (cerrado ? 'bi-lock' : 'bi-exclamation-triangle');
         const riesgo = poliza?.riesgo || poliza?.objeto || '';
-        const searchable = `${s.id} ${s.compania || ''} ${s.causa || ''} ${s.cia_poliza || ''} ${ramo} ${riesgo}`.toLowerCase();
+        const searchable = norm(`${s.id} ${s.compania || ''} ${s.causa || ''} ${s.cia_poliza || ''} ${ramo} ${riesgo}`);
 
         let timelineHtml = '';
         if (tramites.length) {
@@ -141,7 +142,7 @@ export function renderSiniestrosCliente(d = {}) {
     const searchInput = container.querySelector('.data-panel__search-input');
     if (searchInput) {
         searchInput.addEventListener('input', () => {
-            const q = searchInput.value.toLowerCase().trim();
+            const q = norm(searchInput.value.trim());
             const listEl = searchInput.closest('.data-panel').querySelector('.data-panel__list');
             const detailsEl = listEl.querySelector('.data-group__more');
             if (q) {

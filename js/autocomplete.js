@@ -31,12 +31,15 @@ const suggestions = [
     // Compañías
     { icon: 'bi-telephone',           text: 'Consultar teléfonos de compañías',     command: 'consultar_compania',   keywords: ['telefono', 'telefonos', 'compania', 'companias', 'asistencia', 'contacto', 'llamar', 'aseguradora', 'numero'] },
 
+    // Pagos
+    { icon: 'bi-cash-stack',          text: 'Resumen de pagos del cliente',         command: 'resumen_pagos',        keywords: ['paga', 'pago', 'pagos', 'cuanto', 'prima', 'primas', 'coste', 'precio', 'seguro', 'seguros', 'resumen', 'anual', 'total'] },
+
     // Comunicación
     { icon: 'bi-envelope',            text: 'Enviar email al cliente',              command: 'enviar_email',         keywords: ['email', 'correo', 'enviar', 'mail', 'mensaje', 'cliente', 'carta', 'comunicacion'] },
 
     // Utilidades (comandos locales especiales)
     { icon: 'bi-clock-history',       text: 'Ver clientes recientes',               command: '_recientes',           keywords: ['reciente', 'recientes', 'historial', 'ultimo', 'anteriores'] },
-    { icon: 'bi-question-circle',     text: 'Ver funcionalidades disponibles',      command: '_help',                keywords: ['ayuda', 'help', 'funcionalidades', 'que puedo', 'opciones'] },
+    { icon: 'bi-question-circle',     text: 'Ver funcionalidades disponibles',      command: '_help',                keywords: ['ayuda', 'help', 'funcionalidades', 'que puedo', 'opciones', 'que tienes', 'que haces', 'que sabes', 'para que sirves', 'como funciona', 'menu'] },
 ];
 
 let _el = null;

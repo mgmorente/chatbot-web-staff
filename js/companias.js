@@ -1,5 +1,6 @@
 import { addMessageToChat } from './chat.js';
 import { getCompanias } from './storage.js';
+import { norm } from './utils.js';
 
 export async function storeCompaniasList() {
     const token = localStorage.getItem('userToken');
@@ -59,7 +60,7 @@ export function renderTelefonosCompanias(d = []) {
             </div>`).join('');
 
         return `
-        <div class="data-card" data-searchable="${nombre.toLowerCase()} ${phones.map(i => i.area.toLowerCase()).join(' ')}">
+        <div class="data-card" data-searchable="${norm(nombre + ' ' + phones.map(i => i.area).join(' '))}">
             <div class="data-card__icon"><i class="bi bi-building"></i></div>
             <div class="data-card__body">
                 <div class="data-card__title">${nombre}</div>
@@ -99,7 +100,7 @@ export function renderTelefonosCompanias(d = []) {
     const searchInput = container.querySelector('.data-panel__search-input');
     if (searchInput) {
         searchInput.addEventListener('input', () => {
-            const q = searchInput.value.toLowerCase().trim();
+            const q = norm(searchInput.value.trim());
             const listEl = searchInput.closest('.data-panel').querySelector('.data-panel__list');
             const detailsEl = listEl.querySelector('.data-group__more');
             if (q) {

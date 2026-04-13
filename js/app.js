@@ -7,6 +7,7 @@ import { renderModClienteInline, renderAgendaInline, renderEmailInline, renderPr
 import { renderRecibosCliente } from './recibos.js';
 import { renderSiniestrosCliente } from './siniestros.js';
 import { renderTelefonosCompanias } from './companias.js';
+import { renderResumenPagos } from './pagos.js';
 import { renderAgenda } from './agenda.js';
 import { renderDocumentos, renderDocumentosConFiltro } from './docs.js';
 import { updateHeaderClient } from './header.js';
@@ -47,52 +48,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateHeaderClient();
 
-    // --- Quick actions: fijos ---
-    const quickActions = [
-        { command: 'consultar_cliente', icon: 'bi-person-vcard', label: 'Ficha cliente' },
-        { command: 'consultar_poliza', icon: 'bi-shield-check', label: 'Pólizas' },
-        { command: 'consultar_siniestro', icon: 'bi-exclamation-triangle', label: 'Siniestros' },
-        { command: 'consultar_recibo', icon: 'bi-receipt', label: 'Recibos' },
-    ];
-    const quickContainer = document.getElementById('quick-actions');
-    let quickActionsVisible = true;
-
-    function renderQuickActions() {
-        quickContainer.innerHTML = quickActions.map(q =>
-            `<button class="quick-btn" data-command="${q.command}"><i class="bi ${q.icon}"></i> ${q.label}</button>`
-        ).join('');
-        quickContainer.style.display = 'flex';
-        quickActionsVisible = true;
-    }
-
-    function hideQuickActions() {
-        quickContainer.style.display = 'none';
-        quickActionsVisible = false;
-    }
-
-    renderQuickActions();
-
-    // Mostrar quick actions de nuevo al cambiar de cliente + controlar agenda
+    // --- Al cambiar de cliente: mostrar ficha + controlar agenda ---
     document.addEventListener('clienteChanged', (e) => {
-        renderQuickActions();
+        renderFichaCliente();
         const agendaOk = e.detail?.agendaDisponible ?? (localStorage.getItem('agendaDisponible') === '1');
         updateAgendaAvailability(agendaOk);
+    });
 
-        // Aviso de recibos pendientes
-        const data = JSON.parse(localStorage.getItem('clienteData') || 'null');
-        if (data?.recibos) {
-            const pendientes = data.recibos.filter(r => r.situacion !== 'Cobrado');
-            if (pendientes.length > 0) {
-                const total = pendientes.reduce((sum, r) => sum + (parseFloat(r.prima_total) || 0), 0);
-                addMessageToChat('bot', `
-                    <div class="alert-recibos">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                        <span>Este cliente tiene <strong>${pendientes.length} recibo${pendientes.length > 1 ? 's' : ''} pendiente${pendientes.length > 1 ? 's' : ''}</strong> por un total de <strong>${total.toFixed(2)}€</strong></span>
-                        <button class="alert-recibos-btn js-ver-pendientes">Ver recibos</button>
-                    </div>
-                `);
-            }
-        }
+    // --- Clic en stats de la ficha cliente (pólizas, siniestros) ---
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.js-ficha-action');
+        if (!btn) return;
+        const command = btn.dataset.command;
+        let args = {};
+        try { args = JSON.parse(btn.dataset.args || '{}'); } catch {}
+        handleCommand({ command, args });
     });
 
     function updateAgendaAvailability(disponible) {
@@ -174,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderPolizasCliente(d);
                 break;
             case 'consultar_recibo':
-                renderRecibosCliente();
+                renderRecibosCliente(d.args?.pendientes ? { soloPendientes: true } : {});
                 break;
             case 'consultar_siniestro':
                 renderSiniestrosCliente(d);
@@ -211,6 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'wallet_poliza':
                 renderWalletInline();
                 break;
+            case 'resumen_pagos':
+            case 'consultar_pagos':
+                renderResumenPagos();
+                break;
             default:
                 if (d.message) addMessageToChat('bot', d.message);
                 else addMessageToChat('bot', d.error || 'Error en la respuesta del servidor');
@@ -222,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initAutocomplete(chatInput, (text, command) => {
         // Mostrar el texto como mensaje del usuario
         addMessageToChat('user', text);
-        if (quickActionsVisible) hideQuickActions();
+
 
         // Comandos locales especiales (no requieren cliente)
         if (command === '_recientes') { renderClientesRecientes(); return; }
@@ -250,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         messageInput.value = '';
 
         // Ocultar quick actions tras el primer mensaje
-        if (quickActionsVisible) hideQuickActions();
+
 
         // Comandos locales del chat
         const msgLower = message.toLowerCase().trim();
@@ -258,8 +232,37 @@ document.addEventListener('DOMContentLoaded', () => {
             renderClientesRecientes();
             return;
         }
-        if (msgLower === 'ayuda' || msgLower === 'help' || msgLower.includes('funcionalidades')) {
+        if (msgLower === 'ayuda' || msgLower === 'help' || msgLower.includes('funcionalidades')
+            || msgLower.includes('que opciones') || msgLower.includes('qué opciones')
+            || msgLower.includes('que puedo') || msgLower.includes('qué puedo')
+            || msgLower.includes('que tienes') || msgLower.includes('qué tienes')
+            || msgLower.includes('que haces') || msgLower.includes('qué haces')
+            || msgLower.includes('que sabes') || msgLower.includes('qué sabes')
+            || msgLower.includes('para que sirves') || msgLower.includes('para qué sirves')
+            || msgLower.includes('como funciona') || msgLower.includes('cómo funciona')) {
             renderHelp();
+            return;
+        }
+
+        // Resumen de pagos
+        if (msgLower.includes('que paga') || msgLower.includes('qué paga')
+            || msgLower.includes('cuanto paga') || msgLower.includes('cuánto paga')
+            || msgLower.includes('cuanto pago') || msgLower.includes('cuánto pago')
+            || msgLower.includes('resumen de pagos') || msgLower.includes('resumen pagos')
+            || msgLower.includes('cuanto cuesta') || msgLower.includes('cuánto cuesta')
+            || msgLower.includes('prima total') || msgLower.includes('primas')
+            || msgLower.includes('coste de seguros') || msgLower.includes('coste seguros')) {
+            if (!getSelectedClient()) { clienteModal.show(); return; }
+            renderResumenPagos();
+            return;
+        }
+
+        // Abrir selector de cliente
+        if (msgLower.includes('buscar un cliente') || msgLower.includes('buscar cliente')
+            || msgLower.includes('seleccionar cliente') || msgLower.includes('seleccionar un cliente')
+            || msgLower.includes('cambiar cliente') || msgLower.includes('cambiar de cliente')
+            || msgLower.includes('otro cliente') || msgLower.includes('elegir cliente')) {
+            clienteModal.show();
             return;
         }
 
@@ -303,11 +306,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', function (e) {
         const btn = e.target.closest('button[data-command]');
         if (!btn) return;
+        // Ignorar los botones de la ficha cliente (gestionados por su propio handler)
+        if (btn.classList.contains('js-ficha-action')) return;
 
         const command = btn.getAttribute('data-command');
 
         // Ocultar quick actions tras cualquier acción
-        if (quickActionsVisible) hideQuickActions();
+
 
         // Si no hay cliente seleccionado, pedir que seleccione primero
         if (!getSelectedClient() && command !== 'cambiar_cliente') {
@@ -541,47 +546,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div class="help-section">
                     <div class="help-section-title">Cliente</div>
-                    <div class="help-item"><i class="bi bi-search"></i> <strong>Consultar</strong> — Ficha completa del cliente</div>
-                    <div class="help-item"><i class="bi bi-pencil"></i> <strong>Modificar datos</strong> — Cambiar teléfono o email</div>
+                    <div class="help-item"><i class="bi bi-person-vcard"></i> <strong>Ficha cliente</strong> — Se muestra al seleccionar un cliente, con stats clickables de pólizas, siniestros y recibos pendientes</div>
+                    <div class="help-item"><i class="bi bi-pencil"></i> <strong>Modificar datos</strong> — Cambiar teléfono, email o dirección</div>
                     <div class="help-item"><i class="bi bi-arrow-repeat"></i> <strong>Cambiar cliente</strong> — Seleccionar otro cliente</div>
                     <div class="help-item"><i class="bi bi-arrow-clockwise"></i> <strong>Recargar datos</strong> — Actualizar info desde servidor</div>
                 </div>
 
                 <div class="help-section">
                     <div class="help-section-title">Pólizas</div>
-                    <div class="help-item"><i class="bi bi-search"></i> <strong>Pólizas activas</strong> — Listado con detalle</div>
-                    <div class="help-item"><i class="bi bi-files"></i> <strong>Duplicado</strong> — Descargar copia en PDF</div>
-                    <div class="help-item"><i class="bi bi-wallet2"></i> <strong>Wallet</strong> — Enviar tarjeta Apple/Google</div>
+                    <div class="help-item"><i class="bi bi-shield-check"></i> <strong>Pólizas activas / anuladas</strong> — Listado filtrable con buscador</div>
+                    <div class="help-item"><i class="bi bi-files"></i> <strong>Duplicado</strong> — Descargar copia de póliza en PDF</div>
+                    <div class="help-item"><i class="bi bi-wallet2"></i> <strong>Wallet</strong> — Enviar tarjeta Apple/Google Wallet</div>
                 </div>
 
                 <div class="help-section">
-                    <div class="help-section-title">Recibos y Siniestros</div>
-                    <div class="help-item"><i class="bi bi-receipt"></i> <strong>Recibos</strong> — Consultar estado de recibos</div>
-                    <div class="help-item"><i class="bi bi-search"></i> <strong>Siniestros</strong> — Ver siniestros abiertos</div>
-                    <div class="help-item"><i class="bi bi-plus-circle"></i> <strong>Presiniestro</strong> — Registrar nuevo parte</div>
+                    <div class="help-section-title">Recibos, Pagos y Siniestros</div>
+                    <div class="help-item"><i class="bi bi-receipt"></i> <strong>Recibos</strong> — Consultar todos o solo pendientes</div>
+                    <div class="help-item"><i class="bi bi-cash-stack"></i> <strong>Resumen de pagos</strong> — Gráfico donut con desglose por ramo y total anual</div>
+                    <div class="help-item"><i class="bi bi-exclamation-triangle"></i> <strong>Siniestros</strong> — Ver abiertos o cerrados con trámites</div>
+                    <div class="help-item"><i class="bi bi-plus-circle"></i> <strong>Presiniestro</strong> — Registrar nuevo parte con imágenes adjuntas</div>
                 </div>
 
                 <div class="help-section">
                     <div class="help-section-title">Documentos y Agenda</div>
-                    <div class="help-item"><i class="bi bi-folder"></i> <strong>Documentos</strong> — Ver y subir documentos</div>
+                    <div class="help-item"><i class="bi bi-folder"></i> <strong>Documentos</strong> — Consultar documentos por póliza o siniestro</div>
+                    <div class="help-item"><i class="bi bi-upload"></i> <strong>Subir documento</strong> — Adjuntar archivo a póliza o siniestro</div>
                     <div class="help-item"><i class="bi bi-calendar3"></i> <strong>Agenda</strong> — Consultar y crear citas</div>
                 </div>
 
                 <div class="help-section">
                     <div class="help-section-title">Comunicación</div>
                     <div class="help-item"><i class="bi bi-envelope"></i> <strong>Email</strong> — Enviar correo al cliente</div>
-                    <div class="help-item"><i class="bi bi-telephone"></i> <strong>Compañías</strong> — Directorio telefónico</div>
+                    <div class="help-item"><i class="bi bi-telephone"></i> <strong>Compañías</strong> — Directorio telefónico de aseguradoras</div>
                 </div>
 
                 <div class="help-section">
-                    <div class="help-section-title">Atajos del chat</div>
-                    <div class="help-item"><i class="bi bi-search"></i> <strong>buscar [nombre/NIF]</strong> — Buscar cliente</div>
-                    <div class="help-item"><i class="bi bi-clock-history"></i> <strong>recientes</strong> — Clientes recientes</div>
+                    <div class="help-section-title">Accesos rápidos</div>
+                    <div class="help-item"><i class="bi bi-plus-lg"></i> <strong>Botón +</strong> — Menú rápido: subir documento, nuevo siniestro, nueva cita, enviar email</div>
+                    <div class="help-item"><i class="bi bi-search"></i> <strong>buscar [nombre/NIF]</strong> — Buscar cliente desde el chat</div>
+                    <div class="help-item"><i class="bi bi-clock-history"></i> <strong>recientes</strong> — Ver últimos clientes consultados</div>
                     <div class="help-item"><i class="bi bi-question-circle"></i> <strong>ayuda</strong> — Mostrar este panel</div>
                 </div>
 
                 <div class="help-tip">
-                    <i class="bi bi-lightbulb"></i> También puedes escribir preguntas en lenguaje natural en el chat.
+                    <i class="bi bi-lightbulb"></i> Escribe en lenguaje natural o usa las sugerencias que aparecen al escribir.
                 </div>
             </div>
         `;
@@ -698,13 +706,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Botón adjuntar documentos (clip) ---
-    document.getElementById('btn-attach').addEventListener('click', () => {
+    // --- Botón + (menú acciones) ---
+    const attachMenu = document.getElementById('attach-menu');
+    const btnAttach = document.getElementById('btn-attach');
+
+    btnAttach.addEventListener('click', () => {
         if (!getSelectedClient()) {
             clienteModal.show();
             return;
         }
-        renderSubirDocInline();
+        attachMenu.classList.toggle('hidden');
+        // Rotar icono cuando está abierto
+        btnAttach.classList.toggle('active');
+    });
+
+    // Cerrar menú al hacer clic en una opción (el data-command lo gestiona el handler delegado)
+    attachMenu.addEventListener('click', (e) => {
+        if (e.target.closest('.attach-menu-item')) {
+            attachMenu.classList.add('hidden');
+            btnAttach.classList.remove('active');
+        }
+    });
+
+    // Cerrar menú al escribir en el input
+    document.getElementById('chat-message').addEventListener('focus', () => {
+        attachMenu.classList.add('hidden');
+        btnAttach.classList.remove('active');
+    });
+
+    // Cerrar menú al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!attachMenu.classList.contains('hidden') &&
+            !e.target.closest('#attach-menu') &&
+            !e.target.closest('#btn-attach')) {
+            attachMenu.classList.add('hidden');
+            btnAttach.classList.remove('active');
+        }
     });
 
 });

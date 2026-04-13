@@ -1,6 +1,6 @@
 import { addMessageToChat } from './chat.js';
 import { renderDocumentos } from './docs.js';
-import { showLoading } from './utils.js';
+import { showLoading, norm } from './utils.js';
 
 const ramoIcons = {
     "AUTOS": "bi-car-front", "HOGAR": "bi-house", "SALUD": "bi-heart-pulse",
@@ -151,7 +151,7 @@ function parseDate(str) {
 function buildPolizaCard(p, tieneDocs) {
     const activa = p.situacion === 1;
     return `
-    <div class="data-card${!activa ? ' data-card--muted' : ''}" data-searchable="${(p.cia_poliza + ' ' + p.tipo_producto + ' ' + p.compania + ' ' + (p.objeto || '') + ' ' + (p.matricula || '')).toLowerCase()}">
+    <div class="data-card${!activa ? ' data-card--muted' : ''}" data-searchable="${norm(p.cia_poliza + ' ' + p.tipo_producto + ' ' + p.compania + ' ' + (p.objeto || '') + ' ' + (p.matricula || ''))}">
         <div class="data-card__icon"><i class="bi ${getIcon(p.tipo_producto)}"></i></div>
         <div class="data-card__body">
             <div class="data-card__title">${p.cia_poliza || 'N/D'} <span class="data-card__sep">·</span> ${(p.tipo_producto || '').toUpperCase() || 'N/D'} <span class="data-card__sep">·</span> ${p.compania || 'N/D'}</div>
@@ -178,9 +178,9 @@ export function renderPolizasCliente(d) {
         return Object.entries(filtros).every(([key, value]) => {
             if (!value) return true;
             switch (key) {
-                case "ramo": return p.tipo_producto?.toLowerCase().includes(value.toLowerCase());
-                case "compania": return p.compania?.toLowerCase().includes(value.toLowerCase());
-                case "fecha_efecto": return p.fecha_efecto?.toLowerCase().includes(value.toLowerCase());
+                case "ramo": return norm(p.tipo_producto).includes(norm(value));
+                case "compania": return norm(p.compania).includes(norm(value));
+                case "fecha_efecto": return (p.fecha_efecto || '').includes(value);
                 case "estado":
                     const estado = p.situacion === 1 ? "activa" : "anulada";
                     return estado === value.toLowerCase();
@@ -250,7 +250,7 @@ export function renderPolizasCliente(d) {
     const searchInput = container.querySelector('.data-panel__search-input');
     if (searchInput) {
         searchInput.addEventListener('input', () => {
-            const q = searchInput.value.toLowerCase().trim();
+            const q = norm(searchInput.value.trim());
             const panel = searchInput.closest('.data-panel');
             const listEl = panel.querySelector('.data-panel__list');
             const detailsEl = listEl.querySelector('.data-group__more');

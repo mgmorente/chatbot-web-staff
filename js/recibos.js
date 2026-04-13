@@ -1,4 +1,5 @@
 import { addMessageToChat } from './chat.js';
+import { norm } from './utils.js';
 
 const ramoIcons = {
     "AUTOS": "bi-car-front", "HOGAR": "bi-house", "SALUD": "bi-heart-pulse",
@@ -56,12 +57,12 @@ export function renderRecibosCliente({ soloPendientes = false } = {}) {
         const searchable = [
             r.recibo, r.cia_poliza, r.ramo, r.compania, r.riesgo, r.matricula,
             r.prima_total, r.situacion, r.fecha_efecto, r.fecha_vencimiento
-        ].filter(Boolean).join(' ').toLowerCase();
+        ].filter(Boolean).join(' ');
 
         const detailParts = [r.ramo, r.riesgo, r.matricula].filter(Boolean);
         const detailSuffix = detailParts.length ? ` <span class="data-card__sep">·</span> ${detailParts.join(' · ')}` : '';
         return `
-        <div class="data-card data-card--compact${!cobrado ? ' data-card--danger' : ''}" data-searchable="${searchable}">
+        <div class="data-card data-card--compact${!cobrado ? ' data-card--danger' : ''}" data-searchable="${norm(searchable)}">
             <div class="data-card__icon"><i class="bi ${cobrado ? 'bi-check-circle' : 'bi-exclamation-circle'}"></i></div>
             <div class="data-card__body">
                 <div class="data-card__title">${r.recibo || 'N/D'}${detailSuffix}</div>
@@ -98,7 +99,7 @@ export function renderRecibosCliente({ soloPendientes = false } = {}) {
                 </details>`;
         }
 
-        const groupSearchable = [poliza, group.compania, group.ramo].filter(Boolean).join(' ').toLowerCase();
+        const groupSearchable = norm([poliza, group.compania, group.ramo].filter(Boolean).join(' '));
         panels += `
             <div class="data-group" data-searchable="${groupSearchable}">
                 <div class="data-group__header">
@@ -135,7 +136,7 @@ export function renderRecibosCliente({ soloPendientes = false } = {}) {
     const searchInput = container.querySelector('.data-panel__search-input');
     if (searchInput) {
         searchInput.addEventListener('input', () => {
-            const q = searchInput.value.toLowerCase().trim();
+            const q = norm(searchInput.value.trim());
             const listEl = searchInput.closest('.data-panel').querySelector('.data-panel__list');
             if (q) {
                 listEl.querySelectorAll('.data-group__more').forEach(d => d.open = true);

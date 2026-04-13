@@ -1,6 +1,6 @@
 // forms.js — Formularios inline en el chat (sin modales)
 import { addMessageToChat } from './chat.js';
-import { showLoading } from './utils.js';
+import { showLoading, norm } from './utils.js';
 import { getStoredToken } from './storage.js';
 import { recargarDatosCliente } from './clientes.js';
 
@@ -356,9 +356,9 @@ export function initInlinePicker(container, items, { placeholder, renderItem, re
     let onPickCb = null;
 
     function render(term = '') {
-        const t = term.toLowerCase();
+        const t = norm(term);
         const filtered = t
-            ? items.filter(item => searchFields(item).toLowerCase().includes(t))
+            ? items.filter(item => norm(searchFields(item)).includes(t))
             : items;
 
         activeIdx = -1;
@@ -477,10 +477,15 @@ export function renderPresiniestroInline() {
                     <textarea name="descripcion" class="inline-input inline-textarea" rows="3" placeholder="Detalle del siniestro" required></textarea>
                 </div>
                 <div class="inline-form-group">
-                    <label>Archivos <small>(opcional)</small></label>
-                    <input type="file" name="fichero1" class="inline-input mb-1" accept=".pdf,.jpg,.png,.doc,.docx">
-                    <input type="file" name="fichero2" class="inline-input mb-1" accept=".pdf,.jpg,.png,.doc,.docx">
-                    <input type="file" name="fichero3" class="inline-input" accept=".pdf,.jpg,.png,.doc,.docx">
+                    <label>Imágenes <small>(opcional, máx. 5)</small></label>
+                    <div class="siniestro-images">
+                        <label class="siniestro-images-add" title="Añadir imágenes">
+                            <i class="bi bi-camera"></i>
+                            <span>Añadir fotos</span>
+                            <input type="file" class="siniestro-images-input" accept="image/*" multiple hidden>
+                        </label>
+                        <div class="siniestro-images-preview"></div>
+                    </div>
                 </div>
                 <div class="inline-form-actions">
                     <button type="button" class="inline-btn-submit js-form-btn"><i class="bi bi-check-lg"></i> Guardar</button>
@@ -566,6 +571,50 @@ export function renderPresiniestroInline() {
         }
     });
 
+    // --- Selector de imágenes ---
+    const imgInput = form.querySelector('.siniestro-images-input');
+    const imgPreview = form.querySelector('.siniestro-images-preview');
+    const imgFiles = [];
+    form._siniestroImages = imgFiles;
+
+    imgInput.addEventListener('change', () => {
+        for (const file of imgInput.files) {
+            if (!file.type.startsWith('image/')) continue;
+            if (imgFiles.length >= 5) break;
+            imgFiles.push(file);
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const idx = imgFiles.indexOf(file);
+                const thumb = document.createElement('div');
+                thumb.className = 'siniestro-images-thumb';
+                thumb.innerHTML = `<img src="${ev.target.result}" alt=""><button type="button" class="siniestro-images-remove" data-idx="${idx}" title="Quitar"><i class="bi bi-x-lg"></i></button>`;
+                imgPreview.appendChild(thumb);
+            };
+            reader.readAsDataURL(file);
+        }
+        imgInput.value = '';
+        form.querySelector('.siniestro-images-add').style.display = imgFiles.length >= 5 ? 'none' : '';
+    });
+
+    imgPreview.addEventListener('click', (ev) => {
+        const removeBtn = ev.target.closest('.siniestro-images-remove');
+        if (!removeBtn) return;
+        const idx = parseInt(removeBtn.dataset.idx, 10);
+        imgFiles.splice(idx, 1);
+        imgPreview.innerHTML = '';
+        imgFiles.forEach((f, i) => {
+            const reader = new FileReader();
+            reader.onload = (e2) => {
+                const thumb = document.createElement('div');
+                thumb.className = 'siniestro-images-thumb';
+                thumb.innerHTML = `<img src="${e2.target.result}" alt=""><button type="button" class="siniestro-images-remove" data-idx="${i}" title="Quitar"><i class="bi bi-x-lg"></i></button>`;
+                imgPreview.appendChild(thumb);
+            };
+            reader.readAsDataURL(f);
+        });
+        form.querySelector('.siniestro-images-add').style.display = imgFiles.length >= 5 ? 'none' : '';
+    });
+
     // Bloquear Enter (excepto en pickers que lo manejan solos y textarea)
     form.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && !e.target.classList.contains('inline-picker-search')) e.preventDefault();
@@ -584,15 +633,24 @@ export function renderPresiniestroInline() {
 
         showLoading();
         try {
+            const formData = new FormData();
+            formData.append('poliza', polizaPicker.rawValue);
+            formData.append('fecha', fecha);
+            formData.append('causa', causaPicker.rawValue);
+            formData.append('descripcion', descripcion);
+            const imgFiles = form._siniestroImages || [];
+            imgFiles.forEach(file => formData.append('imagenes[]', file));
+
             const res = await fetch(`${ENV.API_URL}/presiniestro`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${getToken()}`, 'empresa': ENV.EMPRESA, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ poliza: polizaPicker.rawValue, fecha, causa: causaPicker.rawValue, descripcion })
+                headers: { 'Authorization': `Bearer ${getToken()}`, 'empresa': ENV.EMPRESA },
+                body: formData
             });
             if (!res.ok) throw new Error();
             Swal.close();
 
             const fechaDisplay = form.querySelector('[name="fecha"]')._flatpickr?.altInput?.value || fecha;
+            const numImgs = imgFiles.length;
             form.closest('.chat-inline-form').innerHTML = `
                 <div class="inline-form-success">
                     <div class="mb-2"><i class="bi bi-check-circle"></i> Presiniestro registrado correctamente</div>
@@ -601,6 +659,7 @@ export function renderPresiniestroInline() {
                         <div><small class="text-muted">Causa</small><br>${causa?.nombre || ''}</div>
                         <div><small class="text-muted">Fecha</small><br>${fechaDisplay}</div>
                         <div><small class="text-muted">Descripción</small><br>${descripcion}</div>
+                        ${numImgs > 0 ? `<div><small class="text-muted">Imágenes</small><br><i class="bi bi-camera"></i> ${numImgs} imagen${numImgs > 1 ? 'es' : ''} adjunta${numImgs > 1 ? 's' : ''}</div>` : ''}
                     </div>
                 </div>`;
         } catch {

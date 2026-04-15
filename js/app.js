@@ -314,6 +314,9 @@ document.addEventListener('DOMContentLoaded', () => {
             msgLower === 'ayuda' || msgLower === 'help' || msgLower.includes('funcionalidades')
             || msgLower.includes('que opciones') || msgLower.includes('qué opciones')
             || msgLower.includes('que puedo') || msgLower.includes('qué puedo')
+            || msgLower.includes('que puedes') || msgLower.includes('qué puedes')
+            || msgLower.includes('que sabes hacer') || msgLower.includes('qué sabes hacer')
+            || msgLower.includes('que ofreces') || msgLower.includes('qué ofreces')
             || msgLower.includes('que tienes') || msgLower.includes('qué tienes')
             || msgLower.includes('que haces') || msgLower.includes('qué haces')
             || msgLower.includes('para que sirves') || msgLower.includes('para qué sirves')
@@ -375,10 +378,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pideOficina     = /\b(oficina|sucursal)\b/i.test(msgLower);
                 const pideEjecutiva   = /\b(ejecutiv[oa]|cuentas|ecuentas)\b/i.test(msgLower);
                 const pideColaborador = /\b(colaborador|asesor|gestor)\b/i.test(msgLower);
+                // Ajustar etiqueta de ejecutivo/a según el género preguntado
+                const usaMasculino = /\bejecutivo\b/i.test(msgLower);
+                const labelEjecutiva = usaMasculino ? 'Ejecutivo de cuentas' : 'Ejecutiva de cuentas';
                 const partes = [];
-                if (pideOficina)     partes.push(`<div class="fc-row"><i class="bi bi-building"></i><strong>Oficina/Sucursal:</strong> ${cli.sucursal || 'N/D'}</div>`);
-                if (pideEjecutiva)   partes.push(`<div class="fc-row"><i class="bi bi-person-badge"></i><strong>Ejecutiva de cuentas:</strong> ${cli.ecuentas || 'N/D'}</div>`);
-                if (pideColaborador) partes.push(`<div class="fc-row"><i class="bi bi-people"></i><strong>Colaborador:</strong> ${cli.colaborador || 'N/D'}</div>`);
+                if (pideOficina)     partes.push(`<div class="fc-row" style="display:block;"><i class="bi bi-building"></i> <strong>Oficina/Sucursal:</strong><br>${cli.sucursal || 'N/D'}</div>`);
+                if (pideEjecutiva)   partes.push(`<div class="fc-row" style="display:block;"><i class="bi bi-person-badge"></i> <strong>${labelEjecutiva}:</strong><br>${cli.ecuentas || 'N/D'}</div>`);
+                if (pideColaborador) partes.push(`<div class="fc-row" style="display:block;"><i class="bi bi-people"></i> <strong>Colaborador:</strong><br>${cli.colaborador || 'N/D'}</div>`);
                 if (partes.length) {
                     addMessageToChat('bot', `<div class="data-empty" style="text-align:left;">${partes.join('')}</div>`);
                     return;
@@ -388,10 +394,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Datos de contacto del cliente (teléfono, email, dirección) → abrir ficha
-        if (/\bsu\s+(tel[eé]fono|m[oó]vil|email|correo|e-mail|direcci[oó]n|domicilio|oficina|sucursal|ejecutiva|colaborador)\b/i.test(msgLower)
-            || /\b(tel[eé]fono|m[oó]vil|email|correo|e-mail|direcci[oó]n|domicilio|oficina|sucursal|ejecutiva|colaborador)\s+del\s+cliente\b/i.test(msgLower)) {
+        // Datos de contacto del cliente (teléfono, email, dirección) → respuesta directa
+        if (/\bsu\s+(tel[eé]fono|m[oó]vil|email|correo|e-mail|direcci[oó]n|domicilio)\b/i.test(msgLower)
+            || /\b(tel[eé]fono|m[oó]vil|email|correo|e-mail|direcci[oó]n|domicilio)\s+del\s+cliente\b/i.test(msgLower)
+            || (/\b(tel[eé]fono|m[oó]vil|email|correo|e-mail|direcci[oó]n|domicilio)\b/i.test(msgLower) && getSelectedClient())) {
             if (!getSelectedClient()) { clienteModal.show(); return; }
+            const cd = JSON.parse(localStorage.getItem('clienteData') || 'null');
+            const cli = cd?.cliente;
+            if (cli) {
+                const pideTelefono  = /\b(tel[eé]fono|m[oó]vil)\b/i.test(msgLower);
+                const pideEmail     = /\b(email|correo|e-mail)\b/i.test(msgLower);
+                const pideDireccion = /\b(direcci[oó]n|domicilio)\b/i.test(msgLower);
+                const partes = [];
+                if (pideTelefono)  partes.push(cli.telefono  ? `<div class="fc-row" style="display:block;"><i class="bi bi-telephone"></i> <strong>Teléfono:</strong><br><a href="tel:${cli.telefono}">${cli.telefono}</a></div>` : `<div class="fc-row" style="display:block;"><i class="bi bi-telephone-x"></i> <strong>Teléfono:</strong><br>N/D</div>`);
+                if (pideEmail)     partes.push(cli.email     ? `<div class="fc-row" style="display:block;"><i class="bi bi-envelope"></i> <strong>Email:</strong><br>${cli.email}</div>`       : `<div class="fc-row" style="display:block;"><i class="bi bi-envelope"></i> <strong>Email:</strong><br>N/D</div>`);
+                if (pideDireccion) partes.push(cli.domicilio ? `<div class="fc-row" style="display:block;"><i class="bi bi-geo-alt"></i> <strong>Dirección:</strong><br>${cli.domicilio}</div>` : `<div class="fc-row" style="display:block;"><i class="bi bi-geo-alt"></i> <strong>Dirección:</strong><br>N/D</div>`);
+                if (partes.length) {
+                    addMessageToChat('bot', `<div class="data-empty" style="text-align:left;">${partes.join('')}</div>`);
+                    return;
+                }
+            }
             renderFichaCliente();
             return;
         }
@@ -408,6 +430,28 @@ document.addEventListener('DOMContentLoaded', () => {
             || /\bcoste\s+(anual|total|de\s+los\s+seguros)/i.test(msgLower)) {
             if (!getSelectedClient()) { clienteModal.show(); return; }
             renderResumenPagos();
+            return;
+        }
+
+        // ---- Override: si el mensaje menciona explícitamente "siniestros" o "recibos",
+        // se trata como consulta directa (no como follow-up de la intent anterior) ----
+        if (/\brecibos?\b/i.test(msgLower)) {
+            if (!getSelectedClient()) { clienteModal.show(); return; }
+            const soloPendientes = /\b(pendientes?|impagados?|sin\s+cobrar|no\s+cobrados?|pte\b)/i.test(msgLower);
+            renderRecibosCliente({ soloPendientes });
+            return;
+        }
+        if (/\bsiniestros?\b/i.test(msgLower)) {
+            if (!getSelectedClient()) { clienteModal.show(); return; }
+            const esAbierto = /\b(abiertos?|activ[oa]s?|en\s+curso|pendientes?|en\s+tr[aá]mite|vigentes?)\b/i.test(msgLower);
+            const esCerrado = /\b(cerrad[oa]s?|anulad[oa]s?|finalizad[oa]s?|resuelt[oa]s?)\b/i.test(msgLower);
+            const RAMOS_S = ['autos','auto','moto','motos','hogar','salud','vida','pyme','pymes','comercio','comercios','accidentes','rc','r.c.','responsabilidad civil'];
+            const ramoS = RAMOS_S.find(r => new RegExp(`\\b${r.replace(/\./g, '\\.')}\\b`, 'i').test(msgLower));
+            const args = {};
+            if (esAbierto) args.estado = 'abierto';
+            else if (esCerrado) args.estado = 'cerrado';
+            if (ramoS) args.ramo = ramoS;
+            handleCommand({ command: 'consultar_siniestro', args });
             return;
         }
 

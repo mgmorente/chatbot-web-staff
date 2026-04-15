@@ -3216,3 +3216,36 @@ span.flatpickr-weekday {
     height: 36px;
     max-width: 220px;
 }
+
+/* ===== Banner sticky de stats del cliente ===== */
+.sticky-stats {
+    position: absolute;
+    top: 60px;            /* justo debajo del header */
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    padding: 10px 14px;
+    background: #ffffff;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    transform: translateY(0);
+    opacity: 1;
+    transition: transform .22s ease, opacity .22s ease;
+}
+.sticky-stats.hidden {
+    transform: translateY(-110%);
+    opacity: 0;
+    pointer-events: none;
+}
+.sticky-stats__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+.sticky-stats__pills .fc-pill {
+    font-size: 12px;
+    padding: 4px 10px;
+}

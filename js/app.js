@@ -91,15 +91,65 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Scroll-to-bottom button ---
+    // --- Scroll-to-bottom button + banner sticky de stats ---
     const chatBox = document.getElementById('chat-box');
     const btnScrollDown = document.getElementById('btn-scroll-down');
+    const stickyStats = document.getElementById('sticky-stats');
     const scrollThreshold = 150;
+    let _prevScrollTop = 0;
+
+    function refreshStickyStats() {
+        if (!stickyStats) return;
+        const data = JSON.parse(localStorage.getItem('clienteData') || 'null');
+        if (!data?.cliente) { stickyStats.innerHTML = ''; stickyStats.classList.add('hidden'); return; }
+        const c = data.cliente;
+        const activas   = (data.polizas   || []).filter(p => p.situacion === 1).length;
+        const anuladas  = (data.polizas   || []).filter(p => p.situacion !== 1).length;
+        const abiertos  = (data.siniestros|| []).filter(s => s.estado !== 'Cerrado').length;
+        const pendientes= (data.recibos   || []).filter(r => r.situacion !== 'Cobrado').length;
+        stickyStats.innerHTML = `
+            <div class="sticky-stats__pills">
+                <button class="fc-pill fc-pill--green js-ficha-action" data-command="consultar_poliza" data-args='{"estado":"activa"}'>${activas} pólizas</button>
+                <button class="fc-pill fc-pill--orange js-ficha-action" data-command="consultar_siniestro" data-args='{"estado":"abierto"}'>${abiertos} siniestros</button>
+                <button class="fc-pill fc-pill--red js-ficha-action" data-command="consultar_recibo" data-args='{"pendientes":true}'>${pendientes} pendientes</button>
+            </div>`;
+    }
+    refreshStickyStats();
+    document.addEventListener('clienteChanged', refreshStickyStats);
+
+    // Acumulador para detectar intención clara de subir/bajar (evita flicker)
+    let _upAccum = 0, _downAccum = 0;
+    const UP_TRIGGER = 30;    // px hacia arriba para desplegar
+    const DOWN_TRIGGER = 20;  // px hacia abajo para ocultar
 
     chatBox.addEventListener('scroll', () => {
         const { scrollTop, scrollHeight, clientHeight } = chatBox;
         const isScrolledUp = (scrollHeight - scrollTop - clientHeight) > scrollThreshold;
         btnScrollDown.classList.toggle('hidden', !isScrolledUp);
+
+        const delta = scrollTop - _prevScrollTop;
+        _prevScrollTop = scrollTop;
+
+        if (!stickyStats || !stickyStats.innerHTML) return;
+
+        // Si está pegado al final (o sin overflow), siempre ocultar
+        const atBottom = (scrollHeight - scrollTop - clientHeight) < 20;
+        const sinOverflow = scrollHeight <= clientHeight + 5;
+        if (atBottom || sinOverflow) {
+            stickyStats.classList.add('hidden');
+            _upAccum = 0; _downAccum = 0;
+            return;
+        }
+
+        if (delta < 0) { // scroll hacia arriba
+            _upAccum += -delta;
+            _downAccum = 0;
+            if (_upAccum >= UP_TRIGGER) stickyStats.classList.remove('hidden');
+        } else if (delta > 0) { // scroll hacia abajo
+            _downAccum += delta;
+            _upAccum = 0;
+            if (_downAccum >= DOWN_TRIGGER) stickyStats.classList.add('hidden');
+        }
     });
 
     btnScrollDown.addEventListener('click', () => {

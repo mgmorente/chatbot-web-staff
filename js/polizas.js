@@ -12,6 +12,39 @@ function getIcon(tipo) {
     return ramoIcons[tipo?.toUpperCase()] || 'bi-file-earmark-text';
 }
 
+/**
+ * Comprueba si una fecha (formato DD/MM/YYYY o YYYY-MM-DD) cumple un valor de filtro.
+ * - Fecha única "YYYY-MM-DD"  → igualdad exacta
+ * - "YYYY-MM"               → mismo mes
+ * - "YYYY"                  → mismo año
+ * - Rango "YYYY-MM-DD/YYYY-MM-DD"
+ */
+function matchFechaRango(fechaRaw, filtro) {
+    if (!fechaRaw || !filtro) return true;
+    const toIso = (s) => {
+        if (!s) return null;
+        const t = String(s).trim();
+        // DD/MM/YYYY
+        const m = t.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+        // YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}/.test(t)) return t.slice(0, 10);
+        return null;
+    };
+    const iso = toIso(fechaRaw);
+    if (!iso) return false;
+    const f = String(filtro).trim();
+    if (f.includes('/')) {
+        // rango "YYYY-MM-DD/YYYY-MM-DD"
+        const [ini, fin] = f.split('/').map(s => s.trim());
+        return (!ini || iso >= ini) && (!fin || iso <= fin);
+    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(f)) return iso === f;
+    if (/^\d{4}-\d{2}$/.test(f)) return iso.startsWith(f);
+    if (/^\d{4}$/.test(f)) return iso.startsWith(f);
+    return iso.includes(f);
+}
+
 export async function descargaPoliza(poliza) {
     try {
         showLoading();
@@ -151,13 +184,14 @@ function parseDate(str) {
 function buildPolizaCard(p, tieneDocs) {
     const activa = p.situacion === 1;
     return `
-    <div class="data-card${!activa ? ' data-card--muted' : ''}" data-searchable="${norm(p.cia_poliza + ' ' + p.tipo_producto + ' ' + p.compania + ' ' + (p.objeto || '') + ' ' + (p.matricula || ''))}">
+    <div class="data-card" data-searchable="${norm(p.cia_poliza + ' ' + p.tipo_producto + ' ' + p.compania + ' ' + (p.objeto || '') + ' ' + (p.matricula || ''))}">
         <div class="data-card__icon"><i class="bi ${getIcon(p.tipo_producto)}"></i></div>
         <div class="data-card__body">
             <div class="data-card__title">${p.cia_poliza || 'N/D'} <span class="data-card__sep">·</span> ${(p.tipo_producto || '').toUpperCase() || 'N/D'} <span class="data-card__sep">·</span> ${p.compania || 'N/D'}</div>
             <div class="data-card__meta">
                 ${p.fecha_vencimiento ? `<span><i class="bi bi-calendar3"></i> Vence ${p.fecha_vencimiento}</span>` : ''}
                 ${p.prima != null ? `<span>${p.prima}€</span>` : ''}
+                ${p.matricula ? `<span><i class="bi bi-car-front"></i> ${p.matricula}</span>` : ''}
                 ${p.objeto ? `<span>${p.objeto}</span>` : ''}
             </div>
             <div class="data-card__status">${activa ? '<span class="status-dot status-dot--ok"></span> Activa' : '<span class="status-dot status-dot--ko"></span> Anulada'}</div>
@@ -173,17 +207,37 @@ export function renderPolizasCliente(d) {
         return;
     }
 
+    // Ignora valores que sean placeholders (ej. "(activa | anulada)") o vacíos
+    const isPlaceholder = (v) => {
+        if (v === null || v === undefined) return true;
+        const s = String(v).trim();
+        if (!s) return true;
+        if (s.includes('|')) return true;                 // "(activa | anulada)"
+        if (/^\(.*\)$/.test(s)) return true;              // envuelto en paréntesis
+        return false;
+    };
+
     const filtros = d.args || {};
     let polizasFiltradas = data.polizas.filter(p => {
         return Object.entries(filtros).every(([key, value]) => {
-            if (!value) return true;
+            if (isPlaceholder(value)) return true;
             switch (key) {
                 case "ramo": return norm(p.tipo_producto).includes(norm(value));
                 case "compania": return norm(p.compania).includes(norm(value));
+                case "matricula":
+                case "codigo":
+                    // Normaliza: quita espacios y guiones para comparar "1234-ABC" con "1234ABC"
+                    const mNorm = s => norm(String(s || '').replace(/[\s-]/g, ''));
+                    return mNorm(p.matricula).includes(mNorm(value))
+                        || mNorm(p.cia_poliza).includes(mNorm(value))
+                        || mNorm(p.poliza).includes(mNorm(value));
                 case "fecha_efecto": return (p.fecha_efecto || '').includes(value);
+                case "fecha_vencimiento":
+                case "fecha":
+                    return matchFechaRango(p.fecha_vencimiento, value);
                 case "estado":
                     const estado = p.situacion === 1 ? "activa" : "anulada";
-                    return estado === value.toLowerCase();
+                    return estado === String(value).toLowerCase();
                 default: return true;
             }
         });
@@ -194,9 +248,11 @@ export function renderPolizasCliente(d) {
         return;
     }
 
-    // Ordenar: activas primero, luego por fecha vencimiento desc
+    // Ordenar: activas (situacion=1) primero, luego por fecha de vencimiento desc
     polizasFiltradas.sort((a, b) => {
-        if (a.situacion !== b.situacion) return b.situacion - a.situacion; // activas primero
+        const aActiva = a.situacion === 1 ? 1 : 0;
+        const bActiva = b.situacion === 1 ? 1 : 0;
+        if (aActiva !== bActiva) return bActiva - aActiva;
         return parseDate(b.fecha_vencimiento) - parseDate(a.fecha_vencimiento);
     });
 
@@ -205,27 +261,18 @@ export function renderPolizasCliente(d) {
     const MAX_VISIBLE = 5;
     const showSearch = count > MAX_VISIBLE;
 
-    // Separar activas e inactivas
-    const activas = polizasFiltradas.filter(p => p.situacion === 1);
-    const inactivas = polizasFiltradas.filter(p => p.situacion !== 1);
-
-    // Visible: primeras 5 activas
-    const visibleActivas = activas.slice(0, MAX_VISIBLE);
-    const hiddenActivas = activas.slice(MAX_VISIBLE);
-    const visibleHtml = visibleActivas.map(p => buildPolizaCard(p, tieneDocs(p.poliza))).join('');
+    // Siempre mostrar las primeras MAX_VISIBLE; el resto se oculta tras "Ver N más"
+    const visibleArr = polizasFiltradas.slice(0, MAX_VISIBLE);
+    const hiddenArr  = polizasFiltradas.slice(MAX_VISIBLE);
+    const visibleHtml = visibleArr.map(p => buildPolizaCard(p, tieneDocs(p.poliza))).join('');
 
     let hiddenHtml = '';
-    const hiddenCards = [
-        ...hiddenActivas.map(p => buildPolizaCard(p, tieneDocs(p.poliza))),
-        ...inactivas.map(p => buildPolizaCard(p, tieneDocs(p.poliza)))
-    ];
-
-    if (hiddenCards.length > 0) {
-        const rest = hiddenCards.length;
+    if (hiddenArr.length > 0) {
+        const rest = hiddenArr.length;
         hiddenHtml = `
             <details class="data-group__more">
                 <summary class="data-group__more-btn"><i class="bi bi-chevron-down"></i> Ver ${rest} póliza${rest > 1 ? 's' : ''} más</summary>
-                ${hiddenCards.join('')}
+                ${hiddenArr.map(p => buildPolizaCard(p, tieneDocs(p.poliza))).join('')}
             </details>`;
     }
 

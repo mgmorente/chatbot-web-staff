@@ -22,15 +22,27 @@ async function fetchCompaniasList(token) {
             }
         });
         if (!response.ok) throw new Error('Error al obtener datos de compañías');
-        return await response.json();
+        const data = await response.json();
+        return Array.isArray(data) ? data : null;
     } catch (err) {
         console.error(err);
         return null;
     }
 }
 
-export function renderTelefonosCompanias(d = []) {
-    const data = getCompanias();
+export async function renderTelefonosCompanias(d = []) {
+    let data = getCompanias();
+
+    // Si no tenemos datos en localStorage, intenta recargarlos
+    if (!data.length) {
+        await storeCompaniasList();
+        data = getCompanias();
+    }
+
+    if (!data.length) {
+        addMessageToChat('bot', '<div class="data-empty"><i class="bi bi-building-x"></i> No se pudieron cargar los datos de compañías. Vuelve a iniciar sesión.</div>');
+        return;
+    }
 
     const filteredData = (d?.args?.compania)
         ? data.filter(c => c.nombre.toLowerCase().includes(d.args.compania.toLowerCase()))

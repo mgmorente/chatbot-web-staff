@@ -231,13 +231,22 @@
                             <i class="bi bi-plus-lg"></i>
                         </button>
                         <input type="text" id="chat-message"
-                            placeholder="Escribe tu consulta..."
+                            placeholder="Escribe tu mensaje aqui ..."
                             autocomplete="off">
                         <button type="submit" class="btn-send" title="Enviar">
                             <i class="bi bi-send-fill"></i>
                         </button>
+                        <button type="button" id="btn-mic" class="btn-mic" title="Pulsa para grabar">
+                            <i class="bi bi-mic-fill"></i>
+                        </button>
                     </div>
                 </form>
+                <!-- Indicador de grabación -->
+                <div id="recording-indicator" class="recording-indicator hidden">
+                    <div class="recording-pulse"></div>
+                    <span class="recording-text">Grabando...</span>
+                    <span id="recording-timer" class="recording-timer">0:00</span>
+                </div>
             </footer>
 
         </main>

@@ -13,6 +13,7 @@ import { renderDocumentos, renderDocumentosConFiltro } from './docs.js';
 import { updateHeaderClient } from './header.js';
 import { showLoading } from './utils.js';
 import { initAutocomplete } from './autocomplete.js';
+import { initVoice } from './voice.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -66,14 +67,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function updateAgendaAvailability(disponible) {
-        // Sidebar: deshabilitar botones de agenda
-        document.querySelectorAll('[data-command="consultar_agenda"], [data-command="registrar_agenda"]').forEach(btn => {
+        // Sidebar: deshabilitar botones que dependen de Outlook (agenda + email)
+        document.querySelectorAll('[data-command="consultar_agenda"], [data-command="registrar_agenda"], [data-command="enviar_email"], [data-command="enviar_email_cliente"]').forEach(btn => {
             btn.disabled = !disponible;
             btn.style.opacity = disponible ? '' : '0.4';
             btn.style.pointerEvents = disponible ? '' : 'none';
         });
-        // Autocomplete: marcar agenda como no disponible
+        // Autocomplete: marcar agenda/email como no disponible
         window._agendaDisponible = disponible;
+        window._outlookDisponible = disponible;
     }
 
     // Restaurar estado de agenda al cargar (si ya había un cliente seleccionado)
@@ -127,6 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Handle Command ---
     function handleCommand(d) {
+        // Recordar última intención para poder resolver mensajes de seguimiento cortos
+        if (d?.command) window.__lastIntent = d.command;
         switch (d.command) {
             case 'recargar_cliente':
                 recargarDatosCliente();
@@ -143,9 +147,17 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'consultar_poliza':
                 renderPolizasCliente(d);
                 break;
-            case 'consultar_recibo':
-                renderRecibosCliente(d.args?.pendientes ? { soloPendientes: true } : {});
+            case 'consultar_recibo': {
+                const a = d.args || {};
+                const estado = String(a.estado || '').toLowerCase();
+                const soloPendientes = a.pendientes === true
+                    || a.soloPendientes === true
+                    || estado === 'pendiente' || estado === 'pendientes'
+                    || estado === 'impagado' || estado === 'impagados'
+                    || estado === 'no cobrado';
+                renderRecibosCliente({ soloPendientes });
                 break;
+            }
             case 'consultar_siniestro':
                 renderSiniestrosCliente(d);
                 break;
@@ -191,6 +203,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Voice (grabación de audio + transcripción) ---
+    initVoice({
+        getToken: () => userToken,
+        getClient: () => getSelectedClient(),
+        onResponse: (data) => handleCommand(data)
+    });
+
     // --- Autocomplete ---
     const chatInput = document.getElementById('chat-message');
     initAutocomplete(chatInput, (text, command) => {
@@ -232,15 +251,75 @@ document.addEventListener('DOMContentLoaded', () => {
             renderClientesRecientes();
             return;
         }
-        if (msgLower === 'ayuda' || msgLower === 'help' || msgLower.includes('funcionalidades')
+        // Si la pregunta hace referencia al cliente, no es una petición de ayuda genérica
+        const refiereCliente = msgLower.includes('cliente') || msgLower.includes(' su ') || msgLower.startsWith('su ')
+            || msgLower.includes(' sus ') || msgLower.startsWith('sus ');
+
+        if (!refiereCliente && (
+            msgLower === 'ayuda' || msgLower === 'help' || msgLower.includes('funcionalidades')
             || msgLower.includes('que opciones') || msgLower.includes('qué opciones')
             || msgLower.includes('que puedo') || msgLower.includes('qué puedo')
             || msgLower.includes('que tienes') || msgLower.includes('qué tienes')
             || msgLower.includes('que haces') || msgLower.includes('qué haces')
-            || msgLower.includes('que sabes') || msgLower.includes('qué sabes')
             || msgLower.includes('para que sirves') || msgLower.includes('para qué sirves')
-            || msgLower.includes('como funciona') || msgLower.includes('cómo funciona')) {
+            || msgLower.includes('como funciona') || msgLower.includes('cómo funciona'))) {
             renderHelp();
+            return;
+        }
+
+        // Modificar / actualizar datos del cliente (email, teléfono, dirección, etc.)
+        if (/\b(modificar|cambiar|actualizar|editar)\b/i.test(msgLower)
+            && (/\b(cliente|email|correo|tel[eé]fono|m[oó]vil|direcci[oó]n|domicilio|datos)\b/i.test(msgLower))) {
+            if (!getSelectedClient()) { clienteModal.show(); return; }
+            handleCommand({ command: 'actualizar_cliente' });
+            return;
+        }
+
+        // Teléfonos / contactos de compañías (lista general o filtrada)
+        const COMPANIAS_CONOCIDAS = ['mapfre','allianz','axa','generali','mutua','asisa','adeslas','sanitas','liberty','pelayo','zurich','reale','caser','catalana','helvetia','santalucia','plus ultra','linea directa','hercules','mutuactivos','ocaso','meridiano','fiatc'];
+        const mencionaCompania = COMPANIAS_CONOCIDAS.find(c => msgLower.includes(c));
+        // Si el mensaje se refiere al cliente, NO es una consulta sobre compañías
+        const esSobreCliente = /\b(cliente|al\s+cliente|del\s+cliente|de\s+la\s+clienta)\b/i.test(msgLower) || refiereCliente;
+        if (!esSobreCliente && (
+            /(tel[eé]fonos?\s+de|contactos?\s+(de\s+(la\s+)?compa|compa)|n[uú]mero\s+de\s+atenci[oó]n|listado\s+de\s+compa)/i.test(msgLower)
+            || (mencionaCompania && /(tel[eé]fono|contacto|n[uú]mero)/i.test(msgLower)))) {
+            handleCommand({ command: 'consultar_compania', args: mencionaCompania ? { compania: mencionaCompania } : {} });
+            return;
+        }
+
+        // Preguntas genéricas sobre el cliente seleccionado → abrir ficha
+        if (refiereCliente && /\b(sabes|datos|informaci[oó]n|ficha|resumen|perfil)\b/i.test(msgLower)) {
+            if (!getSelectedClient()) { clienteModal.show(); return; }
+            renderFichaCliente();
+            return;
+        }
+
+        // Llamar al cliente → abrir tel: link si hay teléfono
+        if (/\b(llamar|llamada|marcar|tel[eé]fonear)\b.*\b(cliente|al\s+cliente)\b/i.test(msgLower)
+            || /\bllamar(lo|le|la)?\b/i.test(msgLower)) {
+            if (!getSelectedClient()) { clienteModal.show(); return; }
+            const cd = JSON.parse(localStorage.getItem('clienteData') || 'null');
+            const tel = cd?.cliente?.telefono;
+            if (tel) {
+                addMessageToChat('bot', `<div class="data-empty"><a href="tel:${tel}" style="color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:8px;"><i class="bi bi-telephone-fill"></i> <strong>${tel}</strong> — ${cd.cliente.nombre}</a></div>`);
+            } else {
+                addMessageToChat('bot', '<div class="data-empty"><i class="bi bi-telephone-x"></i> El cliente no tiene teléfono registrado.</div>');
+            }
+            return;
+        }
+
+        // Oficina / sucursal / ejecutiva / colaborador del cliente → ficha
+        if (/\b(oficina|sucursal|ejecutiva|ejecutivo|colaborador|asesor|gestor|cuentas)\b/i.test(msgLower) && refiereCliente) {
+            if (!getSelectedClient()) { clienteModal.show(); return; }
+            renderFichaCliente();
+            return;
+        }
+
+        // Datos de contacto del cliente (teléfono, email, dirección) → abrir ficha
+        if (/\bsu\s+(tel[eé]fono|m[oó]vil|email|correo|e-mail|direcci[oó]n|domicilio|oficina|sucursal|ejecutiva|colaborador)\b/i.test(msgLower)
+            || /\b(tel[eé]fono|m[oó]vil|email|correo|e-mail|direcci[oó]n|domicilio|oficina|sucursal|ejecutiva|colaborador)\s+del\s+cliente\b/i.test(msgLower)) {
+            if (!getSelectedClient()) { clienteModal.show(); return; }
+            renderFichaCliente();
             return;
         }
 
@@ -251,9 +330,61 @@ document.addEventListener('DOMContentLoaded', () => {
             || msgLower.includes('resumen de pagos') || msgLower.includes('resumen pagos')
             || msgLower.includes('cuanto cuesta') || msgLower.includes('cuánto cuesta')
             || msgLower.includes('prima total') || msgLower.includes('primas')
-            || msgLower.includes('coste de seguros') || msgLower.includes('coste seguros')) {
+            || msgLower.includes('coste anual')
+            || msgLower.includes('coste de seguros') || msgLower.includes('coste seguros')
+            || /\bcoste\s+(anual|total|de\s+los\s+seguros)/i.test(msgLower)) {
             if (!getSelectedClient()) { clienteModal.show(); return; }
             renderResumenPagos();
+            return;
+        }
+
+        // ---- Follow-ups cortos con memoria ligera (< 40 chars) ----
+        if (msgLower.length < 40 && window.__lastIntent) {
+            const RAMOS = ['autos','auto','moto','motos','hogar','salud','vida','pyme','pymes','comercio','comercios','accidentes','rc','r.c.','responsabilidad civil'];
+            const ramoMatch = RAMOS.find(r => new RegExp(`\\b${r.replace(/\./g, '\\.')}\\b`, 'i').test(msgLower));
+            const esEstadoAbierto = /\b(abiertos?|activ[oa]s?|en\s+curso|pendientes?|en\s+tr[aá]mite|vigentes?)\b/i.test(msgLower);
+            const esEstadoCerrado = /\b(cerrad[oa]s?|anulad[oa]s?|finalizad[oa]s?|resuelt[oa]s?)\b/i.test(msgLower);
+
+            // Siniestros follow-ups
+            if (window.__lastIntent.startsWith('consultar_siniestro')) {
+                if (esEstadoAbierto) { handleCommand({ command:'consultar_siniestro', args:{ estado:'abierto' } }); return; }
+                if (esEstadoCerrado) { handleCommand({ command:'consultar_siniestro', args:{ estado:'cerrado' } }); return; }
+                if (ramoMatch)       { handleCommand({ command:'consultar_siniestro', args:{ ramo:ramoMatch } }); return; }
+            }
+            // Pólizas follow-ups (ramo o estado)
+            if (window.__lastIntent.startsWith('consultar_poliza')) {
+                if (ramoMatch)       { handleCommand({ command:'consultar_poliza', args:{ ramo:ramoMatch } }); return; }
+                if (esEstadoAbierto) { handleCommand({ command:'consultar_poliza', args:{ estado:'activa' } }); return; }
+                if (esEstadoCerrado) { handleCommand({ command:'consultar_poliza', args:{ estado:'anulada' } }); return; }
+            }
+            // Recibos follow-ups
+            if (window.__lastIntent.startsWith('consultar_recibo')) {
+                if (esEstadoAbierto) { renderRecibosCliente({ soloPendientes: true }); return; }
+            }
+        }
+
+        // Matrícula suelta (con o sin "y", "ahora", "la", etc.) → consulta pólizas por matrícula
+        // Formatos españoles: 4 dígitos + 3 letras, o 1-3 letras + 4 dígitos + 1-2 letras
+        const mMatricula = message.match(/\b(\d{4}\s?[A-Z]{3}|[A-Z]{1,3}\d{4}[A-Z]{0,2})\b/i);
+        if (mMatricula && (msgLower.length < 40 || window.__lastIntent === 'consultar_poliza')) {
+            if (!getSelectedClient()) { clienteModal.show(); return; }
+            window.__lastIntent = 'consultar_poliza';
+            handleCommand({ command: 'consultar_poliza', args: { matricula: mMatricula[0].replace(/\s/g, '').toUpperCase() } });
+            return;
+        }
+
+        // Recibos pendientes / impagados (override local)
+        if (/\brecibos?\b/i.test(msgLower) && /\b(pendientes?|impagados?|sin\s+cobrar|no\s+cobrados?|pte\b)/i.test(msgLower)) {
+            if (!getSelectedClient()) { clienteModal.show(); return; }
+            renderRecibosCliente({ soloPendientes: true });
+            return;
+        }
+
+        // Agenda (consulta / creación)
+        if (/\b(citas?|agenda|eventos?|reuni[oó]n(es)?)\b/i.test(msgLower)) {
+            if (!getSelectedClient()) { clienteModal.show(); return; }
+            const esNueva = /\b(nueva|nuevo|crear|a[ñn]adir|agendar|registrar|programar)\b/i.test(msgLower);
+            handleCommand({ command: esNueva ? 'registrar_agenda' : 'consultar_agenda' });
             return;
         }
 

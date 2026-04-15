@@ -1,8 +1,8 @@
 // pagos.js — Resumen de pagos del cliente con donut chart SVG
-import { getStoredToken, getSelectedClient } from './storage.js';
+import { getStoredToken, getSelectedClientNif } from './storage.js';
 import { addMessageToChat, addThinkingMessage, removeThinkingMessage } from './chat.js';
 
-const COLORS = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16','#f97316','#6366f1'];
+const COLORS = ['#3b82f6','#6366f1','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#f97316','#64748b','#d946ef'];
 
 function fmtEur(n) {
     return Number(n).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -62,8 +62,8 @@ function buildLegend(items, totalVal) {
 }
 
 export async function renderResumenPagos() {
-    const clientId = getSelectedClient();
-    if (!clientId) return;
+    const nif = getSelectedClientNif();
+    if (!nif) return;
 
     addThinkingMessage();
 
@@ -77,7 +77,7 @@ export async function renderResumenPagos() {
                 'Empresa': ENV.EMPRESA,
                 'Device': ENV.DEVICE
             },
-            body: JSON.stringify({ nif: clientId })
+            body: JSON.stringify({ nif })
         });
 
         const data = await response.json();

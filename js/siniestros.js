@@ -24,13 +24,69 @@ export function renderSiniestrosCliente(d = {}) {
     }
 
     let siniestros = data.siniestros;
-    if (d?.args?.estado) {
-        const estadoBuscado = d.args.estado.toLowerCase();
-        siniestros = siniestros.filter(s => (s.estado || '').toLowerCase() === estadoBuscado);
+    const args = d?.args || {};
+
+    if (args.estado) {
+        const estadoBuscado = String(args.estado).toLowerCase();
+        const esAbierto = ['abierto','abiertos','pendiente','activo','en curso','en tramite','en trámite'].includes(estadoBuscado);
+        const esCerrado = ['cerrado','cerrados','finalizado','resuelto'].includes(estadoBuscado);
+        siniestros = siniestros.filter(s => {
+            const est = (s.estado || '').toLowerCase();
+            if (esAbierto) return est !== 'cerrado';
+            if (esCerrado) return est === 'cerrado';
+            return est === estadoBuscado;
+        });
+    }
+
+    if (args.ramo) {
+        const r = norm(args.ramo);
+        const polMap = {};
+        (data.polizas || []).forEach(p => { polMap[p.poliza] = p; });
+        siniestros = siniestros.filter(s => {
+            const p = polMap[s.poliza];
+            return p && norm(p.tipo_producto).includes(r);
+        });
+    }
+
+    if (args.matricula) {
+        const mNorm = s => norm(String(s || '').replace(/[\s-]/g, ''));
+        const needle = mNorm(args.matricula);
+        const polMap = {};
+        (data.polizas || []).forEach(p => { polMap[p.poliza] = p; });
+        siniestros = siniestros.filter(s => {
+            const p = polMap[s.poliza];
+            return p && mNorm(p.matricula).includes(needle);
+        });
+    }
+
+    // Filtro por fecha (año, mes o rango) — compara contra fecha_apertura
+    if (args.fecha) {
+        const toIso = (raw) => {
+            if (!raw) return null;
+            const t = String(raw).trim();
+            const m = t.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+            if (/^\d{4}-\d{2}-\d{2}/.test(t)) return t.slice(0, 10);
+            return null;
+        };
+        const f = String(args.fecha).trim();
+        siniestros = siniestros.filter(s => {
+            const iso = toIso(s.fecha_apertura);
+            if (!iso) return false;
+            if (f.includes('/')) {
+                const [ini, fin] = f.split('/').map(x => x.trim());
+                return (!ini || iso >= ini) && (!fin || iso <= fin);
+            }
+            if (/^\d{4}-\d{2}-\d{2}$/.test(f)) return iso === f;
+            if (/^\d{4}-\d{2}$/.test(f)) return iso.startsWith(f);
+            if (/^\d{4}$/.test(f)) return iso.startsWith(f);
+            return iso.includes(f);
+        });
     }
 
     if (!siniestros.length) {
-        addMessageToChat('bot', `<div class="data-empty"><i class="bi bi-check-circle"></i> No hay siniestros con estado "${d.args.estado}"</div>`);
+        const filtroDesc = args.estado || args.ramo || args.matricula || '';
+        addMessageToChat('bot', `<div class="data-empty"><i class="bi bi-check-circle"></i> No hay siniestros${filtroDesc ? ` que cumplan el filtro "${filtroDesc}"` : ''}</div>`);
         return;
     }
 
@@ -85,7 +141,7 @@ export function renderSiniestrosCliente(d = {}) {
         }
 
         return `
-        <div class="data-card${cerrado ? ' data-card--muted' : ''}" data-searchable="${searchable}">
+        <div class="data-card" data-searchable="${searchable}">
             <div class="data-card__icon"><i class="bi ${ramoIcon}"></i></div>
             <div class="data-card__body">
                 <div class="data-card__title">${s.id || 'N/D'} <span class="data-card__sep">·</span> ${s.compania || 'N/D'}</div>

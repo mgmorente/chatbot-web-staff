@@ -274,6 +274,12 @@ export function renderEmailInline() {
     const data = getClienteData();
     if (!data?.cliente) return;
 
+    // Bloquear si Outlook no está disponible
+    if (window._outlookDisponible === false) {
+        addMessageToChat('bot', '<div class="data-empty"><i class="bi bi-envelope-x"></i> Debe configurar su cuenta Outlook365 en Pacconline para enviar emails.</div>');
+        return;
+    }
+
     const html = `
         <div class="chat-inline-form">
             <div class="inline-form-title"><i class="bi bi-envelope"></i> Enviar email</div>

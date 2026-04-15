@@ -47,7 +47,12 @@ export function getClientes() {
 }
 
 export function getCompanias() {
-    return JSON.parse(localStorage.getItem('companias')) || [];
+    try {
+        const v = JSON.parse(localStorage.getItem('companias'));
+        return Array.isArray(v) ? v : [];
+    } catch {
+        return [];
+    }
 }
 
 export function getAgenda() {
@@ -58,6 +63,15 @@ export function getSelectedClient() {
     try {
         const data = JSON.parse(localStorage.getItem('clienteData'));
         return data?.cliente?.nombre || null;
+    } catch {
+        return null;
+    }
+}
+
+export function getSelectedClientNif() {
+    try {
+        const data = JSON.parse(localStorage.getItem('clienteData'));
+        return data?.cliente?.nif || null;
     } catch {
         return null;
     }

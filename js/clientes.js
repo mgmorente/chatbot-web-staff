@@ -228,7 +228,6 @@ export function renderFichaCliente() {
     const html = `
         <div class="fc">
             <div class="fc-top">
-                <div class="fc-avatar">${initials}</div>
                 <div class="fc-info">
                     <div class="fc-name">${c.nombre}${c.cliente_fiel ? ' <i class="bi bi-heart-fill fc-fiel"></i>' : ''}</div>
                     <div class="fc-sub">${c.nif} · ${c.tipo || 'N/A'}${c.cod_importancia != null ? ` · <i class="bi bi-star-fill fc-star"></i>${c.cod_importancia}` : ''}</div>

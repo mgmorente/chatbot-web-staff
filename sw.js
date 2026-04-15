@@ -4,7 +4,21 @@
  * Cache-first para assets externos (CDN, fuentes, imágenes)
  */
 
-const CACHE_NAME = 'paccman-staff-v1';
+// La versión se obtiene dinámicamente del último commit (via version.php).
+// Si falla (offline o sin git) cae a un fallback basado en la fecha del SW.
+let CACHE_NAME = `paccman-staff-fallback-${Date.now()}`;
+
+async function resolveCacheName(base) {
+    try {
+        const res = await fetch(base + 'version.php?format=json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        return `paccman-staff-${data.hash || data.version || Date.now()}`;
+    } catch (err) {
+        console.warn('[SW Staff] No se pudo obtener versión, usando fallback:', err.message);
+        return CACHE_NAME;
+    }
+}
 
 // ===== INSTALL: cachear assets estáticos =====
 self.addEventListener('install', (event) => {
@@ -22,18 +36,18 @@ self.addEventListener('install', (event) => {
         base + 'offline.html',
     ];
 
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                console.log('[SW Staff] Cacheando assets desde:', base);
-                return Promise.allSettled(
-                    staticAssets.map(url => cache.add(url).catch(err => {
-                        console.warn('[SW Staff] No se pudo cachear:', url, err.message);
-                    }))
-                );
-            })
-            .then(() => self.skipWaiting())
-    );
+    event.waitUntil((async () => {
+        CACHE_NAME = await resolveCacheName(base);
+        console.log('[SW Staff] Cache name:', CACHE_NAME);
+        const cache = await caches.open(CACHE_NAME);
+        console.log('[SW Staff] Cacheando assets desde:', base);
+        await Promise.allSettled(
+            staticAssets.map(url => cache.add(url).catch(err => {
+                console.warn('[SW Staff] No se pudo cachear:', url, err.message);
+            }))
+        );
+        await self.skipWaiting();
+    })());
 });
 
 // ===== ACTIVATE: limpiar cachés antiguos =====

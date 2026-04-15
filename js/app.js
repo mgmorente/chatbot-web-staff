@@ -17,6 +17,33 @@ import { initVoice } from './voice.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- Mostrar versión en el sidebar y permitir refresco forzado ---
+    (function initVersionBadge() {
+        const el = document.getElementById('appVersion');
+        const txt = document.getElementById('appVersionText');
+        if (!el || !txt) return;
+        const info = window.APP_VERSION || { version: '?', buildDate: '', full: 'v?' };
+        txt.textContent = info.full;
+        el.title = `PACCMAN Staff ${info.full}\nClick para actualizar a la última versión`;
+        el.addEventListener('click', async () => {
+            el.classList.add('checking');
+            try {
+                // Desregistrar service workers
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map(r => r.unregister()));
+                }
+                // Borrar todas las cachés
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(k => caches.delete(k)));
+                }
+            } catch (err) { console.warn('[Version] Error limpiando caché:', err); }
+            // Recarga forzada
+            window.location.reload();
+        });
+    })();
+
     // --- Fijar altura del viewport (evitar salto con teclado virtual) ---
     function setAppHeight() {
         const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;

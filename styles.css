@@ -3249,3 +3249,20 @@ span.flatpickr-weekday {
     font-size: 12px;
     padding: 4px 10px;
 }
+
+/* --- Indicador de versión en el sidebar --- */
+.app-version {
+    margin-top: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #6b7280;
+    text-align: center;
+    cursor: pointer;
+    border-top: 1px solid #e5e7eb;
+    transition: color .15s, background .15s;
+    user-select: none;
+}
+.app-version:hover { color: #16a34a; background: #f0fdf4; }
+.app-version i { margin-right: 4px; }
+.app-version.checking i { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

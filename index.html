@@ -168,6 +168,10 @@
                 <button id="logout" class="sidebar-logout sidebar-logout--danger">
                     <i class="bi bi-box-arrow-left"></i> Cerrar sesión
                 </button>
+                <div id="appVersion" class="app-version" title="Click para actualizar">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    <span id="appVersionText">v?</span>
+                </div>
             </div>
         </aside>
 
@@ -286,9 +290,12 @@
     <!-- Variables de entorno -->
     <script src="env.js"></script>
 
-    <!-- App (cache-bust dinámico) -->
+    <!-- Versión de la app (extraída del último commit git via version.php) -->
+    <script src="version.php"></script>
+
+    <!-- App (cache-bust basado en la versión, se actualiza al cambiar version.js) -->
     <script>
-        const v = Date.now();
+        const v = (window.APP_VERSION && window.APP_VERSION.version) || Date.now();
         document.write(`<script type="module" src="js/app.js?v=${v}"><\/script>`);
     </script>
 

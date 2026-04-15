@@ -22,7 +22,7 @@ async function refetchAgenda() {
             localStorage.setItem('agendaDisponible', '0');
             window._agendaDisponible = false;
             window._outlookDisponible = false;
-            document.dispatchEvent(new CustomEvent('clienteChanged', { detail: { agendaDisponible: false } }));
+            document.dispatchEvent(new CustomEvent('outlookStatusChanged', { detail: { disponible: false } }));
             return { error: 'outlook_no_conectado' };
         }
 
@@ -36,7 +36,7 @@ async function refetchAgenda() {
         localStorage.setItem('agendaDisponible', '1');
         window._agendaDisponible = true;
         window._outlookDisponible = true;
-        document.dispatchEvent(new CustomEvent('clienteChanged', { detail: { agendaDisponible: true } }));
+        document.dispatchEvent(new CustomEvent('outlookStatusChanged', { detail: { disponible: true } }));
         return { agenda };
     } catch {
         return { error: 'fetch_fallo' };

@@ -56,6 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAgendaAvailability(agendaOk);
     });
 
+    // --- Cambio de estado de Outlook (sin re-renderizar ficha) ---
+    document.addEventListener('outlookStatusChanged', (e) => {
+        updateAgendaAvailability(!!e.detail?.disponible);
+    });
+
     // --- Clic en stats de la ficha cliente (pólizas, siniestros) ---
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('.js-ficha-action');

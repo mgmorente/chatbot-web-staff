@@ -301,7 +301,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
         // Comandos locales del chat
-        const msgLower = message.toLowerCase().trim();
+        // Normalizamos a minúsculas Y eliminamos acentos para que el transcriptor de voz
+        // (que puede devolver texto en mayúsculas y/o sin tildes) dispare los mismos triggers.
+        const msgLower = message
+            .toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // strip diacritics
+            .trim();
         if (msgLower === 'recientes' || msgLower.includes('clientes recientes') || msgLower === 'historial') {
             renderClientesRecientes();
             return;

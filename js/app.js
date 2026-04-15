@@ -363,9 +363,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Oficina / sucursal / ejecutiva / colaborador del cliente → ficha
-        if (/\b(oficina|sucursal|ejecutiva|ejecutivo|colaborador|asesor|gestor|cuentas)\b/i.test(msgLower) && refiereCliente) {
+        // Oficina / sucursal / ejecutiva / colaborador del cliente → respuesta directa
+        // Se activa si el mensaje menciona estos términos y (a) se refiere al cliente
+        // o (b) ya hay un cliente seleccionado (contexto implícito: "qué oficina tiene").
+        if (/\b(oficina|sucursal|ejecutiva|ejecutivo|colaborador|asesor|gestor|cuentas|ecuentas)\b/i.test(msgLower)
+            && (refiereCliente || getSelectedClient())) {
             if (!getSelectedClient()) { clienteModal.show(); return; }
+            const cd = JSON.parse(localStorage.getItem('clienteData') || 'null');
+            const cli = cd?.cliente;
+            if (cli) {
+                const pideOficina     = /\b(oficina|sucursal)\b/i.test(msgLower);
+                const pideEjecutiva   = /\b(ejecutiv[oa]|cuentas|ecuentas)\b/i.test(msgLower);
+                const pideColaborador = /\b(colaborador|asesor|gestor)\b/i.test(msgLower);
+                const partes = [];
+                if (pideOficina)     partes.push(`<div class="fc-row"><i class="bi bi-building"></i><strong>Oficina/Sucursal:</strong> ${cli.sucursal || 'N/D'}</div>`);
+                if (pideEjecutiva)   partes.push(`<div class="fc-row"><i class="bi bi-person-badge"></i><strong>Ejecutiva de cuentas:</strong> ${cli.ecuentas || 'N/D'}</div>`);
+                if (pideColaborador) partes.push(`<div class="fc-row"><i class="bi bi-people"></i><strong>Colaborador:</strong> ${cli.colaborador || 'N/D'}</div>`);
+                if (partes.length) {
+                    addMessageToChat('bot', `<div class="data-empty" style="text-align:left;">${partes.join('')}</div>`);
+                    return;
+                }
+            }
             renderFichaCliente();
             return;
         }

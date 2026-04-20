@@ -136,10 +136,17 @@ function onKeydown(e) {
         e.preventDefault();
         _selected = Math.max(_selected - 1, 0);
         highlightSelected();
-    } else if (e.key === 'Enter' && _selected >= 0) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        selectItem(_selected);
+    } else if (e.key === 'Enter') {
+        if (_selected >= 0) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            selectItem(_selected);
+        } else {
+            // Enter sin sugerencia seleccionada: dejar que el form envíe,
+            // pero ocultar el desplegable (en Windows el input mantiene foco
+            // y no dispara blur, así que las sugerencias se quedaban visibles).
+            hide();
+        }
     } else if (e.key === 'Escape') {
         hide();
     }
@@ -191,4 +198,12 @@ export function initAutocomplete(chatInput, onSelect) {
     chatInput.addEventListener('focus', () => {
         if (chatInput.value.trim().length >= 2) onInput();
     });
+
+    // Al enviar el formulario (Enter o botón "enviar") ocultar siempre el
+    // desplegable. En Windows el input conserva el foco, por lo que sin esto
+    // las sugerencias se quedaban visibles.
+    const parentForm = chatInput.form || chatInput.closest('form');
+    if (parentForm) {
+        parentForm.addEventListener('submit', () => hide());
+    }
 }

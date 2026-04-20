@@ -34,6 +34,9 @@ const suggestions = [
     // Pagos
     { icon: 'bi-cash-stack',          text: 'Resumen de pagos del cliente',         command: 'resumen_pagos',        keywords: ['paga', 'pago', 'pagos', 'cuanto', 'prima', 'primas', 'coste', 'precio', 'seguro', 'seguros', 'resumen', 'anual', 'total'] },
 
+    // Tarificación
+    { icon: 'bi-heart-pulse',         text: 'Cotizar seguro de salud',              command: 'cotizar_salud',        keywords: ['cotizar', 'cotizacion', 'tarificar', 'tarificacion', 'tarifa', 'salud', 'medico', 'sanitario', 'asisa', 'adeslas', 'gerenpiacc', 'prima', 'precio', 'presupuesto', 'calcular'] },
+
     // Comunicación
     { icon: 'bi-envelope',            text: 'Enviar email al cliente',              command: 'enviar_email',         keywords: ['email', 'correo', 'enviar', 'mail', 'mensaje', 'cliente', 'carta', 'comunicacion'] },
 

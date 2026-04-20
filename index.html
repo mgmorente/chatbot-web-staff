@@ -43,6 +43,11 @@
                 </div>
             </div>
 
+            <div id="appVersion" class="app-version app-version--above-user" title="Click para actualizar">
+                <i class="bi bi-arrow-clockwise"></i>
+                <span id="appVersionText">v?</span>
+            </div>
+
             <div class="sidebar-user" id="sidebar-user">
                 <i class="bi bi-person-circle"></i>
                 <span id="user-name"></span>
@@ -140,6 +145,18 @@
                 </div>
 
                 <div class="nav-group">
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navTarificacion">
+                        <i class="bi bi-calculator"></i> Tarificación
+                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    </button>
+                    <div class="collapse" id="navTarificacion">
+                        <button class="nav-action" data-command="cotizar_salud">
+                            <i class="bi bi-heart-pulse"></i> Cotizar salud
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nav-group">
                     <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navOtros">
                         <i class="bi bi-grid"></i> Otros
                         <i class="bi bi-chevron-down nav-chevron"></i>
@@ -168,10 +185,6 @@
                 <button id="logout" class="sidebar-logout sidebar-logout--danger">
                     <i class="bi bi-box-arrow-left"></i> Cerrar sesión
                 </button>
-                <div id="appVersion" class="app-version" title="Click para actualizar">
-                    <i class="bi bi-arrow-clockwise"></i>
-                    <span id="appVersionText">v?</span>
-                </div>
             </div>
         </aside>
 

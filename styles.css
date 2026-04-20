@@ -3266,3 +3266,217 @@ span.flatpickr-weekday {
 .app-version i { margin-right: 4px; }
 .app-version.checking i { animation: spin 1s linear infinite; }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ============ COTIZAR SALUD (tarificación automática) ============ */
+.cot-salud-asegurados {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+.cot-salud-asegurado-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.cot-salud-asegurado-label {
+    flex: 0 0 100px;
+    font-size: 0.78rem;
+    color: var(--staff-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.cot-salud-edad-input {
+    flex: 1 1 auto;
+    max-width: 140px;
+}
+.cot-salud-del-btn {
+    background: none;
+    border: 1px solid var(--staff-border);
+    color: var(--staff-text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+}
+.cot-salud-del-btn:hover {
+    color: #c62828;
+    border-color: #c62828;
+}
+.inline-btn-add-asegurado {
+    margin-top: 4px;
+    background: none;
+    border: 1px dashed var(--staff-border);
+    color: var(--staff-accent);
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.inline-btn-add-asegurado:hover {
+    border-color: var(--staff-accent);
+    background: var(--staff-badge-bg);
+}
+.cot-salud-table-wrap {
+    margin-top: 8px;
+    overflow-x: auto;
+}
+.cot-salud-table {
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+}
+.cot-salud-table th {
+    font-weight: 600;
+    color: var(--staff-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+.cot-salud-table td {
+    white-space: nowrap;
+}
+.cot-salud-table .text-end {
+    text-align: right;
+}
+.cot-salud-total-row td {
+    border-top: 2px solid var(--staff-border);
+    background: var(--staff-badge-bg);
+}
+.cot-salud-note {
+    margin-top: 4px;
+}
+
+/* --- Cotización salud: layout vertical compacto (sin tabla) --- */
+.cot-salud-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+.cot-salud-header-sub {
+    color: var(--staff-text-muted);
+    font-weight: 400;
+    font-size: 0.8rem;
+}
+.cot-salud-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+.cot-salud-item {
+    padding: 8px 10px;
+    border: 1px solid var(--staff-border);
+    border-radius: 8px;
+    background: var(--staff-panel-bg, transparent);
+}
+.cot-salud-item--na {
+    opacity: 0.55;
+}
+.cot-salud-item-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.cot-salud-item-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--staff-text);
+}
+.cot-salud-item-total {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--staff-accent);
+    white-space: nowrap;
+}
+.cot-salud-item-total small {
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: var(--staff-text-muted);
+}
+.cot-salud-item-pills {
+    margin-top: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+}
+.cot-salud-pill {
+    font-size: 0.72rem;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: var(--staff-badge-bg);
+    color: var(--staff-text);
+    line-height: 1.5;
+    white-space: nowrap;
+}
+.cot-salud-pill-ref {
+    color: var(--staff-text-muted);
+    font-weight: 500;
+}
+.cot-salud-pill--na {
+    opacity: 0.5;
+}
+
+/* Versión/actualización bajo el nombre de usuario
+   Usa los mismos paddings que .sidebar-user, con separador inferior
+   que hace de divisor con el resto del menú. */
+.app-version--under-user {
+    margin-top: 0;
+    padding: 8px 20px;
+    text-align: left;
+    font-size: 11px;
+    color: var(--staff-text-muted);
+    border-top: 0;
+    border-bottom: 1px solid var(--staff-border);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.app-version--under-user:hover {
+    color: var(--staff-accent);
+    background: var(--staff-badge-bg);
+}
+.app-version--under-user i {
+    margin-right: 0;
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+/* Versión/actualización por ENCIMA del nombre de usuario.
+   Hereda tamaño/cursor de .app-version pero cambia alineación, paddings
+   y sus bordes para integrarse entre .sidebar-brand y .sidebar-user. */
+.app-version--above-user {
+    margin-top: 0;
+    padding: 8px 20px;
+    text-align: left;
+    font-size: 11px;
+    color: var(--staff-text-muted);
+    border-top: 0;
+    border-bottom: 1px solid var(--staff-border);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.app-version--above-user:hover {
+    color: var(--staff-accent);
+    background: var(--staff-badge-bg);
+}
+.app-version--above-user i {
+    margin-right: 0;
+    font-size: 12px;
+    opacity: 0.8;
+}

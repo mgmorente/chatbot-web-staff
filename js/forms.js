@@ -841,3 +841,232 @@ export function renderSubirDocInline() {
         }
     });
 }
+
+// ===== COTIZAR SALUD (tarificación automática) =====
+// Provincias con su código INE (1-52) — se usan como value del <select>
+const PROVINCIAS_ES = [
+    [1, 'Álava'], [2, 'Albacete'], [3, 'Alicante'], [4, 'Almería'], [5, 'Ávila'],
+    [6, 'Badajoz'], [7, 'Baleares'], [8, 'Barcelona'], [9, 'Burgos'], [10, 'Cáceres'],
+    [11, 'Cádiz'], [12, 'Castellón'], [13, 'Ciudad Real'], [14, 'Córdoba'], [15, 'A Coruña'],
+    [16, 'Cuenca'], [17, 'Girona'], [18, 'Granada'], [19, 'Guadalajara'], [20, 'Gipuzkoa'],
+    [21, 'Huelva'], [22, 'Huesca'], [23, 'Jaén'], [24, 'León'], [25, 'Lleida'],
+    [26, 'La Rioja'], [27, 'Lugo'], [28, 'Madrid'], [29, 'Málaga'], [30, 'Murcia'],
+    [31, 'Navarra'], [32, 'Ourense'], [33, 'Asturias'], [34, 'Palencia'], [35, 'Las Palmas'],
+    [36, 'Pontevedra'], [37, 'Salamanca'], [38, 'Santa Cruz de Tenerife'], [39, 'Cantabria'], [40, 'Segovia'],
+    [41, 'Sevilla'], [42, 'Soria'], [43, 'Tarragona'], [44, 'Teruel'], [45, 'Toledo'],
+    [46, 'Valencia'], [47, 'Valladolid'], [48, 'Bizkaia'], [49, 'Zamora'], [50, 'Zaragoza'],
+    [51, 'Ceuta'], [52, 'Melilla'],
+];
+
+const COMPANIAS_SALUD = [
+    { key: 'asisa',             label: 'Asisa' },
+    { key: 'asisa_pyme',        label: 'Asisa Pyme Plus' },
+    { key: 'adeslas_nuevo',     label: 'Adeslas Gerenpiacc' },
+    { key: 'adeslas_colectivo', label: 'Adeslas Colectivo' },
+    { key: 'adeslas_autonomos', label: 'Adeslas Autónomos' },
+];
+
+const MAX_ASEGURADOS_SALUD = 6;
+
+/** Intenta detectar la provincia a partir del domicilio del cliente (heurística simple). */
+function detectarProvinciaDesdeDomicilio(domicilio) {
+    if (!domicilio) return '';
+    const txt = norm(domicilio);
+    for (const [cod, nombre] of PROVINCIAS_ES) {
+        if (txt.includes(norm(nombre))) return String(cod);
+    }
+    return '';
+}
+
+function buildTarificacionSaludURL() {
+    // ENV.API_URL apunta a ".../api/chatbot-staff"; el endpoint de tarificación
+    // cuelga directamente de ".../api/tarificacion-automatica/salud/calcular".
+    // Importante: usar ENV (no window.ENV) porque env.js lo declara con `const`
+    // y eso no crea una propiedad en window — solo un identificador global de script.
+    const base = (ENV.API_URL || '').replace(/\/chatbot-staff$/, '');
+    return `${base}/tarificacion-automatica/salud/calcular`;
+}
+
+function fmtEuroSalud(v) {
+    if (v === null || v === undefined) return '—';
+    return Number(v).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+}
+
+export function renderCotizarSaludInline() {
+    closePreviousForms();
+    const data = getClienteData();
+    if (!data?.cliente) return;
+
+    const prefProvincia = detectarProvinciaDesdeDomicilio(data.cliente.domicilio || '');
+
+    const provinciaOptions = PROVINCIAS_ES
+        .map(([cod, nombre]) => `<option value="${cod}" ${String(cod) === prefProvincia ? 'selected' : ''}>${nombre}</option>`)
+        .join('');
+
+    const html = `
+        <div class="chat-inline-form">
+            <div class="inline-form-title"><i class="bi bi-heart-pulse"></i> Cotización salud</div>
+            <form id="inlineCotizarSaludForm" novalidate>
+                <div class="inline-form-group">
+                    <label>Provincia</label>
+                    <select name="provincia" class="inline-input" required>
+                        <option value="">Selecciona una provincia</option>
+                        ${provinciaOptions}
+                    </select>
+                </div>
+                <div class="inline-form-group">
+                    <label>Asegurados <small>(máx. ${MAX_ASEGURADOS_SALUD})</small></label>
+                    <div class="js-asegurados-list cot-salud-asegurados"></div>
+                    <button type="button" class="js-add-asegurado inline-btn-add-asegurado">
+                        <i class="bi bi-plus-lg"></i> Añadir asegurado
+                    </button>
+                </div>
+                <div class="inline-form-actions">
+                    <button type="button" class="inline-btn-submit js-form-btn">
+                        <i class="bi bi-calculator"></i> Calcular
+                    </button>
+                </div>
+            </form>
+        </div>`;
+
+    const msgEl = addMessageToChat('bot', html);
+    const container = msgEl || document;
+    const form = container.querySelector('#inlineCotizarSaludForm');
+    const listEl = form.querySelector('.js-asegurados-list');
+    const btnAdd = form.querySelector('.js-add-asegurado');
+
+    // Bloquear submit con Enter
+    form.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
+
+    function renumerar() {
+        const rows = listEl.querySelectorAll('.js-asegurado-row');
+        rows.forEach((row, i) => {
+            const lbl = row.querySelector('.js-asegurado-label');
+            if (lbl) lbl.textContent = `Asegurado ${i + 1}`;
+            const btnDel = row.querySelector('.js-del-asegurado');
+            if (btnDel) btnDel.style.display = rows.length > 1 ? '' : 'none';
+        });
+        btnAdd.style.display = rows.length >= MAX_ASEGURADOS_SALUD ? 'none' : '';
+    }
+
+    function addRow(edadInicial = '') {
+        const rows = listEl.querySelectorAll('.js-asegurado-row');
+        if (rows.length >= MAX_ASEGURADOS_SALUD) return;
+        const row = document.createElement('div');
+        row.className = 'js-asegurado-row cot-salud-asegurado-row';
+        row.innerHTML = `
+            <span class="js-asegurado-label cot-salud-asegurado-label">Asegurado</span>
+            <input type="number" name="edad" class="inline-input cot-salud-edad-input" min="0" max="70" step="1" placeholder="Edad" value="${edadInicial}" required>
+            <button type="button" class="js-del-asegurado cot-salud-del-btn" title="Eliminar">
+                <i class="bi bi-x-lg"></i>
+            </button>`;
+        listEl.appendChild(row);
+        row.querySelector('.js-del-asegurado').addEventListener('click', () => {
+            row.remove();
+            renumerar();
+        });
+        renumerar();
+        row.querySelector('input[name="edad"]').focus();
+    }
+
+    btnAdd.addEventListener('click', () => addRow());
+
+    // Arrancar con 1 asegurado
+    addRow();
+
+    form.querySelector('.js-form-btn').addEventListener('click', async () => {
+        const provincia = parseInt(form.querySelector('[name="provincia"]').value, 10);
+        const edadInputs = Array.from(form.querySelectorAll('input[name="edad"]'));
+        if (!provincia) { form.classList.add('was-validated'); return; }
+
+        const edades = [];
+        for (const inp of edadInputs) {
+            if (!inp.checkValidity() || inp.value === '') {
+                form.classList.add('was-validated');
+                inp.focus();
+                return;
+            }
+            edades.push(parseInt(inp.value, 10));
+        }
+        if (!edades.length) return;
+
+        showLoading('Calculando cotización...');
+        try {
+            const res = await fetch(buildTarificacionSaludURL(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${getToken()}`,
+                    'Empresa': ENV.EMPRESA,
+                    'Device': ENV.DEVICE,
+                },
+                body: JSON.stringify({ provincia, edades })
+            });
+            if (!res.ok) {
+                let msg = 'No se pudo calcular la cotización';
+                try {
+                    const err = await res.json();
+                    if (err?.message) msg = err.message;
+                } catch {}
+                throw new Error(msg);
+            }
+            const result = await res.json();
+            Swal.close();
+            pintarResultadoCotizacionSalud(form, result);
+        } catch (err) {
+            Swal.close();
+            Swal.fire('Error', err?.message || 'No se pudo realizar el proceso', 'error');
+        }
+    });
+}
+
+function pintarResultadoCotizacionSalud(form, result) {
+    const provinciaNombre = (PROVINCIAS_ES.find(p => p[0] === result.provincia) || [null, '—'])[1];
+    const resultados = Array.isArray(result.resultados) ? result.resultados : [];
+    const totales = result.totales || {};
+
+    // Orden: compañías que tarifican primero (por total ascendente), luego las que no.
+    const companiasOrdenadas = [...COMPANIAS_SALUD].sort((a, b) => {
+        const ta = totales[a.key];
+        const tb = totales[b.key];
+        const va = (ta === null || ta === undefined || ta === 0) ? Infinity : Number(ta);
+        const vb = (tb === null || tb === undefined || tb === 0) ? Infinity : Number(tb);
+        return va - vb;
+    });
+
+    const companiaItems = companiasOrdenadas.map(c => {
+        const total = totales[c.key];
+        const tarifica = total !== null && total !== undefined && Number(total) > 0;
+
+        const asegInline = resultados.map((r, i) => {
+            const prima = r.primas?.[c.key];
+            const cls = (prima === null || prima === undefined) ? 'cot-salud-pill cot-salud-pill--na' : 'cot-salud-pill';
+            return `<span class="${cls}"><span class="cot-salud-pill-ref">#${r.asegurado ?? (i + 1)} · ${r.edad}a</span> ${fmtEuroSalud(prima)}</span>`;
+        }).join('');
+
+        return `
+            <div class="cot-salud-item ${tarifica ? '' : 'cot-salud-item--na'}">
+                <div class="cot-salud-item-head">
+                    <span class="cot-salud-item-name">${c.label}</span>
+                    <span class="cot-salud-item-total">${tarifica ? fmtEuroSalud(total) + ' <small>/ mes</small>' : '— No tarifica'}</span>
+                </div>
+                ${tarifica && resultados.length > 1 ? `<div class="cot-salud-item-pills">${asegInline}</div>` : ''}
+            </div>`;
+    }).join('');
+
+    const edadesResumen = resultados.map(r => `${r.edad}a`).join(' · ');
+
+    const html = `
+        <div class="inline-form-success">
+            <div class="cot-salud-header">
+                <i class="bi bi-check-circle"></i>
+                <strong>Cotización salud</strong>
+                <span class="cot-salud-header-sub">${provinciaNombre} · ${resultados.length} aseg. (${edadesResumen})</span>
+            </div>
+            <div class="cot-salud-list">${companiaItems}</div>
+            <div class="cot-salud-note"><small class="text-muted"><i class="bi bi-info-circle"></i> Primas mensuales orientativas.</small></div>
+        </div>`;
+
+    form.closest('.chat-inline-form').innerHTML = html;
+}

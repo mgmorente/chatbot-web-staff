@@ -3,7 +3,7 @@ import { getStoredToken, clearStoredToken, getSelectedClient } from './storage.j
 import { addMessageToChat, addThinkingMessage, removeThinkingMessage } from './chat.js';
 import { initClienteSearch, recargarDatosCliente, renderFichaCliente, buscarClienteEnChat, renderBusquedaClientes, renderClientesRecientes, fetchCliente } from './clientes.js';
 import { renderPolizasCliente, renderDuplicadoInline, renderWalletInline } from './polizas.js';
-import { renderModClienteInline, renderAgendaInline, renderEmailInline, renderPresiniestroInline, renderSubirDocInline } from './forms.js';
+import { renderModClienteInline, renderAgendaInline, renderEmailInline, renderPresiniestroInline, renderSubirDocInline, renderCotizarSaludInline } from './forms.js';
 import { renderRecibosCliente } from './recibos.js';
 import { renderSiniestrosCliente } from './siniestros.js';
 import { renderTelefonosCompanias } from './companias.js';
@@ -278,6 +278,10 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'resumen_pagos':
             case 'consultar_pagos':
                 renderResumenPagos();
+                break;
+            case 'cotizar_salud':
+            case 'tarificar_salud':
+                renderCotizarSaludInline();
                 break;
             default:
                 if (d.message) addMessageToChat('bot', d.message);

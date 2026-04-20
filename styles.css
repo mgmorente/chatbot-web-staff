@@ -3939,3 +3939,17 @@ span.flatpickr-weekday {
     color: var(--staff-text);
     font-weight: 500;
 }
+
+/* Pill del cliente en el header: clicable para cambiar de cliente */
+.header-client-pill.change-client {
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+.header-client-pill.change-client:hover {
+    background: var(--staff-badge-bg);
+    color: var(--staff-accent);
+}
+.header-client-pill.change-client:focus-visible {
+    outline: 2px solid var(--staff-accent);
+    outline-offset: 2px;
+}

@@ -209,6 +209,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Sidebar: comportamiento acordeón + auto-scroll al expandir ---
+    // (a) Abrir un grupo cierra los demás abiertos.
+    // (b) Al terminar la animación, si el grupo expandido se sale por
+    //     abajo del área visible (frecuente en móvil), se hace scroll
+    //     dentro del sidebar-nav para que el contenido quede visible.
+    const sidebarNav = sidebar.querySelector('.sidebar-nav');
+    if (sidebarNav && window.bootstrap?.Collapse) {
+        sidebarNav.querySelectorAll('.nav-group > .collapse').forEach(col => {
+            col.addEventListener('show.bs.collapse', () => {
+                sidebarNav.querySelectorAll('.nav-group > .collapse.show').forEach(other => {
+                    if (other !== col) {
+                        bootstrap.Collapse.getOrCreateInstance(other).hide();
+                    }
+                });
+            });
+            col.addEventListener('shown.bs.collapse', () => {
+                const group = col.closest('.nav-group');
+                if (!group) return;
+                const navRect   = sidebarNav.getBoundingClientRect();
+                const groupRect = group.getBoundingClientRect();
+                if (groupRect.bottom > navRect.bottom) {
+                    const diff = groupRect.bottom - navRect.bottom + 12;
+                    sidebarNav.scrollBy({ top: diff, behavior: 'smooth' });
+                }
+            });
+        });
+    }
+
     // --- Handle Command ---
     function handleCommand(d) {
         // Recordar última intención para poder resolver mensajes de seguimiento cortos

@@ -37,6 +37,10 @@ const suggestions = [
     // Tarificación
     { icon: 'bi-heart-pulse',         text: 'Cotizar seguro de salud',              command: 'cotizar_salud',        keywords: ['cotizar', 'cotizacion', 'tarificar', 'tarificacion', 'tarifa', 'salud', 'medico', 'sanitario', 'asisa', 'adeslas', 'gerenpiacc', 'prima', 'precio', 'presupuesto', 'calcular'] },
 
+    // Recordatorios
+    { icon: 'bi-bookmark-star',       text: 'Ver recordatorios del cliente',        command: 'consultar_recordatorio', keywords: ['recordatorio', 'recordatorios', 'recuerda', 'recuerdame', 'apunte', 'apuntes', 'nota', 'notas', 'tareas', 'pendiente', 'pendientes', 'ver', 'consultar'] },
+    { icon: 'bi-bookmark-plus',       text: 'Nuevo recordatorio del cliente',       command: 'registrar_recordatorio', keywords: ['recordatorio', 'nuevo', 'nueva', 'crear', 'anadir', 'apuntar', 'apunta', 'anota', 'anotar', 'recordar', 'recuerdame', 'nota', 'tarea', 'pendiente'] },
+
     // Comunicación
     { icon: 'bi-envelope',            text: 'Enviar email al cliente',              command: 'enviar_email',         keywords: ['email', 'correo', 'enviar', 'mail', 'mensaje', 'cliente', 'carta', 'comunicacion'] },
 

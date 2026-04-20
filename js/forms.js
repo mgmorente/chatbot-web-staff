@@ -1070,3 +1070,219 @@ function pintarResultadoCotizacionSalud(form, result) {
 
     form.closest('.chat-inline-form').innerHTML = html;
 }
+
+// =====================================================================
+// RECORDATORIOS DEL CLIENTE (JSON en clientes.observa, backend en
+// /chatbot-staff/recordatorios)
+// =====================================================================
+
+function recordatoriosURL(path = '') {
+    return `${ENV.API_URL}/recordatorios${path}`;
+}
+
+function escAttr(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escText(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function itemRecordatorioHTML(r) {
+    const autorLinea = r.autor ? `<small class="text-muted">por ${escText(r.autor)}</small>` : '';
+    const claseHecho = r.hecho ? 'recordatorio-item--hecho' : '';
+    return `
+        <li class="recordatorio-item ${claseHecho}" data-id="${escAttr(r.id)}">
+            <label class="recordatorio-check">
+                <input type="checkbox" class="js-toggle-recordatorio" ${r.hecho ? 'checked' : ''}>
+                <span class="recordatorio-check-box"></span>
+            </label>
+            <div class="recordatorio-body">
+                <div class="recordatorio-text">${escText(r.texto)}</div>
+                ${autorLinea ? `<div class="recordatorio-meta">${autorLinea}</div>` : ''}
+            </div>
+            <button type="button" class="recordatorio-del js-del-recordatorio" title="Eliminar">
+                <i class="bi bi-trash"></i>
+            </button>
+        </li>`;
+}
+
+function renderListaRecordatoriosEn(contenedor, recordatorios) {
+    const pendientes = recordatorios.filter(r => !r.hecho);
+    const hechos     = recordatorios.filter(r =>  r.hecho);
+
+    const bloquePend = pendientes.length
+        ? `<ul class="recordatorios-lista">${pendientes.map(itemRecordatorioHTML).join('')}</ul>`
+        : `<div class="recordatorios-empty"><i class="bi bi-check2-circle"></i> No hay recordatorios pendientes</div>`;
+
+    const bloqueHechos = hechos.length
+        ? `
+            <details class="recordatorios-hechos">
+                <summary><i class="bi bi-archive"></i> Completados (${hechos.length})</summary>
+                <ul class="recordatorios-lista">${hechos.map(itemRecordatorioHTML).join('')}</ul>
+            </details>`
+        : '';
+
+    contenedor.innerHTML = bloquePend + bloqueHechos;
+}
+
+function cablearAccionesRecordatorios(contenedor, nif, onChange) {
+    contenedor.querySelectorAll('.js-toggle-recordatorio').forEach(chk => {
+        chk.addEventListener('change', async () => {
+            const li = chk.closest('.recordatorio-item');
+            const id = li?.dataset?.id;
+            if (!id) return;
+            try {
+                const res = await fetch(recordatoriosURL(`/${encodeURIComponent(id)}/toggle`), {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}`, 'Empresa': ENV.EMPRESA, 'Device': ENV.DEVICE },
+                    body: JSON.stringify({ nif })
+                });
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                onChange(data.recordatorios || []);
+            } catch {
+                chk.checked = !chk.checked;
+                Swal.fire('Error', 'No se pudo actualizar el recordatorio', 'error');
+            }
+        });
+    });
+
+    contenedor.querySelectorAll('.js-del-recordatorio').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const li = btn.closest('.recordatorio-item');
+            const id = li?.dataset?.id;
+            if (!id) return;
+            const ok = await Swal.fire({
+                icon: 'question',
+                title: 'Eliminar recordatorio',
+                text: '¿Seguro que quieres eliminarlo? Esta acción no se puede deshacer.',
+                showCancelButton: true,
+                confirmButtonText: 'Eliminar',
+                cancelButtonText: 'Cancelar',
+            }).then(r => r.isConfirmed);
+            if (!ok) return;
+            try {
+                const res = await fetch(recordatoriosURL(`/${encodeURIComponent(id)}`), {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}`, 'Empresa': ENV.EMPRESA, 'Device': ENV.DEVICE },
+                    body: JSON.stringify({ nif })
+                });
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                onChange(data.recordatorios || []);
+            } catch {
+                Swal.fire('Error', 'No se pudo eliminar el recordatorio', 'error');
+            }
+        });
+    });
+}
+
+export async function renderRecordatoriosInline() {
+    closePreviousForms();
+    const data = getClienteData();
+    if (!data?.cliente) return;
+
+    const nif = data.cliente.nif;
+
+    const html = `
+        <div class="chat-inline-form">
+            <div class="inline-form-title recordatorios-title">
+                <span><i class="bi bi-bookmark-star"></i> Recordatorios</span>
+                <button type="button" class="inline-btn-nuevo-recordatorio js-nuevo-recordatorio">
+                    <i class="bi bi-plus-lg"></i> Nuevo
+                </button>
+            </div>
+            <div class="js-recordatorios-contenedor">
+                <div class="recordatorios-loading"><i class="bi bi-hourglass-split"></i> Cargando…</div>
+            </div>
+        </div>`;
+
+    const msgEl = addMessageToChat('bot', html);
+    const container = msgEl || document;
+    const lista = container.querySelector('.js-recordatorios-contenedor');
+
+    container.querySelector('.js-nuevo-recordatorio').addEventListener('click', () => {
+        renderNuevoRecordatorioInline();
+    });
+
+    const refrescar = (recordatorios) => {
+        renderListaRecordatoriosEn(lista, recordatorios);
+        cablearAccionesRecordatorios(lista, nif, refrescar);
+        // Sincronizar con localStorage para que la ficha del cliente quede actualizada
+        try {
+            const cd = JSON.parse(localStorage.getItem('clienteData') || 'null');
+            if (cd) { cd.recordatorios = recordatorios; localStorage.setItem('clienteData', JSON.stringify(cd)); }
+        } catch {}
+    };
+
+    try {
+        const res = await fetch(`${recordatoriosURL()}?nif=${encodeURIComponent(nif)}`, {
+            headers: { 'Authorization': `Bearer ${getToken()}`, 'Empresa': ENV.EMPRESA, 'Device': ENV.DEVICE },
+        });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        refrescar(data.recordatorios || []);
+    } catch {
+        lista.innerHTML = `<div class="recordatorios-empty"><i class="bi bi-exclamation-triangle"></i> No se pudieron cargar los recordatorios</div>`;
+    }
+}
+
+export function renderNuevoRecordatorioInline(prefill = {}) {
+    closePreviousForms();
+    const data = getClienteData();
+    if (!data?.cliente) return;
+
+    const nif = data.cliente.nif;
+    const textoPrefill = prefill.texto ? String(prefill.texto) : '';
+
+    const html = `
+        <div class="chat-inline-form">
+            <div class="inline-form-title"><i class="bi bi-bookmark-plus"></i> Nuevo recordatorio</div>
+            <form id="inlineRecordatorioForm" novalidate>
+                <div class="inline-form-group">
+                    <label>Texto</label>
+                    <textarea name="texto" class="inline-input inline-textarea" rows="3" placeholder="Ej: Es fumador / Preguntar por su mujer" required>${escText(textoPrefill)}</textarea>
+                </div>
+                <div class="inline-form-actions">
+                    <button type="button" class="inline-btn-submit js-form-btn"><i class="bi bi-check-lg"></i> Guardar</button>
+                </div>
+            </form>
+        </div>`;
+
+    const msgEl = addMessageToChat('bot', html);
+    const container = msgEl || document;
+    const form = container.querySelector('#inlineRecordatorioForm');
+
+    form.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') e.preventDefault(); });
+
+    form.querySelector('.js-form-btn').addEventListener('click', async () => {
+        const texto = form.querySelector('[name="texto"]').value.trim();
+        if (!texto) { form.classList.add('was-validated'); form.querySelector('[name="texto"]').focus(); return; }
+
+        showLoading('Guardando recordatorio...');
+        try {
+            const res = await fetch(recordatoriosURL(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}`, 'Empresa': ENV.EMPRESA, 'Device': ENV.DEVICE },
+                body: JSON.stringify({ nif, texto })
+            });
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            Swal.close();
+            form.closest('.chat-inline-form').innerHTML = `
+                <div class="inline-form-success">
+                    <i class="bi bi-check-circle"></i> Recordatorio guardado
+                </div>`;
+            // Sincronizar localStorage para que la ficha refleje el nuevo recordatorio
+            try {
+                const cd = JSON.parse(localStorage.getItem('clienteData') || 'null');
+                if (cd) { cd.recordatorios = data.recordatorios || []; localStorage.setItem('clienteData', JSON.stringify(cd)); }
+            } catch {}
+            // Mostrar la lista actualizada a continuación
+            renderRecordatoriosInline();
+        } catch {
+            Swal.close();
+            Swal.fire('Error', 'No se pudo guardar el recordatorio', 'error');
+        }
+    });
+}

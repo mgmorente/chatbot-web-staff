@@ -225,6 +225,39 @@ export function renderFichaCliente() {
 
     const initials = c.nombre ? c.nombre.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() : '?';
 
+    // Acorta "Grupo Pacc" a "GP" para que los metadatos (sucursal,
+    // colaborador, ejecutivo de cuentas) no ocupen tanto espacio.
+    const shortenGP = v => (v || 'N/D').replace(/Grupo\s+Pacc/gi, 'GP');
+
+    // Recordatorios: tarjetas visuales compactas (post-it), scroll horizontal
+    const recordatorios = Array.isArray(data.recordatorios) ? data.recordatorios : [];
+    const recPendientes = recordatorios.filter(r => !r.hecho);
+    const recNumPend    = recPendientes.length;
+    const fcRecCards = recPendientes.map(r => `
+        <button type="button" class="fc-rec-card js-ficha-action" data-command="consultar_recordatorio" title="Ver recordatorios">
+            <i class="bi bi-bookmark-star-fill fc-rec-card-pin"></i>
+            <span class="fc-rec-card-text">${(r.texto || '').replace(/</g,'&lt;')}</span>
+        </button>`).join('');
+    const fcRecSection = `
+        <div class="fc-rec-section">
+            <div class="fc-rec-section-head">
+                <span class="fc-rec-section-title">
+                    <i class="bi bi-bookmark-star"></i>
+                    Recordatorios
+                    ${recNumPend ? `<span class="fc-rec-section-count">${recNumPend}</span>` : ''}
+                </span>
+                <button type="button" class="fc-rec-section-btn js-ficha-action" data-command="registrar_recordatorio" title="Nuevo recordatorio">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+            ${recNumPend
+                ? `<div class="fc-rec-section-cards">${fcRecCards}</div>`
+                : `<button type="button" class="fc-rec-section-empty js-ficha-action" data-command="registrar_recordatorio">
+                        <i class="bi bi-plus-circle"></i> Añadir el primer recordatorio
+                   </button>`
+            }
+        </div>`;
+
     const html = `
         <div class="fc">
             <div class="fc-top">
@@ -240,11 +273,32 @@ export function renderFichaCliente() {
                 <button class="fc-pill fc-pill--red js-ficha-action" data-command="consultar_recibo" data-args='{"pendientes":true}'>${recibosPendientes.length} pendientes</button>
             </div>
             <div class="fc-details">
-                ${c.telefono ? `<a href="tel:${c.telefono}" class="fc-row"><i class="bi bi-telephone"></i>${c.telefono}</a>` : ''}
-                ${c.email ? `<a href="#" class="fc-row email-cliente"><i class="bi bi-envelope"></i>${c.email}</a>` : ''}
+                ${(c.telefono || c.email) ? `
+                    <div class="fc-row fc-row--inline">
+                        ${c.telefono ? `<a href="tel:${c.telefono}" class="fc-row-item"><i class="bi bi-telephone"></i>${c.telefono}</a>` : ''}
+                        ${c.email ? `<a href="#" class="fc-row-item email-cliente"><i class="bi bi-envelope"></i>${c.email}</a>` : ''}
+                    </div>
+                ` : ''}
                 ${c.domicilio ? `<div class="fc-row"><i class="bi bi-geo-alt"></i>${c.domicilio}</div>` : ''}
-                <div class="fc-row fc-row--muted"><i class="bi bi-building"></i>${c.sucursal || 'N/D'} · ${c.colaborador || 'N/D'} · ${c.ecuentas || 'N/D'}</div>
+                <div class="fc-meta">
+                    <span class="fc-meta-item" title="Sucursal">
+                        <i class="bi bi-building"></i>
+                        <span class="fc-meta-label">Sucursal</span>
+                        <span class="fc-meta-value">${shortenGP(c.sucursal)}</span>
+                    </span>
+                    <span class="fc-meta-item" title="Colaborador">
+                        <i class="bi bi-people"></i>
+                        <span class="fc-meta-label">Colaborador</span>
+                        <span class="fc-meta-value">${shortenGP(c.colaborador)}</span>
+                    </span>
+                    <span class="fc-meta-item" title="Ejecutivo de cuentas">
+                        <i class="bi bi-person-badge"></i>
+                        <span class="fc-meta-label">Ej. cuentas</span>
+                        <span class="fc-meta-value">${shortenGP(c.ecuentas)}</span>
+                    </span>
+                </div>
             </div>
+            ${fcRecSection}
         </div>
     `;
     addMessageToChat('bot', html);

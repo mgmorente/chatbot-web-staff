@@ -3,7 +3,7 @@ import { getStoredToken, clearStoredToken, getSelectedClient } from './storage.j
 import { addMessageToChat, addThinkingMessage, removeThinkingMessage } from './chat.js';
 import { initClienteSearch, recargarDatosCliente, renderFichaCliente, buscarClienteEnChat, renderBusquedaClientes, renderClientesRecientes, fetchCliente } from './clientes.js';
 import { renderPolizasCliente, renderDuplicadoInline, renderWalletInline } from './polizas.js';
-import { renderModClienteInline, renderAgendaInline, renderEmailInline, renderPresiniestroInline, renderSubirDocInline, renderCotizarSaludInline } from './forms.js';
+import { renderModClienteInline, renderAgendaInline, renderEmailInline, renderPresiniestroInline, renderSubirDocInline, renderCotizarSaludInline, renderRecordatoriosInline, renderNuevoRecordatorioInline } from './forms.js';
 import { renderRecibosCliente } from './recibos.js';
 import { renderSiniestrosCliente } from './siniestros.js';
 import { renderTelefonosCompanias } from './companias.js';
@@ -282,6 +282,16 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'cotizar_salud':
             case 'tarificar_salud':
                 renderCotizarSaludInline();
+                break;
+            case 'consultar_recordatorio':
+            case 'ver_recordatorios':
+                renderRecordatoriosInline();
+                break;
+            case 'registrar_recordatorio':
+            case 'nuevo_recordatorio':
+                renderNuevoRecordatorioInline({
+                    texto: d.args?.recordatorio || ''
+                });
                 break;
             default:
                 if (d.message) addMessageToChat('bot', d.message);
@@ -830,10 +840,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div class="help-section">
                     <div class="help-section-title">Cliente</div>
-                    <div class="help-item"><i class="bi bi-person-vcard"></i> <strong>Ficha cliente</strong> — Se muestra al seleccionar un cliente, con stats clickables de pólizas, siniestros y recibos pendientes</div>
+                    <div class="help-item"><i class="bi bi-person-vcard"></i> <strong>Ver datos</strong> — Ficha con stats clickables de pólizas, siniestros, recibos pendientes y recordatorios</div>
                     <div class="help-item"><i class="bi bi-pencil"></i> <strong>Modificar datos</strong> — Cambiar teléfono, email o dirección</div>
-                    <div class="help-item"><i class="bi bi-arrow-repeat"></i> <strong>Cambiar cliente</strong> — Seleccionar otro cliente</div>
-                    <div class="help-item"><i class="bi bi-arrow-clockwise"></i> <strong>Recargar datos</strong> — Actualizar info desde servidor</div>
+                    <div class="help-item"><i class="bi bi-envelope"></i> <strong>Enviar email</strong> — Redactar correo al cliente vía Outlook 365</div>
                 </div>
 
                 <div class="help-section">
@@ -855,7 +864,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="help-section-title">Documentos y Agenda</div>
                     <div class="help-item"><i class="bi bi-folder"></i> <strong>Documentos</strong> — Consultar documentos por póliza o siniestro</div>
                     <div class="help-item"><i class="bi bi-upload"></i> <strong>Subir documento</strong> — Adjuntar archivo a póliza o siniestro</div>
-                    <div class="help-item"><i class="bi bi-calendar3"></i> <strong>Agenda</strong> — Consultar y crear citas</div>
+                    <div class="help-item"><i class="bi bi-calendar3"></i> <strong>Agenda</strong> — Consultar y crear citas con fecha/hora</div>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-title">Recordatorios</div>
+                    <div class="help-item"><i class="bi bi-bookmark-star"></i> <strong>Recordatorios</strong> — Notas libres sobre el cliente (ej: "es fumador", "prefiere llamadas por la tarde"). Desde la lista puedes crear nuevos, marcar como hechos o eliminarlos.</div>
+                    <div class="help-item"><i class="bi bi-plus-lg"></i> <strong>Crear rápido</strong> — Desde el botón + junto al input del chat, o por texto natural: "apunta que...", "recuérdame que...", "nuevo recordatorio: ..."</div>
+                </div>
+
+                <div class="help-section">
+                    <div class="help-section-title">Tarificación</div>
+                    <div class="help-item"><i class="bi bi-heart-pulse"></i> <strong>Cotizar salud</strong> — Tarificación automática Asisa / Adeslas por provincia y edades (hasta 6 asegurados)</div>
                 </div>
 
                 <div class="help-section">

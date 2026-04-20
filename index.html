@@ -63,16 +63,17 @@
                     </button>
                     <div class="collapse" id="navCliente">
                         <button class="nav-action" data-command="consultar_cliente">
-                            <i class="bi bi-search"></i> Consultar cliente
+                            <i class="bi bi-person-vcard"></i> Ver datos
                         </button>
                         <button class="nav-action" data-command="actualizar_cliente">
                             <i class="bi bi-pencil"></i> Modificar datos
                         </button>
-                        <button class="nav-action" data-command="cambiar_cliente">
-                            <i class="bi bi-arrow-repeat"></i> Cambiar cliente
+                        <button class="nav-action" data-command="enviar_email">
+                            <i class="bi bi-send"></i> Enviar email
                         </button>
-                        <button class="nav-action" data-command="recargar_cliente">
-                            <i class="bi bi-arrow-clockwise"></i> Recargar datos
+                        <hr class="nav-separator">
+                        <button class="nav-action" data-command="consultar_recordatorio">
+                            <i class="bi bi-bookmark-star"></i> Recordatorios
                         </button>
                     </div>
                 </div>
@@ -157,16 +158,28 @@
                 </div>
 
                 <div class="nav-group">
-                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navOtros">
-                        <i class="bi bi-grid"></i> Otros
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navDirectorio">
+                        <i class="bi bi-journal-text"></i> Directorio
                         <i class="bi bi-chevron-down nav-chevron"></i>
                     </button>
-                    <div class="collapse" id="navOtros">
+                    <div class="collapse" id="navDirectorio">
                         <button class="nav-action" data-command="consultar_compania">
                             <i class="bi bi-telephone"></i> Teléfonos compañías
                         </button>
-                        <button class="nav-action" data-command="enviar_email">
-                            <i class="bi bi-send"></i> Enviar email
+                    </div>
+                </div>
+
+                <div class="nav-group">
+                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navSesion">
+                        <i class="bi bi-person-gear"></i> Sesión
+                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    </button>
+                    <div class="collapse" id="navSesion">
+                        <button class="nav-action" data-command="cambiar_cliente">
+                            <i class="bi bi-arrow-repeat"></i> Cambiar cliente
+                        </button>
+                        <button class="nav-action" data-command="recargar_cliente">
+                            <i class="bi bi-arrow-clockwise"></i> Recargar datos
                         </button>
                     </div>
                 </div>
@@ -240,6 +253,9 @@
                     </button>
                     <button class="attach-menu-item" data-command="registrar_agenda">
                         <i class="bi bi-calendar-plus"></i> Nueva cita
+                    </button>
+                    <button class="attach-menu-item" data-command="registrar_recordatorio">
+                        <i class="bi bi-bookmark-plus"></i> Nuevo recordatorio
                     </button>
                     <button class="attach-menu-item" data-command="enviar_email">
                         <i class="bi bi-envelope"></i> Enviar email

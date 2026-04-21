@@ -899,13 +899,15 @@ export function renderCotizarSaludInline() {
 
     const prefProvincia = detectarProvinciaDesdeDomicilio(data.cliente.domicilio || '');
 
-    const provinciaOptions = PROVINCIAS_ES
+    // Ordenar provincias alfabéticamente (ignorando acentos y mayúsculas) para el <select>.
+    const provinciaOptions = [...PROVINCIAS_ES]
+        .sort((a, b) => a[1].localeCompare(b[1], 'es', { sensitivity: 'base' }))
         .map(([cod, nombre]) => `<option value="${cod}" ${String(cod) === prefProvincia ? 'selected' : ''}>${nombre}</option>`)
         .join('');
 
     const html = `
         <div class="chat-inline-form">
-            <div class="inline-form-title"><i class="bi bi-heart-pulse"></i> Cotización salud</div>
+            <div class="inline-form-title"><i class="bi bi-heart-pulse"></i> Tarificador Salud</div>
             <form id="inlineCotizarSaludForm" novalidate>
                 <div class="inline-form-group">
                     <label>Provincia</label>
@@ -990,7 +992,7 @@ export function renderCotizarSaludInline() {
         }
         if (!edades.length) return;
 
-        showLoading('Calculando cotización...');
+        showLoading('Calculando tarificación...');
         try {
             const res = await fetch(buildTarificacionSaludURL(), {
                 method: 'POST',
@@ -1004,7 +1006,7 @@ export function renderCotizarSaludInline() {
                 body: JSON.stringify({ provincia, edades })
             });
             if (!res.ok) {
-                let msg = 'No se pudo calcular la cotización';
+                let msg = 'No se pudo calcular la tarificación';
                 try {
                     const err = await res.json();
                     if (err?.message) msg = err.message;
@@ -1061,11 +1063,10 @@ function pintarResultadoCotizacionSalud(form, result) {
         <div class="inline-form-success">
             <div class="cot-salud-header">
                 <i class="bi bi-check-circle"></i>
-                <strong>Cotización salud</strong>
+                <strong>Tarificador Salud</strong>
                 <span class="cot-salud-header-sub">${provinciaNombre} · ${resultados.length} aseg. (${edadesResumen})</span>
             </div>
             <div class="cot-salud-list">${companiaItems}</div>
-            <div class="cot-salud-note"><small class="text-muted"><i class="bi bi-info-circle"></i> Primas mensuales orientativas.</small></div>
         </div>`;
 
     form.closest('.chat-inline-form').innerHTML = html;

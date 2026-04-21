@@ -35,7 +35,7 @@ const suggestions = [
     { icon: 'bi-cash-stack',          text: 'Resumen de pagos del cliente',         command: 'resumen_pagos',        keywords: ['paga', 'pago', 'pagos', 'cuanto', 'prima', 'primas', 'coste', 'precio', 'seguro', 'seguros', 'resumen', 'anual', 'total'] },
 
     // Tarificación
-    { icon: 'bi-heart-pulse',         text: 'Cotizar seguro de salud',              command: 'cotizar_salud',        keywords: ['cotizar', 'cotizacion', 'tarificar', 'tarificacion', 'tarifa', 'salud', 'medico', 'sanitario', 'asisa', 'adeslas', 'gerenpiacc', 'prima', 'precio', 'presupuesto', 'calcular'] },
+    { icon: 'bi-heart-pulse',         text: 'Tarificar seguro de salud',            command: 'cotizar_salud',        keywords: ['cotizar', 'cotizacion', 'tarificar', 'tarificacion', 'tarifa', 'salud', 'medico', 'sanitario', 'asisa', 'adeslas', 'gerenpiacc', 'prima', 'precio', 'presupuesto', 'calcular'] },
 
     // Recordatorios
     { icon: 'bi-bookmark-star',       text: 'Ver recordatorios del cliente',        command: 'consultar_recordatorio', keywords: ['recordatorio', 'recordatorios', 'recuerda', 'recuerdame', 'apunte', 'apuntes', 'nota', 'notas', 'tareas', 'pendiente', 'pendientes', 'ver', 'consultar'] },

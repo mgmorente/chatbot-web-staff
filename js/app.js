@@ -440,23 +440,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Oficina / sucursal / ejecutiva / colaborador del cliente → respuesta directa
+        // Ejecutiva / colaborador del cliente → respuesta directa
         // Se activa si el mensaje menciona estos términos y (a) se refiere al cliente
-        // o (b) ya hay un cliente seleccionado (contexto implícito: "qué oficina tiene").
-        if (/\b(oficina|sucursal|ejecutiva|ejecutivo|colaborador|asesor|gestor|cuentas|ecuentas)\b/i.test(msgLower)
+        // o (b) ya hay un cliente seleccionado.
+        if (/\b(ejecutiva|ejecutivo|colaborador|asesor|gestor|cuentas|ecuentas)\b/i.test(msgLower)
             && (refiereCliente || getSelectedClient())) {
             if (!getSelectedClient()) { clienteModal.show(); return; }
             const cd = JSON.parse(localStorage.getItem('clienteData') || 'null');
             const cli = cd?.cliente;
             if (cli) {
-                const pideOficina     = /\b(oficina|sucursal)\b/i.test(msgLower);
                 const pideEjecutiva   = /\b(ejecutiv[oa]|cuentas|ecuentas)\b/i.test(msgLower);
                 const pideColaborador = /\b(colaborador|asesor|gestor)\b/i.test(msgLower);
                 // Ajustar etiqueta de ejecutivo/a según el género preguntado
                 const usaMasculino = /\bejecutivo\b/i.test(msgLower);
                 const labelEjecutiva = usaMasculino ? 'Ejecutivo de cuentas' : 'Ejecutiva de cuentas';
                 const partes = [];
-                if (pideOficina)     partes.push(`<div class="fc-row" style="display:block;"><i class="bi bi-building"></i> <strong>Oficina/Sucursal:</strong><br>${cli.sucursal || 'N/D'}</div>`);
                 if (pideEjecutiva)   partes.push(`<div class="fc-row" style="display:block;"><i class="bi bi-person-badge"></i> <strong>${labelEjecutiva}:</strong><br>${cli.ecuentas || 'N/D'}</div>`);
                 if (pideColaborador) partes.push(`<div class="fc-row" style="display:block;"><i class="bi bi-people"></i> <strong>Colaborador:</strong><br>${cli.colaborador || 'N/D'}</div>`);
                 if (partes.length) {
@@ -903,7 +901,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 <div class="help-section">
                     <div class="help-section-title">Tarificación</div>
-                    <div class="help-item"><i class="bi bi-heart-pulse"></i> <strong>Cotizar salud</strong> — Tarificación automática Asisa / Adeslas por provincia y edades (hasta 6 asegurados)</div>
+                    <div class="help-item"><i class="bi bi-heart-pulse"></i> <strong>Tarificador Salud</strong> — Tarificación automática Asisa / Adeslas por provincia y edades (hasta 6 asegurados)</div>
                 </div>
 
                 <div class="help-section">
@@ -1075,5 +1073,204 @@ document.addEventListener('DOMContentLoaded', () => {
             btnAttach.classList.remove('active');
         }
     });
+
+    // =====================================================================
+    // ACTION DOCK — dock flotante con 2 niveles (sustituye al sidebar)
+    // =====================================================================
+    const actionDock = document.getElementById('action-dock');
+    const actionDockSublayer = document.getElementById('action-dock-sublayer');
+    const actionDockSublayerInner = actionDockSublayer
+        ? actionDockSublayer.querySelector('.action-dock__sublayer-inner')
+        : null;
+    const btnDockToggle = document.getElementById('btn-dock-toggle');
+
+    if (actionDock && actionDockSublayer && actionDockSublayerInner) {
+
+        // Catálogo de sub-acciones por grupo. Los botones usan data-command
+        // (que ya está gestionado por el handler delegado de más arriba) o
+        // data-proxy (redirige el click al botón original oculto del sidebar).
+        const DOCK_GROUPS = {
+            cliente: {
+                title: 'Cliente',
+                items: [
+                    { icon: 'bi-person-vcard', label: 'Ver datos', command: 'consultar_cliente' },
+                    { icon: 'bi-pencil', label: 'Modificar', command: 'actualizar_cliente' },
+                    { icon: 'bi-send', label: 'Enviar email', command: 'enviar_email' },
+                    { icon: 'bi-bookmark-star', label: 'Recordatorios', command: 'consultar_recordatorio' },
+                    { icon: 'bi-arrow-repeat', label: 'Cambiar', command: 'cambiar_cliente' },
+                    { icon: 'bi-arrow-clockwise', label: 'Recargar', command: 'recargar_cliente' },
+                ],
+            },
+            polizas: {
+                title: 'Pólizas y recibos',
+                items: [
+                    { icon: 'bi-search', label: 'Activas', command: 'consultar_poliza' },
+                    { icon: 'bi-files', label: 'Duplicado', command: 'duplicado_poliza' },
+                    { icon: 'bi-wallet2', label: 'Wallet', command: 'wallet_poliza' },
+                    { icon: 'bi-receipt', label: 'Recibos', command: 'consultar_recibo' },
+                ],
+            },
+            siniestros: {
+                title: 'Siniestros',
+                items: [
+                    { icon: 'bi-search', label: 'Abiertos', command: 'consultar_siniestro' },
+                    { icon: 'bi-plus-circle', label: 'Registrar', command: 'registrar_siniestro' },
+                ],
+            },
+            documentos: {
+                title: 'Documentos',
+                items: [
+                    { icon: 'bi-search', label: 'Consultar', command: 'consultar_documento' },
+                    { icon: 'bi-upload', label: 'Subir', command: 'registrar_documento' },
+                ],
+            },
+            agenda: {
+                title: 'Agenda',
+                items: [
+                    { icon: 'bi-search', label: 'Consultar', command: 'consultar_agenda' },
+                    { icon: 'bi-plus-circle', label: 'Nueva cita', command: 'registrar_agenda' },
+                ],
+            },
+            herramientas: {
+                title: 'Herramientas',
+                items: [
+                    { icon: 'bi-calculator', label: 'Tarif. Salud', command: 'cotizar_salud' },
+                    { icon: 'bi-telephone', label: 'Compañías', command: 'consultar_compania' },
+                ],
+            },
+            mas: {
+                title: 'Más opciones',
+                items: [
+                    { icon: 'bi-file-earmark-pdf', label: 'Exportar chat', proxy: 'exportChat' },
+                    { icon: 'bi-question-circle', label: 'Ayuda', proxy: 'showHelp' },
+                    { icon: 'bi-download', label: 'Instalar app', proxy: 'installApp' },
+                    { icon: 'bi-arrow-clockwise', label: 'Actualizar', proxy: 'appVersion', variant: 'warning' },
+                    { icon: 'bi-box-arrow-left', label: 'Cerrar sesión', proxy: 'logout', variant: 'danger' },
+                ],
+            },
+        };
+
+        const renderDockSublayer = (groupKey) => {
+            const group = DOCK_GROUPS[groupKey];
+            if (!group) return;
+            const tiles = group.items.map(it => {
+                const variantClass = it.variant ? ` action-dock__tile--${it.variant}` : '';
+                const attrs = it.command
+                    ? `data-command="${it.command}"`
+                    : `data-dock-proxy="${it.proxy}"`;
+                return `
+                    <button type="button" class="action-dock__tile${variantClass}" ${attrs}>
+                        <i class="bi ${it.icon}"></i>
+                        <span>${it.label}</span>
+                    </button>`;
+            }).join('');
+
+            actionDockSublayerInner.innerHTML = `
+                <div class="action-dock__sublayer-title">
+                    <span>${group.title}</span>
+                    <button type="button" class="action-dock__sublayer-close" aria-label="Cerrar">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                ${tiles}
+            `;
+        };
+
+        const closeDockSublayer = () => {
+            actionDockSublayer.classList.remove('is-open');
+            actionDockSublayer.setAttribute('aria-hidden', 'true');
+            actionDock.querySelectorAll('.action-dock__btn.is-open')
+                .forEach(b => b.classList.remove('is-open'));
+        };
+
+        const openDockSublayer = (btn, groupKey) => {
+            renderDockSublayer(groupKey);
+            actionDock.querySelectorAll('.action-dock__btn.is-open')
+                .forEach(b => b.classList.remove('is-open'));
+            btn.classList.add('is-open');
+            actionDockSublayer.classList.add('is-open');
+            actionDockSublayer.setAttribute('aria-hidden', 'false');
+        };
+
+        const showDock = () => {
+            actionDock.classList.add('is-visible');
+            if (btnDockToggle) btnDockToggle.classList.add('is-open');
+        };
+
+        const hideDock = () => {
+            closeDockSublayer();
+            actionDock.classList.remove('is-visible');
+            if (btnDockToggle) btnDockToggle.classList.remove('is-open');
+        };
+
+        const toggleDock = () => {
+            if (actionDock.classList.contains('is-visible')) hideDock();
+            else showDock();
+        };
+
+        // Botón trigger en la chat-input-area
+        if (btnDockToggle) {
+            btnDockToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleDock();
+                // Si el attach-menu (+) está abierto, lo cerramos para no solapar
+                const am = document.getElementById('attach-menu');
+                const ba = document.getElementById('btn-attach');
+                if (am && !am.classList.contains('hidden')) {
+                    am.classList.add('hidden');
+                    if (ba) ba.classList.remove('active');
+                }
+            });
+        }
+
+        // Click en un botón del primer nivel
+        actionDock.addEventListener('click', (e) => {
+            const btn = e.target.closest('.action-dock__btn');
+            if (btn) {
+                const group = btn.getAttribute('data-dock-group');
+                if (btn.classList.contains('is-open')) {
+                    closeDockSublayer();
+                } else {
+                    openDockSublayer(btn, group);
+                }
+                return;
+            }
+            // Cerrar sublayer
+            if (e.target.closest('.action-dock__sublayer-close')) {
+                closeDockSublayer();
+                return;
+            }
+            // Click en tile del segundo nivel
+            const tile = e.target.closest('.action-dock__tile');
+            if (tile) {
+                const proxy = tile.getAttribute('data-dock-proxy');
+                if (proxy) {
+                    const target = document.getElementById(proxy);
+                    if (target) target.click();
+                }
+                // Si tiene data-command, el handler delegado ya lo captura.
+                // Tras ejecutar una acción cerramos el dock completo.
+                hideDock();
+            }
+        });
+
+        // Cerrar al hacer clic fuera del dock o del botón trigger
+        document.addEventListener('click', (e) => {
+            if (!actionDock.classList.contains('is-visible')) return;
+            if (e.target.closest('#action-dock')) return;
+            if (e.target.closest('#btn-dock-toggle')) return;
+            hideDock();
+        });
+
+        // Cerrar con tecla Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if (actionDockSublayer.classList.contains('is-open')) {
+                closeDockSublayer();
+            } else if (actionDock.classList.contains('is-visible')) {
+                hideDock();
+            }
+        });
+    }
 
 });

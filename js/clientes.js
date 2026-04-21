@@ -225,8 +225,8 @@ export function renderFichaCliente() {
 
     const initials = c.nombre ? c.nombre.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() : '?';
 
-    // Acorta "Grupo Pacc" a "GP" para que los metadatos (sucursal,
-    // colaborador, ejecutivo de cuentas) no ocupen tanto espacio.
+    // Acorta "Grupo Pacc" a "GP" para que los metadatos (colaborador,
+    // ejecutivo de cuentas) no ocupen tanto espacio.
     const shortenGP = v => (v || 'N/D').replace(/Grupo\s+Pacc/gi, 'GP');
 
     // Recordatorios: tarjetas visuales compactas (post-it), scroll horizontal
@@ -281,9 +281,8 @@ export function renderFichaCliente() {
                 ` : ''}
                 ${c.domicilio ? `<div class="fc-row"><i class="bi bi-geo-alt"></i>${c.domicilio}</div>` : ''}
                 <div class="fc-meta">
-                    <span class="fc-meta-item" title="Sucursal">
+                    <span class="fc-meta-item" title="Oficina">
                         <i class="bi bi-building"></i>
-                        <span class="fc-meta-label">Sucursal</span>
                         <span class="fc-meta-value">${shortenGP(c.sucursal)}</span>
                     </span>
                     <span class="fc-meta-item" title="Colaborador">

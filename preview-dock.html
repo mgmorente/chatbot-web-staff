@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Preview · Action Dock v2</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <script>
+        const _v = Date.now();
+        document.write(`<link href="styles.css?v=${_v}" rel="stylesheet">`);
+    </script>
+    <style>
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--staff-chat-bg, #eae6df); }
+        .preview-wrap {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .preview-header {
+            background: #fff;
+            border-bottom: 1px solid var(--staff-border, #d9dce0);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+        .preview-body {
+            flex: 1;
+            padding: 20px;
+            background: var(--staff-chat-bg, #eae6df);
+            padding-bottom: 110px;
+            overflow-y: auto;
+        }
+        .preview-note {
+            background: #fff;
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin: 10px 0;
+            max-width: 560px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .preview-input {
+            position: relative;
+            background: #fff;
+            border-top: 1px solid var(--staff-border, #d9dce0);
+            padding: 10px 16px;
+        }
+        .preview-input-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f0f2f5;
+            border-radius: 24px;
+            padding: 4px;
+        }
+        .preview-input-row input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 8px 10px;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+        .preview-btn {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: #667781;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+        .preview-btn:hover { background: rgba(0,0,0,0.04); }
+        .preview-btn--send {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-wrap">
+        <div class="preview-header">
+            <span>PACCMAN · Preview Dock v2</span>
+            <span style="font-size: 0.8rem; color: #666;">Pulsa el botón ▦ inferior para abrir el menú</span>
+        </div>
+        <div class="preview-body">
+            <div class="preview-note">
+                El dock ahora está <b>oculto por defecto</b>. Se muestra al pulsar el botón de la izquierda del <code>+</code> (icono de cuadrícula).
+            </div>
+            <div class="preview-note">
+                La <b>barra del primer nivel</b> ocupa casi todo el ancho disponible (hasta 1100px) y los botones se distribuyen de forma equitativa.
+            </div>
+            <div class="preview-note">
+                Pulsa en Cliente / Pólizas / etc. para ver el <b>segundo nivel (tiles)</b>. Cerrar: click fuera, Escape, o la X del panel.
+            </div>
+        </div>
+
+        <div class="preview-input">
+            <div class="preview-input-row">
+                <button id="btn-dock-toggle" type="button" class="preview-btn btn-dock-toggle" title="Menú de acciones">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </button>
+                <button type="button" class="preview-btn" title="Acciones rápidas">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+                <input type="text" placeholder="Escribe tu mensaje aquí...">
+                <button type="submit" class="preview-btn preview-btn--send" title="Enviar">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+                <button type="button" class="preview-btn" title="Grabar">
+                    <i class="bi bi-mic-fill"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dock idéntico al de producción (oculto por defecto) -->
+        <div id="action-dock" class="action-dock" role="toolbar" aria-label="Acciones rápidas">
+            <div id="action-dock-sublayer" class="action-dock__sublayer" aria-hidden="true">
+                <div class="action-dock__sublayer-inner"></div>
+            </div>
+            <div class="action-dock__bar">
+                <button class="action-dock__btn" type="button" data-dock-group="cliente" aria-label="Cliente">
+                    <span class="action-dock__icon"><i class="bi bi-person-fill"></i></span>
+                    <span class="action-dock__label">Cliente</span>
+                </button>
+                <button class="action-dock__btn" type="button" data-dock-group="polizas" aria-label="Pólizas y recibos">
+                    <span class="action-dock__icon"><i class="bi bi-shield-check"></i></span>
+                    <span class="action-dock__label">Pólizas</span>
+                </button>
+                <button class="action-dock__btn" type="button" data-dock-group="siniestros" aria-label="Siniestros">
+                    <span class="action-dock__icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                    <span class="action-dock__label">Siniestros</span>
+                </button>
+                <button class="action-dock__btn" type="button" data-dock-group="documentos" aria-label="Documentos">
+                    <span class="action-dock__icon"><i class="bi bi-folder-fill"></i></span>
+                    <span class="action-dock__label">Docs</span>
+                </button>
+                <button class="action-dock__btn" type="button" data-dock-group="agenda" aria-label="Agenda">
+                    <span class="action-dock__icon"><i class="bi bi-calendar3"></i></span>
+                    <span class="action-dock__label">Agenda</span>
+                </button>
+                <button class="action-dock__btn" type="button" data-dock-group="herramientas" aria-label="Herramientas">
+                    <span class="action-dock__icon"><i class="bi bi-tools"></i></span>
+                    <span class="action-dock__label">Tools</span>
+                </button>
+                <button class="action-dock__btn" type="button" data-dock-group="mas" aria-label="Más">
+                    <span class="action-dock__icon"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+                    <span class="action-dock__label">Más</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DOCK_GROUPS = {
+            cliente: { title: 'Cliente', items: [
+                { icon: 'bi-person-vcard', label: 'Ver datos' },
+                { icon: 'bi-pencil', label: 'Modificar' },
+                { icon: 'bi-send', label: 'Enviar email' },
+                { icon: 'bi-bookmark-star', label: 'Recordatorios' },
+                { icon: 'bi-arrow-repeat', label: 'Cambiar' },
+                { icon: 'bi-arrow-clockwise', label: 'Recargar' },
+            ]},
+            polizas: { title: 'Pólizas y recibos', items: [
+                { icon: 'bi-search', label: 'Activas' },
+                { icon: 'bi-files', label: 'Duplicado' },
+                { icon: 'bi-wallet2', label: 'Wallet' },
+                { icon: 'bi-receipt', label: 'Recibos' },
+            ]},
+            siniestros: { title: 'Siniestros', items: [
+                { icon: 'bi-search', label: 'Abiertos' },
+                { icon: 'bi-plus-circle', label: 'Registrar' },
+            ]},
+            documentos: { title: 'Documentos', items: [
+                { icon: 'bi-search', label: 'Consultar' },
+                { icon: 'bi-upload', label: 'Subir' },
+            ]},
+            agenda: { title: 'Agenda', items: [
+                { icon: 'bi-search', label: 'Consultar' },
+                { icon: 'bi-plus-circle', label: 'Nueva cita' },
+            ]},
+            herramientas: { title: 'Herramientas', items: [
+                { icon: 'bi-calculator', label: 'Tarif. Salud' },
+                { icon: 'bi-telephone', label: 'Compañías' },
+            ]},
+            mas: { title: 'Más opciones', items: [
+                { icon: 'bi-file-earmark-pdf', label: 'Exportar chat' },
+                { icon: 'bi-question-circle', label: 'Ayuda' },
+                { icon: 'bi-download', label: 'Instalar app' },
+                { icon: 'bi-arrow-clockwise', label: 'Actualizar', variant: 'warning' },
+                { icon: 'bi-box-arrow-left', label: 'Cerrar sesión', variant: 'danger' },
+            ]},
+        };
+
+        const dock = document.getElementById('action-dock');
+        const sublayer = document.getElementById('action-dock-sublayer');
+        const inner = sublayer.querySelector('.action-dock__sublayer-inner');
+        const toggle = document.getElementById('btn-dock-toggle');
+
+        function render(key) {
+            const g = DOCK_GROUPS[key];
+            inner.innerHTML = `
+                <div class="action-dock__sublayer-title">
+                    <span>${g.title}</span>
+                    <button type="button" class="action-dock__sublayer-close" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+                </div>
+                ${g.items.map(it => `
+                    <button type="button" class="action-dock__tile${it.variant ? ' action-dock__tile--'+it.variant : ''}">
+                        <i class="bi ${it.icon}"></i>
+                        <span>${it.label}</span>
+                    </button>
+                `).join('')}
+            `;
+        }
+        function closeSub() {
+            sublayer.classList.remove('is-open');
+            dock.querySelectorAll('.action-dock__btn.is-open').forEach(b => b.classList.remove('is-open'));
+        }
+        function hideDock() {
+            closeSub();
+            dock.classList.remove('is-visible');
+            toggle.classList.remove('is-open');
+        }
+        function showDock() {
+            dock.classList.add('is-visible');
+            toggle.classList.add('is-open');
+        }
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (dock.classList.contains('is-visible')) hideDock(); else showDock();
+        });
+        dock.addEventListener('click', (e) => {
+            const btn = e.target.closest('.action-dock__btn');
+            if (btn) {
+                if (btn.classList.contains('is-open')) { closeSub(); return; }
+                dock.querySelectorAll('.action-dock__btn.is-open').forEach(b => b.classList.remove('is-open'));
+                btn.classList.add('is-open');
+                render(btn.dataset.dockGroup);
+                sublayer.classList.add('is-open');
+                return;
+            }
+            if (e.target.closest('.action-dock__sublayer-close')) { closeSub(); return; }
+            if (e.target.closest('.action-dock__tile')) { hideDock(); }
+        });
+        document.addEventListener('click', (e) => {
+            if (!dock.classList.contains('is-visible')) return;
+            if (e.target.closest('#action-dock')) return;
+            if (e.target.closest('#btn-dock-toggle')) return;
+            hideDock();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if (sublayer.classList.contains('is-open')) closeSub();
+            else if (dock.classList.contains('is-visible')) hideDock();
+        });
+    </script>
+</body>
+</html>

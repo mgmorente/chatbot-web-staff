@@ -50,22 +50,41 @@ function findGitBinary(): string {
 $GIT_BIN  = findGitBinary();
 $GIT_ROOT = findGitRoot();
 
-function runGit(string $args): string {
+function runGit(string $args, bool $captureErrors = false): string {
     global $GIT_BIN, $GIT_ROOT;
     if (!$GIT_ROOT) return '';
-    $cmd = escapeshellarg($GIT_BIN) . ' -C ' . escapeshellarg($GIT_ROOT) . ' ' . $args . ' 2>&1';
+    $isWin = stripos(PHP_OS, 'WIN') === 0;
+    $nullDev = $isWin ? 'NUL' : '/dev/null';
+    $redirect = $captureErrors ? '2>&1' : "2>{$nullDev}";
+    $cmd = escapeshellarg($GIT_BIN) . ' -C ' . escapeshellarg($GIT_ROOT) . ' ' . $args . ' ' . $redirect;
     return trim((string) @shell_exec($cmd));
 }
 
-$hash      = runGit("log -1 --format=%h")      ?: 'dev';
-$hashFull  = runGit("log -1 --format=%H")      ?: '';
-$isoDate   = runGit("log -1 --format=%cI")     ?: date('c');
-$message   = runGit("log -1 --format=%s")      ?: '';
-$branch    = runGit("rev-parse --abbrev-ref HEAD") ?: '';
-$dirty     = runGit("status --porcelain")      !== '';
+$hash      = runGit("log -1 --format=%h");
+$hashFull  = runGit("log -1 --format=%H");
+$isoDate   = runGit("log -1 --format=%cI");
+$message   = runGit("log -1 --format=%s");
+$branch    = runGit("rev-parse --abbrev-ref HEAD");
+$statusOut = runGit("status --porcelain");
 
-// Fecha de build legible (YYYY-MM-DD HH:MM)
-$buildDate = $isoDate ? date('Y-m-d H:i', strtotime($isoDate)) : date('Y-m-d H:i');
+// Validación defensiva: si git falló o devolvió basura, usar fallbacks sanos
+// (evita que errores tipo "fatal: ..." se cuelen como hash o fecha)
+if (!preg_match('/^[0-9a-f]{7,40}$/', $hash))       $hash = 'dev';
+if (!preg_match('/^[0-9a-f]{40}$/', $hashFull))     $hashFull = '';
+if (!preg_match('/^[\w\/\-\.]+$/', $branch))        $branch = '';
+
+// Fecha de build: solo aceptamos un ISO-8601 válido; si no, fallback al mtime
+// de este mismo archivo (es decir, fecha del último deploy / modificación).
+$ts = $isoDate ? strtotime($isoDate) : false;
+if ($ts === false || $ts <= 0) {
+    $ts = @filemtime(__FILE__) ?: time();
+    $isoDate = date('c', $ts);
+}
+$buildDate = date('Y-m-d H:i', $ts);
+
+// dirty: solo si git status produjo líneas que parecen cambios reales
+// (ignoramos salidas con "fatal:" / "error:" que indican que git falló)
+$dirty = $statusOut !== '' && !preg_match('/^(fatal|error|warning):/mi', $statusOut);
 
 $data = [
     'version'   => $hash . ($dirty ? '+dirty' : ''),

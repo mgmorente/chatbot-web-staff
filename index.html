@@ -43,11 +43,6 @@
                 </div>
             </div>
 
-            <div id="appVersion" class="app-version app-version--above-user" title="Click para actualizar">
-                <i class="bi bi-arrow-clockwise"></i>
-                <span id="appVersionText">v?</span>
-            </div>
-
             <div class="sidebar-user" id="sidebar-user">
                 <i class="bi bi-person-circle"></i>
                 <span id="user-name"></span>
@@ -74,6 +69,13 @@
                         <hr class="nav-separator">
                         <button class="nav-action" data-command="consultar_recordatorio">
                             <i class="bi bi-bookmark-star"></i> Recordatorios
+                        </button>
+                        <hr class="nav-separator">
+                        <button class="nav-action" data-command="cambiar_cliente">
+                            <i class="bi bi-arrow-repeat"></i> Cambiar cliente
+                        </button>
+                        <button class="nav-action" data-command="recargar_cliente">
+                            <i class="bi bi-arrow-clockwise"></i> Recargar datos
                         </button>
                     </div>
                 </div>
@@ -146,43 +148,17 @@
                 </div>
 
                 <div class="nav-group">
-                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navTarificacion">
-                        <i class="bi bi-calculator"></i> Tarificación
-                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    <button class="nav-group-toggle" data-command="cotizar_salud">
+                        <i class="bi bi-calculator"></i> Tarificador Salud
                     </button>
-                    <div class="collapse" id="navTarificacion">
-                        <button class="nav-action" data-command="cotizar_salud">
-                            <i class="bi bi-heart-pulse"></i> Cotizar salud
-                        </button>
-                    </div>
                 </div>
 
                 <div class="nav-group">
-                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navDirectorio">
-                        <i class="bi bi-journal-text"></i> Directorio
-                        <i class="bi bi-chevron-down nav-chevron"></i>
+                    <button class="nav-group-toggle" data-command="consultar_compania">
+                        <i class="bi bi-telephone"></i> Teléfonos compañías
                     </button>
-                    <div class="collapse" id="navDirectorio">
-                        <button class="nav-action" data-command="consultar_compania">
-                            <i class="bi bi-telephone"></i> Teléfonos compañías
-                        </button>
-                    </div>
                 </div>
 
-                <div class="nav-group">
-                    <button class="nav-group-toggle" data-bs-toggle="collapse" data-bs-target="#navSesion">
-                        <i class="bi bi-person-gear"></i> Sesión
-                        <i class="bi bi-chevron-down nav-chevron"></i>
-                    </button>
-                    <div class="collapse" id="navSesion">
-                        <button class="nav-action" data-command="cambiar_cliente">
-                            <i class="bi bi-arrow-repeat"></i> Cambiar cliente
-                        </button>
-                        <button class="nav-action" data-command="recargar_cliente">
-                            <i class="bi bi-arrow-clockwise"></i> Recargar datos
-                        </button>
-                    </div>
-                </div>
             </nav>
 
             <div class="sidebar-footer">
@@ -198,6 +174,10 @@
                 <button id="logout" class="sidebar-logout sidebar-logout--danger">
                     <i class="bi bi-box-arrow-left"></i> Cerrar sesión
                 </button>
+                <div id="appVersion" class="app-version app-version--footer" role="button" tabindex="0" title="Click para actualizar">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    <span id="appVersionText">v?</span>
+                </div>
             </div>
         </aside>
 
@@ -223,11 +203,8 @@
                         <i class="bi bi-person-fill"></i>
                         <span id="selected-client" class="header-client-name">Sin seleccionar</span>
                     </div>
-                    <button class="btn-header change-client" title="Cambiar cliente">
-                        <i class="bi bi-arrow-left-right"></i>
-                    </button>
                     <button id="sidebarToggle" class="btn-header" title="Menú">
-                        <i class="bi bi-three-dots-vertical"></i>
+                        <i class="bi bi-list"></i>
                     </button>
                 </div>
             </header>
@@ -241,6 +218,45 @@
                 <i class="bi bi-chevron-down"></i>
             </button>
 
+            <!-- Dock flotante con botones circulares de 2 niveles (reemplaza al sidebar) -->
+            <div id="action-dock" class="action-dock" role="toolbar" aria-label="Acciones rápidas">
+                <!-- Panel de sub-acciones (segundo nivel). Se rellena en JS segun el grupo activo -->
+                <div id="action-dock-sublayer" class="action-dock__sublayer" aria-hidden="true">
+                    <div class="action-dock__sublayer-inner"></div>
+                </div>
+                <!-- Primer nivel: botones circulares -->
+                <div class="action-dock__bar">
+                    <button class="action-dock__btn" type="button" data-dock-group="cliente" aria-label="Cliente">
+                        <span class="action-dock__icon"><i class="bi bi-person-fill"></i></span>
+                        <span class="action-dock__label">Cliente</span>
+                    </button>
+                    <button class="action-dock__btn" type="button" data-dock-group="polizas" aria-label="Pólizas y recibos">
+                        <span class="action-dock__icon"><i class="bi bi-shield-check"></i></span>
+                        <span class="action-dock__label">Pólizas</span>
+                    </button>
+                    <button class="action-dock__btn" type="button" data-dock-group="siniestros" aria-label="Siniestros">
+                        <span class="action-dock__icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                        <span class="action-dock__label">Siniestros</span>
+                    </button>
+                    <button class="action-dock__btn" type="button" data-dock-group="documentos" aria-label="Documentos">
+                        <span class="action-dock__icon"><i class="bi bi-folder-fill"></i></span>
+                        <span class="action-dock__label">Docs</span>
+                    </button>
+                    <button class="action-dock__btn" type="button" data-dock-group="agenda" aria-label="Agenda">
+                        <span class="action-dock__icon"><i class="bi bi-calendar3"></i></span>
+                        <span class="action-dock__label">Agenda</span>
+                    </button>
+                    <button class="action-dock__btn" type="button" data-dock-group="herramientas" aria-label="Herramientas">
+                        <span class="action-dock__icon"><i class="bi bi-tools"></i></span>
+                        <span class="action-dock__label">Tools</span>
+                    </button>
+                    <button class="action-dock__btn" type="button" data-dock-group="mas" aria-label="Más">
+                        <span class="action-dock__icon"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+                        <span class="action-dock__label">Más</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Input -->
             <footer class="chat-input-area">
                 <!-- Menú acciones rápidas del clip -->
@@ -251,11 +267,11 @@
                     <button class="attach-menu-item" data-command="registrar_siniestro">
                         <i class="bi bi-exclamation-triangle"></i> Nuevo siniestro
                     </button>
-                    <button class="attach-menu-item" data-command="registrar_agenda">
-                        <i class="bi bi-calendar-plus"></i> Nueva cita
-                    </button>
                     <button class="attach-menu-item" data-command="registrar_recordatorio">
                         <i class="bi bi-bookmark-plus"></i> Nuevo recordatorio
+                    </button>
+                    <button class="attach-menu-item" data-command="registrar_agenda">
+                        <i class="bi bi-calendar-plus"></i> Nueva cita
                     </button>
                     <button class="attach-menu-item" data-command="enviar_email">
                         <i class="bi bi-envelope"></i> Enviar email
@@ -274,6 +290,11 @@
                         </button>
                         <button type="button" id="btn-mic" class="btn-mic" title="Pulsa para grabar">
                             <i class="bi bi-mic-fill"></i>
+                        </button>
+                    </div>
+                    <div class="chat-actions-right">
+                        <button type="button" class="btn-attach btn-dock-toggle" id="btn-dock-toggle" title="Menú de acciones">
+                            <i class="bi bi-grid-3x3-gap-fill"></i>
                         </button>
                     </div>
                 </form>

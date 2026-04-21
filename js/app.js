@@ -1331,6 +1331,19 @@ document.addEventListener('DOMContentLoaded', () => {
         actionDock.addEventListener('click', (e) => {
             const btn = e.target.closest('.action-dock__btn');
             if (btn) {
+                // Botón raíz con acción directa (proxy o comando), sin sublayer
+                const rootProxy = btn.getAttribute('data-dock-proxy');
+                const rootCommand = btn.getAttribute('data-command');
+                if (rootProxy || rootCommand) {
+                    closeDockSublayer();
+                    if (rootProxy) {
+                        const target = document.getElementById(rootProxy);
+                        if (target) target.click();
+                    }
+                    // data-command lo captura el handler delegado existente
+                    hideDock();
+                    return;
+                }
                 const group = btn.getAttribute('data-dock-group');
                 if (btn.classList.contains('is-open')) {
                     closeDockSublayer();

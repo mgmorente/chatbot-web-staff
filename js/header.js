@@ -18,8 +18,9 @@ export function updateHeaderClient() {
 
     if (clienteNombre) {
         selectedEl.textContent = clienteNombre;
+        // Limpiamos el chat al cambiar de cliente, pero NO mostramos mensaje
+        // de bienvenida — la información del cliente aparece en la ficha lateral.
         document.getElementById('chat-box').innerHTML = '';
-        addMessageToChat('bot', `Ha seleccionado un nuevo cliente: <strong>${clienteNombre}</strong>`);
     } else {
         selectedEl.textContent = 'Sin seleccionar';
     }

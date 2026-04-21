@@ -23,6 +23,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <!-- Driver.js (tour guiado de onboarding) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css">
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
     <script>
         const _v = Date.now();
         document.write(`<link href="styles.css?v=${_v}" rel="stylesheet">`);
@@ -168,6 +171,9 @@
                 <button id="showHelp" class="sidebar-logout">
                     <i class="bi bi-question-circle"></i> Funcionalidades
                 </button>
+                <button id="startTour" class="sidebar-logout">
+                    <i class="bi bi-compass"></i> Tour guiado
+                </button>
                 <button id="installApp" class="sidebar-logout">
                     <i class="bi bi-download"></i> Instalar app
                 </button>
@@ -308,6 +314,11 @@
 
         </main>
     </div>
+
+    <!-- FAB móvil para abrir la ficha cliente lateral -->
+    <button type="button" id="fcsFab" class="fcs-fab" title="Ficha del cliente" aria-label="Abrir ficha del cliente">
+        <i class="bi bi-person-vcard-fill"></i>
+    </button>
 
     <!-- Modal para cambiar cliente -->
     <div class="modal fade" id="clienteModal" tabindex="-1" aria-labelledby="clienteModalLabel" aria-hidden="true">

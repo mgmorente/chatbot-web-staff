@@ -14,6 +14,8 @@ import { updateHeaderClient } from './header.js';
 import { showLoading } from './utils.js';
 import { initAutocomplete } from './autocomplete.js';
 import { initVoice } from './voice.js';
+import { initFichaClienteSidebar, renderFichaClienteSidebar } from './ficha-cliente.js';
+import { startOnboardingTour } from './onboarding.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -76,11 +78,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateHeaderClient();
 
-    // --- Al cambiar de cliente: mostrar ficha + controlar agenda ---
+    // --- Inicializar el sidebar lateral derecho con la ficha del cliente ---
+    initFichaClienteSidebar();
+
+    // Flag en <body> para activar/desactivar UI dependiente (ej. FAB móvil)
+    function syncClienteBodyFlag() {
+        document.body.classList.toggle('has-cliente', !!getSelectedClient());
+    }
+    syncClienteBodyFlag();
+
+    // --- Al cambiar de cliente: refrescar la ficha lateral y abrirla.
+    //     La tarjeta inline en el chat (renderFichaCliente) se ha sustituido
+    //     por la ficha lateral derecha — ya no se inyecta en el chat.
+    //     Se añade un mensaje sugerencia para invitar a consultar. ---
     document.addEventListener('clienteChanged', (e) => {
-        renderFichaCliente();
+        renderFichaClienteSidebar();
+        // Asegurar que la ficha esté visible/expandida
+        const sb = document.getElementById('fichaClienteSidebar');
+        if (sb) {
+            sb.classList.remove('is-collapsed');
+            try { localStorage.setItem('fichaSidebarCollapsed', '0'); } catch {}
+            if (window.innerWidth <= 992) sb.classList.add('is-open');
+        }
+        syncClienteBodyFlag();
+
+        // Mensaje sugerencia en el chat: primer nombre + chips de consultas rápidas
+        const data = JSON.parse(localStorage.getItem('clienteData') || 'null');
+        const nombreCorto = data?.cliente?.nombre
+            ? data.cliente.nombre.split(/\s+/)[0]
+            : 'el cliente';
+        const safeNombre = String(nombreCorto)
+            .replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        addMessageToChat('bot', `
+            <div class="client-suggest">
+                <p class="client-suggest-lead">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Cliente <strong>${safeNombre}</strong> cargado. ¿Qué quieres consultar?</span>
+                </p>
+            </div>
+        `);
+
         const agendaOk = e.detail?.agendaDisponible ?? (localStorage.getItem('agendaDisponible') === '1');
         updateAgendaAvailability(agendaOk);
+    });
+
+    // --- Acciones lanzadas desde el sidebar lateral (ficha cliente) ---
+    document.addEventListener('fichaSidebarAction', (e) => {
+        const action = e.detail?.action;
+        if (!action) return;
+        switch (action) {
+            case 'open-cliente-modal':   clienteModal.show(); break;
+            case 'actualizar-cliente':   handleCommand({ command: 'actualizar_cliente' }); break;
+            case 'email-cliente':        handleCommand({ command: 'enviar_email' }); break;
+            case 'ver-polizas':          handleCommand({ command: 'consultar_poliza', args: { estado: 'activa' } }); break;
+            case 'ver-recibos':          handleCommand({ command: 'consultar_recibo', args: { pendientes: true } }); break;
+            case 'ver-siniestros':       handleCommand({ command: 'consultar_siniestro', args: { estado: 'abierto' } }); break;
+            case 'nuevo-siniestro':      handleCommand({ command: 'registrar_siniestro' }); break;
+            case 'ver-recordatorios':    handleCommand({ command: 'consultar_recordatorio' }); break;
+            case 'nuevo-recordatorio':   handleCommand({ command: 'registrar_recordatorio' }); break;
+            case 'recargar':             handleCommand({ command: 'recargar_cliente' }); break;
+        }
     });
 
     // --- Cambio de estado de Outlook (sin re-renderizar ficha) ---
@@ -865,57 +922,67 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="help-section">
-                    <div class="help-section-title">Cliente</div>
-                    <div class="help-item"><i class="bi bi-person-vcard"></i> <strong>Ver datos</strong> — Ficha con stats clickables de pólizas, siniestros, recibos pendientes y recordatorios</div>
-                    <div class="help-item"><i class="bi bi-pencil"></i> <strong>Modificar datos</strong> — Cambiar teléfono, email o dirección</div>
-                    <div class="help-item"><i class="bi bi-envelope"></i> <strong>Enviar email</strong> — Redactar correo al cliente vía Outlook 365</div>
+                    <div class="help-section-title"><i class="bi bi-people"></i> Cliente</div>
+                    <div class="help-item"><i class="bi bi-person-vcard"></i><span class="help-item-text"><strong>Ver datos</strong> — Ficha completa con stats clickables (pólizas, siniestros, recibos pendientes y recordatorios).</span></div>
+                    <div class="help-item"><i class="bi bi-pencil"></i><span class="help-item-text"><strong>Modificar datos</strong> — Actualizar teléfono, email o dirección.</span></div>
+                    <div class="help-item"><i class="bi bi-send"></i><span class="help-item-text"><strong>Enviar email</strong> — Redactar correo al cliente vía Outlook 365.</span></div>
+                    <div class="help-item"><i class="bi bi-bookmark-star"></i><span class="help-item-text"><strong>Recordatorios</strong> — Notas sobre el cliente (ej.: "es fumador", "prefiere llamadas por la tarde"). Crear, marcar como hechos o eliminar.</span></div>
+                    <div class="help-item"><i class="bi bi-arrow-repeat"></i><span class="help-item-text"><strong>Cambiar cliente</strong> — Abrir el selector para trabajar con otra ficha.</span></div>
+                    <div class="help-item"><i class="bi bi-arrow-clockwise"></i><span class="help-item-text"><strong>Recargar datos</strong> — Refrescar la información del cliente actual desde el servidor.</span></div>
                 </div>
 
                 <div class="help-section">
-                    <div class="help-section-title">Pólizas</div>
-                    <div class="help-item"><i class="bi bi-shield-check"></i> <strong>Pólizas activas / anuladas</strong> — Listado filtrable con buscador</div>
-                    <div class="help-item"><i class="bi bi-files"></i> <strong>Duplicado</strong> — Descargar copia de póliza en PDF</div>
-                    <div class="help-item"><i class="bi bi-wallet2"></i> <strong>Wallet</strong> — Enviar tarjeta Apple/Google Wallet</div>
+                    <div class="help-section-title"><i class="bi bi-shield-check"></i> Pólizas y recibos</div>
+                    <div class="help-item"><i class="bi bi-search"></i><span class="help-item-text"><strong>Pólizas activas / anuladas</strong> — Listado filtrable con buscador por ramo, compañía o número.</span></div>
+                    <div class="help-item"><i class="bi bi-files"></i><span class="help-item-text"><strong>Duplicado de póliza</strong> — Descargar copia en PDF.</span></div>
+                    <div class="help-item"><i class="bi bi-wallet2"></i><span class="help-item-text"><strong>Wallet</strong> — Enviar tarjeta para Apple Wallet / Google Wallet.</span></div>
+                    <div class="help-item"><i class="bi bi-receipt"></i><span class="help-item-text"><strong>Recibos</strong> — Consultar todos los recibos o filtrar solo los pendientes.</span></div>
+                    <div class="help-item"><i class="bi bi-cash-stack"></i><span class="help-item-text"><strong>Resumen de pagos</strong> — Gráfico donut con desglose por ramo y total anual.</span></div>
                 </div>
 
                 <div class="help-section">
-                    <div class="help-section-title">Recibos, Pagos y Siniestros</div>
-                    <div class="help-item"><i class="bi bi-receipt"></i> <strong>Recibos</strong> — Consultar todos o solo pendientes</div>
-                    <div class="help-item"><i class="bi bi-cash-stack"></i> <strong>Resumen de pagos</strong> — Gráfico donut con desglose por ramo y total anual</div>
-                    <div class="help-item"><i class="bi bi-exclamation-triangle"></i> <strong>Siniestros</strong> — Ver abiertos o cerrados con trámites</div>
-                    <div class="help-item"><i class="bi bi-plus-circle"></i> <strong>Presiniestro</strong> — Registrar nuevo parte con imágenes adjuntas</div>
+                    <div class="help-section-title"><i class="bi bi-exclamation-triangle"></i> Siniestros</div>
+                    <div class="help-item"><i class="bi bi-search"></i><span class="help-item-text"><strong>Siniestros abiertos</strong> — Ver los siniestros en curso y sus trámites.</span></div>
+                    <div class="help-item"><i class="bi bi-plus-circle"></i><span class="help-item-text"><strong>Registrar presiniestro</strong> — Dar de alta un nuevo parte con imágenes adjuntas.</span></div>
                 </div>
 
                 <div class="help-section">
-                    <div class="help-section-title">Documentos y Agenda</div>
-                    <div class="help-item"><i class="bi bi-folder"></i> <strong>Documentos</strong> — Consultar documentos por póliza o siniestro</div>
-                    <div class="help-item"><i class="bi bi-upload"></i> <strong>Subir documento</strong> — Adjuntar archivo a póliza o siniestro</div>
-                    <div class="help-item"><i class="bi bi-calendar3"></i> <strong>Agenda</strong> — Consultar y crear citas con fecha/hora</div>
+                    <div class="help-section-title"><i class="bi bi-folder"></i> Documentos</div>
+                    <div class="help-item"><i class="bi bi-search"></i><span class="help-item-text"><strong>Consultar documentos</strong> — Buscar por póliza o por siniestro.</span></div>
+                    <div class="help-item"><i class="bi bi-upload"></i><span class="help-item-text"><strong>Subir documento</strong> — Adjuntar archivo a una póliza o siniestro.</span></div>
                 </div>
 
                 <div class="help-section">
-                    <div class="help-section-title">Recordatorios</div>
-                    <div class="help-item"><i class="bi bi-bookmark-star"></i> <strong>Recordatorios</strong> — Notas libres sobre el cliente (ej: "es fumador", "prefiere llamadas por la tarde"). Desde la lista puedes crear nuevos, marcar como hechos o eliminarlos.</div>
-                    <div class="help-item"><i class="bi bi-plus-lg"></i> <strong>Crear rápido</strong> — Desde el botón + junto al input del chat, o por texto natural: "apunta que...", "recuérdame que...", "nuevo recordatorio: ..."</div>
+                    <div class="help-section-title"><i class="bi bi-calendar3"></i> Agenda</div>
+                    <div class="help-item"><i class="bi bi-search"></i><span class="help-item-text"><strong>Consultar agenda</strong> — Ver próximas citas y eventos.</span></div>
+                    <div class="help-item"><i class="bi bi-plus-circle"></i><span class="help-item-text"><strong>Nueva cita</strong> — Crear una cita con fecha, hora y notas.</span></div>
                 </div>
 
                 <div class="help-section">
-                    <div class="help-section-title">Tarificación</div>
-                    <div class="help-item"><i class="bi bi-heart-pulse"></i> <strong>Tarificador Salud</strong> — Tarificación automática Asisa / Adeslas por provincia y edades (hasta 6 asegurados)</div>
+                    <div class="help-section-title"><i class="bi bi-tools"></i> Herramientas</div>
+                    <div class="help-item"><i class="bi bi-calculator"></i><span class="help-item-text"><strong>Tarificador Salud</strong> — Tarificación automática Asisa / Adeslas por provincia y edades (hasta 6 asegurados).</span></div>
+                    <div class="help-item"><i class="bi bi-telephone"></i><span class="help-item-text"><strong>Teléfonos compañías</strong> — Directorio telefónico de aseguradoras.</span></div>
                 </div>
 
                 <div class="help-section">
-                    <div class="help-section-title">Comunicación</div>
-                    <div class="help-item"><i class="bi bi-envelope"></i> <strong>Email</strong> — Enviar correo al cliente</div>
-                    <div class="help-item"><i class="bi bi-telephone"></i> <strong>Compañías</strong> — Directorio telefónico de aseguradoras</div>
+                    <div class="help-section-title"><i class="bi bi-lightning-charge"></i> Accesos rápidos</div>
+                    <div class="help-item"><i class="bi bi-grid-3x3-gap-fill"></i><span class="help-item-text"><strong>Dock de acciones</strong> — Menú principal con todos los grupos (Cliente, Pólizas, Siniestros, Documentos, Agenda, Herramientas y Más). Ábrelo con el botón de cuadrícula junto al input.</span></div>
+                    <div class="help-item"><i class="bi bi-plus-lg"></i><span class="help-item-text"><strong>Botón +</strong> — Menú rápido junto al input: subir documento, nuevo siniestro, nuevo recordatorio, nueva cita o enviar email.</span></div>
+                    <div class="help-item"><i class="bi bi-person-fill"></i><span class="help-item-text"><strong>Pastilla de cliente</strong> — Toca el nombre del cliente en la cabecera para cambiar rápidamente de ficha.</span></div>
+                    <div class="help-item"><i class="bi bi-mic-fill"></i><span class="help-item-text"><strong>Dictado por voz</strong> — Pulsa el micrófono para grabar y transcribir tu mensaje.</span></div>
+                    <div class="help-item"><i class="bi bi-search"></i><span class="help-item-text"><strong>buscar [nombre/NIF]</strong> — Buscar cliente directamente desde el chat.</span></div>
+                    <div class="help-item"><i class="bi bi-clock-history"></i><span class="help-item-text"><strong>recientes</strong> — Ver los últimos clientes consultados.</span></div>
+                    <div class="help-item"><i class="bi bi-chat-text"></i><span class="help-item-text"><strong>Lenguaje natural</strong> — Pide "ficha", "recibos pendientes", "apunta que…", "recuérdame que…", etc.</span></div>
+                    <div class="help-item"><i class="bi bi-question-circle"></i><span class="help-item-text"><strong>ayuda</strong> — Volver a mostrar este panel.</span></div>
                 </div>
 
                 <div class="help-section">
-                    <div class="help-section-title">Accesos rápidos</div>
-                    <div class="help-item"><i class="bi bi-plus-lg"></i> <strong>Botón +</strong> — Menú rápido: subir documento, nuevo siniestro, nueva cita, enviar email</div>
-                    <div class="help-item"><i class="bi bi-search"></i> <strong>buscar [nombre/NIF]</strong> — Buscar cliente desde el chat</div>
-                    <div class="help-item"><i class="bi bi-clock-history"></i> <strong>recientes</strong> — Ver últimos clientes consultados</div>
-                    <div class="help-item"><i class="bi bi-question-circle"></i> <strong>ayuda</strong> — Mostrar este panel</div>
+                    <div class="help-section-title"><i class="bi bi-gear"></i> Aplicación</div>
+                    <div class="help-item"><i class="bi bi-info-circle"></i><span class="help-item-text">Todas estas opciones están en el grupo <strong>Más</strong> del dock.</span></div>
+                    <div class="help-item"><i class="bi bi-file-earmark-pdf"></i><span class="help-item-text"><strong>Exportar chat</strong> — Guardar la conversación actual en PDF.</span></div>
+                    <div class="help-item"><i class="bi bi-download"></i><span class="help-item-text"><strong>Instalar app</strong> — Añadir PACCMAN a tu móvil u ordenador como PWA.</span></div>
+                    <div class="help-item"><i class="bi bi-arrow-clockwise"></i><span class="help-item-text"><strong>Actualizar</strong> — Forzar la última versión de la app.</span></div>
+                    <div class="help-item"><i class="bi bi-box-arrow-left"></i><span class="help-item-text"><strong>Cerrar sesión</strong> — Salir de forma segura de PACCMAN.</span></div>
                 </div>
 
                 <div class="help-tip">
@@ -925,6 +992,42 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         addMessageToChat('bot', html);
     }
+
+    // --- Tour guiado: botón manual en sidebar/footer ---
+    const startTourBtn = document.getElementById('startTour');
+    if (startTourBtn) {
+        startTourBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Cerrar sidebar móvil si estuviera abierta
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                const overlay = document.querySelector('.sidebar-overlay');
+                if (overlay) overlay.remove();
+            }
+            startOnboardingTour({ force: true });
+        });
+    }
+
+    // --- FAB móvil para abrir la ficha cliente lateral ---
+    const fcsFab = document.getElementById('fcsFab');
+    if (fcsFab) {
+        fcsFab.addEventListener('click', () => {
+            const sb = document.getElementById('fichaClienteSidebar');
+            if (sb) sb.classList.toggle('is-open');
+        });
+    }
+    // Cerrar la ficha al clicar fuera (solo en móvil/drawer)
+    document.addEventListener('click', (e) => {
+        const sb = document.getElementById('fichaClienteSidebar');
+        if (!sb || !sb.classList.contains('is-open')) return;
+        if (window.innerWidth > 992) return;
+        if (sb.contains(e.target)) return;
+        if (e.target.closest('#fcsFab')) return;
+        sb.classList.remove('is-open');
+    });
+
+    // El tour no se lanza automáticamente: el empleado lo inicia manualmente
+    // desde el menú flotante "Más" → "Tour guiado" cuando lo necesite.
 
     // --- Instalar App (PWA) ---
     let deferredPrompt = null;
@@ -963,7 +1066,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="help-panel">
                     <div class="help-panel-header"><i class="bi bi-check-circle"></i> <span>App ya instalada</span></div>
                     <div class="help-section">
-                        <div class="help-item">Ya estás usando PACCMAN como aplicación instalada.</div>
+                        <div class="help-item"><span class="help-item-text">Ya estás usando PACCMAN como aplicación instalada.</span></div>
                     </div>
                 </div>`;
         } else if (isIOS) {
@@ -971,10 +1074,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="help-panel">
                     <div class="help-panel-header"><i class="bi bi-phone"></i> <span>Instalar en iPhone / iPad</span></div>
                     <div class="help-section">
-                        <div class="help-item"><strong>1.</strong> Abre esta web en <strong>Safari</strong> (no funciona desde Chrome u otros navegadores en iOS)</div>
-                        <div class="help-item"><strong>2.</strong> Pulsa el botón <strong>Compartir</strong> <i class="bi bi-box-arrow-up"></i> (abajo en iPhone, arriba en iPad)</div>
-                        <div class="help-item"><strong>3.</strong> Desplázate y selecciona <strong>"Añadir a pantalla de inicio"</strong></div>
-                        <div class="help-item"><strong>4.</strong> Pulsa <strong>Añadir</strong> — aparecerá el icono de PACCMAN en tu pantalla</div>
+                        <div class="help-item"><span class="help-item-text"><strong>1.</strong> Abre esta web en <strong>Safari</strong> (no funciona desde Chrome u otros navegadores en iOS).</span></div>
+                        <div class="help-item"><span class="help-item-text"><strong>2.</strong> Pulsa el botón <strong>Compartir</strong> <i class="bi bi-box-arrow-up"></i> (abajo en iPhone, arriba en iPad).</span></div>
+                        <div class="help-item"><span class="help-item-text"><strong>3.</strong> Desplázate y selecciona <strong>"Añadir a pantalla de inicio"</strong>.</span></div>
+                        <div class="help-item"><span class="help-item-text"><strong>4.</strong> Pulsa <strong>Añadir</strong> — aparecerá el icono de PACCMAN en tu pantalla.</span></div>
                     </div>
                     <div class="help-tip"><i class="bi bi-info-circle"></i> Requiere iOS 16.4 o superior para la mejor experiencia.</div>
                 </div>`;
@@ -983,10 +1086,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="help-panel">
                     <div class="help-panel-header"><i class="bi bi-phone"></i> <span>Instalar en Android</span></div>
                     <div class="help-section">
-                        <div class="help-item"><strong>1.</strong> Abre esta web en <strong>Chrome</strong></div>
-                        <div class="help-item"><strong>2.</strong> Pulsa el menú <i class="bi bi-three-dots-vertical"></i> (arriba a la derecha)</div>
-                        <div class="help-item"><strong>3.</strong> Selecciona <strong>"Instalar aplicación"</strong> o <strong>"Añadir a pantalla de inicio"</strong></div>
-                        <div class="help-item"><strong>4.</strong> Confirma — la app se instalará como una aplicación nativa</div>
+                        <div class="help-item"><span class="help-item-text"><strong>1.</strong> Abre esta web en <strong>Chrome</strong>.</span></div>
+                        <div class="help-item"><span class="help-item-text"><strong>2.</strong> Pulsa el menú <i class="bi bi-three-dots-vertical"></i> (arriba a la derecha).</span></div>
+                        <div class="help-item"><span class="help-item-text"><strong>3.</strong> Selecciona <strong>"Instalar aplicación"</strong> o <strong>"Añadir a pantalla de inicio"</strong>.</span></div>
+                        <div class="help-item"><span class="help-item-text"><strong>4.</strong> Confirma — la app se instalará como una aplicación nativa.</span></div>
                     </div>
                     <div class="help-tip"><i class="bi bi-info-circle"></i> Si no ves la opción, asegúrate de estar usando Chrome actualizado.</div>
                 </div>`;
@@ -996,13 +1099,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="help-panel-header"><i class="bi bi-laptop"></i> <span>Instalar en escritorio</span></div>
                     <div class="help-section">
                         <div class="help-section-title">Chrome / Edge</div>
-                        <div class="help-item"><strong>1.</strong> Haz clic en el icono de instalación <i class="bi bi-download"></i> en la barra de direcciones (a la derecha)</div>
-                        <div class="help-item"><strong>2.</strong> Confirma <strong>"Instalar"</strong> — se abrirá como ventana independiente</div>
+                        <div class="help-item"><span class="help-item-text"><strong>1.</strong> Haz clic en el icono de instalación <i class="bi bi-download"></i> en la barra de direcciones (a la derecha).</span></div>
+                        <div class="help-item"><span class="help-item-text"><strong>2.</strong> Confirma <strong>"Instalar"</strong> — se abrirá como ventana independiente.</span></div>
                     </div>
                     <div class="help-section">
                         <div class="help-section-title">Safari (macOS Sonoma+)</div>
-                        <div class="help-item"><strong>1.</strong> Ve a <strong>Archivo → Añadir al Dock</strong></div>
-                        <div class="help-item"><strong>2.</strong> La app aparecerá en tu Dock como aplicación</div>
+                        <div class="help-item"><span class="help-item-text"><strong>1.</strong> Ve a <strong>Archivo → Añadir al Dock</strong>.</span></div>
+                        <div class="help-item"><span class="help-item-text"><strong>2.</strong> La app aparecerá en tu Dock como aplicación.</span></div>
                     </div>
                     <div class="help-tip"><i class="bi bi-info-circle"></i> Firefox escritorio no soporta la instalación de aplicaciones web.</div>
                 </div>`;
@@ -1143,6 +1246,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 items: [
                     { icon: 'bi-file-earmark-pdf', label: 'Exportar chat', proxy: 'exportChat' },
                     { icon: 'bi-question-circle', label: 'Ayuda', proxy: 'showHelp' },
+                    { icon: 'bi-compass', label: 'Tour guiado', proxy: 'startTour' },
                     { icon: 'bi-download', label: 'Instalar app', proxy: 'installApp' },
                     { icon: 'bi-arrow-clockwise', label: 'Actualizar', proxy: 'appVersion', variant: 'warning' },
                     { icon: 'bi-box-arrow-left', label: 'Cerrar sesión', proxy: 'logout', variant: 'danger' },

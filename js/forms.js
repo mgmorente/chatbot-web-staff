@@ -1088,8 +1088,32 @@ function escText(s) {
     return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function fechaRecordatorioCorta(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const hoy = new Date();
+    const ayer = new Date(); ayer.setDate(hoy.getDate() - 1);
+    const mismoDia = (a, b) =>
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth()    === b.getMonth()    &&
+        a.getDate()     === b.getDate();
+    if (mismoDia(d, hoy))  return 'hoy';
+    if (mismoDia(d, ayer)) return 'ayer';
+    const opts = d.getFullYear() === hoy.getFullYear()
+        ? { day: '2-digit', month: '2-digit' }
+        : { day: '2-digit', month: '2-digit', year: '2-digit' };
+    return d.toLocaleDateString('es-ES', opts);
+}
+
 function itemRecordatorioHTML(r) {
-    const autorLinea = r.autor ? `<small class="text-muted">por ${escText(r.autor)}</small>` : '';
+    const fechaCorta = fechaRecordatorioCorta(r.created_at);
+    const partesMeta = [];
+    if (r.autor)    partesMeta.push(`por ${escText(r.autor)}`);
+    if (fechaCorta) partesMeta.push(escText(fechaCorta));
+    const metaLinea = partesMeta.length
+        ? `<small class="text-muted">${partesMeta.join(' · ')}</small>`
+        : '';
     const claseHecho = r.hecho ? 'recordatorio-item--hecho' : '';
     return `
         <li class="recordatorio-item ${claseHecho}" data-id="${escAttr(r.id)}">
@@ -1099,7 +1123,7 @@ function itemRecordatorioHTML(r) {
             </label>
             <div class="recordatorio-body">
                 <div class="recordatorio-text">${escText(r.texto)}</div>
-                ${autorLinea ? `<div class="recordatorio-meta">${autorLinea}</div>` : ''}
+                ${metaLinea ? `<div class="recordatorio-meta">${metaLinea}</div>` : ''}
             </div>
             <button type="button" class="recordatorio-del js-del-recordatorio" title="Eliminar">
                 <i class="bi bi-trash"></i>

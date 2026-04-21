@@ -226,6 +226,9 @@
             if (Array.isArray(companias))    localStorage.setItem('companias', JSON.stringify(companias));
             if (Array.isArray(descriptores)) localStorage.setItem('descriptores', JSON.stringify(descriptores));
 
+            // Marcar que el usuario acaba de hacer login (para el mensaje de bienvenida en el chat)
+            sessionStorage.setItem('just_logged_in', '1');
+
             window.location.href = 'index.html';
         }
 

@@ -5,7 +5,19 @@ import { addMessageToChat } from './chat.js';
 export function updateHeaderClient() {
     // mensaje inicial
     if (!document.getElementById('chat-box').innerHTML.trim()) {
-        addMessageToChat('bot', '¡Hola! Soy tu asistente virtual, <a href="#" class="change-client">selecciona un cliente</a> y pregúntame lo que necesites.');
+        // Consumir el flag de login (solo relevante para no mostrarlo en otras vistas)
+        sessionStorage.removeItem('just_logged_in');
+
+        const firstName = (getUser() || '').split(/\s+/)[0] || '';
+        const safeName = String(firstName).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const saludo = safeName ? `¡Hola, <strong>${safeName}</strong>!` : '¡Hola!';
+
+        addMessageToChat('bot',
+            `<i class="bi bi-stars" style="color:var(--staff-accent);margin-right:6px;"></i>` +
+            `${saludo} Soy tu asistente virtual, ` +
+            `<a href="#" class="change-client">selecciona un cliente</a> y pregúntame lo que necesites ` +
+            `o <a href="#" class="start-tour">realiza un tour rápido</a>.`
+        );
     }
     // usuario
     const user = getUser() || '';

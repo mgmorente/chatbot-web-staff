@@ -78,6 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateHeaderClient();
 
+    // Click delegado en el enlace "hacemos un tour rápido" del mensaje de bienvenida
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('.start-tour');
+        if (!link) return;
+        e.preventDefault();
+        startOnboardingTour({ force: true });
+    });
+
     // --- Inicializar el sidebar lateral derecho con la ficha del cliente ---
     initFichaClienteSidebar();
 

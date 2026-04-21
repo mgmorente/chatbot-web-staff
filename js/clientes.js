@@ -210,97 +210,39 @@ async function fetchCliente(clientId) {
 }
 
 export function renderFichaCliente() {
+    // Antes: esta función inyectaba una tarjeta con los datos completos del
+    // cliente como mensaje del bot en el chat.
+    // Ahora: se abre/expande el sidebar lateral "Ficha cliente" (que ya
+    // contiene la misma información y más) en lugar de ensuciar el chat
+    // con una respuesta larga duplicada.
     const data = localStorage.getItem('clienteData') ? JSON.parse(localStorage.getItem('clienteData')) : null;
     if (!data || !data.cliente) return;
 
-    const c = data.cliente;
-    const polizasActivas = data.polizas ? data.polizas.filter(p => p.situacion === 1).length : 0;
-    const polizasVencidas = data.polizas ? data.polizas.filter(p => p.situacion !== 1).length : 0;
-    const siniestrosAbiertos = data.siniestros ? data.siniestros.filter(s => s.estado !== 'Cerrado').length : 0;
-    const siniestrosCerrados = data.siniestros ? data.siniestros.filter(s => s.estado === 'Cerrado').length : 0;
+    const sb = document.getElementById('fichaClienteSidebar');
+    if (sb) {
+        // Desktop: expandir (quitar colapsado). Móvil: abrir drawer.
+        sb.classList.remove('is-collapsed');
+        try { localStorage.setItem('fichaSidebarCollapsed', '0'); } catch {}
+        if (window.innerWidth <= 992) sb.classList.add('is-open');
 
-    // Recibos pendientes
-    const recibosPendientes = data.recibos ? data.recibos.filter(r => r.situacion !== 'Cobrado') : [];
-    const totalPendiente = recibosPendientes.reduce((sum, r) => sum + (parseFloat(r.prima_total) || 0), 0);
+        // Refrescar contenido para que refleje los datos actuales.
+        if (typeof window.renderFichaClienteSidebar === 'function') {
+            try { window.renderFichaClienteSidebar(); } catch {}
+        }
 
-    const initials = c.nombre ? c.nombre.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() : '?';
-
-    // Acorta "Grupo Pacc" a "GP" para que los metadatos (colaborador,
-    // ejecutivo de cuentas) no ocupen tanto espacio.
-    const shortenGP = v => (v || 'N/D').replace(/Grupo\s+Pacc/gi, 'GP');
-
-    // Recordatorios: tarjetas visuales compactas (post-it), scroll horizontal
-    const recordatorios = Array.isArray(data.recordatorios) ? data.recordatorios : [];
-    const recPendientes = recordatorios.filter(r => !r.hecho);
-    const recNumPend    = recPendientes.length;
-    const fcRecCards = recPendientes.map(r => `
-        <button type="button" class="fc-rec-card js-ficha-action" data-command="consultar_recordatorio" title="Ver recordatorios">
-            <i class="bi bi-bookmark-star-fill fc-rec-card-pin"></i>
-            <span class="fc-rec-card-text">${(r.texto || '').replace(/</g,'&lt;')}</span>
-        </button>`).join('');
-    const fcRecSection = `
-        <div class="fc-rec-section">
-            <div class="fc-rec-section-head">
-                <span class="fc-rec-section-title">
-                    <i class="bi bi-bookmark-star"></i>
-                    Recordatorios
-                    ${recNumPend ? `<span class="fc-rec-section-count">${recNumPend}</span>` : ''}
-                </span>
-                <button type="button" class="fc-rec-section-btn js-ficha-action" data-command="registrar_recordatorio" title="Nuevo recordatorio">
-                    <i class="bi bi-plus-lg"></i>
-                </button>
+        // Pequeño resalte visual para indicar que ahí está la ficha.
+        sb.classList.add('fcs-flash');
+        setTimeout(() => sb.classList.remove('fcs-flash'), 900);
+    } else {
+        // Fallback: si por algún motivo el sidebar no existe, al menos
+        // avisamos en el chat (sin volcar toda la ficha).
+        addMessageToChat('bot', `
+            <div class="data-empty">
+                <i class="bi bi-person-vcard"></i>
+                Ficha del cliente disponible en el panel lateral.
             </div>
-            ${recNumPend
-                ? `<div class="fc-rec-section-cards">${fcRecCards}</div>`
-                : `<button type="button" class="fc-rec-section-empty js-ficha-action" data-command="registrar_recordatorio">
-                        <i class="bi bi-plus-circle"></i> Añadir el primer recordatorio
-                   </button>`
-            }
-        </div>`;
-
-    const html = `
-        <div class="fc">
-            <div class="fc-top">
-                <div class="fc-info">
-                    <div class="fc-name">${c.nombre}${c.cliente_fiel ? ' <i class="bi bi-heart-fill fc-fiel"></i>' : ''}</div>
-                    <div class="fc-sub">${c.nif} · ${c.tipo || 'N/A'}${c.cod_importancia != null ? ` · <i class="bi bi-star-fill fc-star"></i>${c.cod_importancia}` : ''}</div>
-                </div>
-            </div>
-            <div class="fc-stats">
-                <button class="fc-pill fc-pill--green js-ficha-action" data-command="consultar_poliza" data-args='{"estado":"activa"}'>${polizasActivas} activas</button>
-                <button class="fc-pill fc-pill--gray js-ficha-action" data-command="consultar_poliza" data-args='{"estado":"anulada"}'>${polizasVencidas} anuladas</button>
-                <button class="fc-pill fc-pill--orange js-ficha-action" data-command="consultar_siniestro" data-args='{"estado":"abierto"}'>${siniestrosAbiertos} siniestros</button>
-                <button class="fc-pill fc-pill--red js-ficha-action" data-command="consultar_recibo" data-args='{"pendientes":true}'>${recibosPendientes.length} pendientes</button>
-            </div>
-            <div class="fc-details">
-                ${(c.telefono || c.email) ? `
-                    <div class="fc-row fc-row--inline">
-                        ${c.telefono ? `<a href="tel:${c.telefono}" class="fc-row-item"><i class="bi bi-telephone"></i>${c.telefono}</a>` : ''}
-                        ${c.email ? `<a href="#" class="fc-row-item email-cliente"><i class="bi bi-envelope"></i>${c.email}</a>` : ''}
-                    </div>
-                ` : ''}
-                ${c.domicilio ? `<div class="fc-row"><i class="bi bi-geo-alt"></i>${c.domicilio}</div>` : ''}
-                <div class="fc-meta">
-                    <span class="fc-meta-item" title="Oficina">
-                        <i class="bi bi-building"></i>
-                        <span class="fc-meta-value">${shortenGP(c.sucursal)}</span>
-                    </span>
-                    <span class="fc-meta-item" title="Colaborador">
-                        <i class="bi bi-people"></i>
-                        <span class="fc-meta-label">Colaborador</span>
-                        <span class="fc-meta-value">${shortenGP(c.colaborador)}</span>
-                    </span>
-                    <span class="fc-meta-item" title="Ejecutivo de cuentas">
-                        <i class="bi bi-person-badge"></i>
-                        <span class="fc-meta-label">Ej. cuentas</span>
-                        <span class="fc-meta-value">${shortenGP(c.ecuentas)}</span>
-                    </span>
-                </div>
-            </div>
-            ${fcRecSection}
-        </div>
-    `;
-    addMessageToChat('bot', html);
+        `);
+    }
 }
 
 // --- Buscador global en el chat ---

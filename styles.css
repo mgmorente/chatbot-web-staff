@@ -4477,11 +4477,24 @@ span.flatpickr-weekday {
 
 /* Con el dock oculto por defecto no hace falta padding extra */
 
-/* Responsive: móvil — botones un poco más compactos */
+/* Responsive: móvil — botones un poco más compactos, en dos filas si hace falta */
 @media (max-width: 560px) {
     .action-dock { bottom: 78px; width: calc(100% - 12px); }
-    .action-dock__bar { padding: 10px 12px; gap: 4px; border-radius: 18px; }
-    .action-dock__btn { min-width: 60px; padding: 8px 4px 6px; gap: 4px; }
+    .action-dock__bar {
+        padding: 10px 12px;
+        gap: 6px 4px;
+        border-radius: 18px;
+        flex-wrap: wrap;
+        overflow-x: hidden;
+        justify-content: space-around;
+    }
+    .action-dock__btn {
+        min-width: 0;
+        flex: 1 1 calc(25% - 6px);
+        max-width: calc(25% - 6px);
+        padding: 8px 2px 6px;
+        gap: 4px;
+    }
     .action-dock__icon { width: 46px; height: 46px; font-size: 20px; }
     .action-dock__label { font-size: 0.66rem; line-height: 1.15; }
     .action-dock__sublayer-inner {
@@ -4494,10 +4507,17 @@ span.flatpickr-weekday {
     .action-dock__tile { font-size: 0.68rem; padding: 8px 4px; min-height: 68px; }
 }
 
-/* Muy pequeño: scroll horizontal en el dock */
+/* Muy pequeño: mantener wrap a 2 filas, ~3 columnas */
 @media (max-width: 400px) {
-    .action-dock__bar { justify-content: flex-start; }
-    .action-dock__btn { flex: 0 0 auto; }
+    .action-dock__bar {
+        justify-content: space-around;
+        flex-wrap: wrap;
+        overflow-x: hidden;
+    }
+    .action-dock__btn {
+        flex: 1 1 calc(25% - 6px);
+        max-width: calc(25% - 6px);
+    }
 }
 
 /* Boton que muestra/oculta el dock, vive en la chat-input-area.

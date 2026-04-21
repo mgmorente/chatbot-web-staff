@@ -112,6 +112,14 @@ function render() {
         div.innerHTML = `<i class="bi ${item.icon}"></i><span>${item.text}</span>`;
         div.addEventListener('pointerdown', (e) => {
             e.preventDefault();
+            // En móvil real, entre pointerdown y el click "fantasma" que
+            // dispara el navegador puede pasar ~300-700 ms si el usuario
+            // mantiene el dedo. Marcamos ya la ventana de apertura para
+            // que el handler global "clic fuera = cerrar drawer" no
+            // cierre la ficha que acaba de abrir este select.
+            if (item.command === 'consultar_cliente' || item.command === 'recargar_cliente') {
+                window.__fcsJustOpenedAt = Date.now();
+            }
             selectItem(i);
         });
         div.addEventListener('mouseenter', () => {

@@ -1037,17 +1037,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.innerWidth > 992) return;
         if (sb.contains(e.target)) return;
         if (e.target.closest('#fcsFab')) return;
-        // Si la ficha se acaba de abrir en este mismo ciclo de click
-        // (p. ej. tras pulsar "Ver datos" en el action-dock, una sugerencia
-        // del autocomplete, o el botón "consultar_cliente" del sidebar nav),
-        // no la cerramos. Sin esto, el listener delegado de data-command
-        // abre la ficha y este handler la cierra inmediatamente después.
-        if (window.__fcsJustOpenedAt && (Date.now() - window.__fcsJustOpenedAt) < 350) return;
-        // Tampoco cerrar si el click es sobre un trigger que abre/refresca
-        // la ficha (defensa en profundidad por si el timestamp no llegara).
+        // Si la ficha se acaba de abrir en este mismo gesto táctil
+        // (autocomplete, "Ver datos" del action-dock, botón del sidebar,
+        // etc.), no la cerramos. En móvil real puede haber un desfase de
+        // 300-700 ms entre el pointerdown del gesto y el click "fantasma"
+        // que dispara el navegador después, así que damos un margen amplio.
+        if (window.__fcsJustOpenedAt && (Date.now() - window.__fcsJustOpenedAt) < 900) return;
+        // Defensa en profundidad: no cerrar si el click es sobre un
+        // trigger conocido (o su contenedor) que abre/refresca la ficha.
         if (e.target.closest('[data-command="consultar_cliente"]')) return;
         if (e.target.closest('[data-command="recargar_cliente"]')) return;
         if (e.target.closest('[data-fcs-action="recargar"]')) return;
+        // Ni sobre las zonas que disparan un consultar_cliente indirecto
+        // (autocomplete del input, action-dock y su sub-capa). En móvil
+        // el click "fantasma" tras un pointerdown en un tile del dock o
+        // una sugerencia a veces aterriza sobre estas zonas tras cerrarlas.
+        if (e.target.closest('.autocomplete-dropdown, .autocomplete-item')) return;
+        if (e.target.closest('#action-dock, #action-dock-sublayer')) return;
+        if (e.target.closest('.chat-input-area')) return;
         sb.classList.remove('is-open');
     });
 

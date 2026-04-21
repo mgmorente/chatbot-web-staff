@@ -4394,3 +4394,41 @@ span.flatpickr-weekday {
     transform: translateY(-2px) scale(1.05);
 }
 .btn-dock-toggle.is-open i { transform: scale(1.08); }
+
+
+/* En movil el boton de menu no cabe al lado del micro; lo sacamos del flujo
+   y lo dejamos flotando encima del micro como un FAB pequeno. */
+@media (max-width: 576px) {
+    .chat-input-area { overflow: visible; }
+    .chat-form { position: relative; }
+    .chat-actions-right {
+        position: absolute;
+        right: 10px;
+        bottom: calc(100% + 10px); /* Flota por encima del input */
+        margin: 0;
+        padding: 0;
+        z-index: 30;
+    }
+    .btn-dock-toggle {
+        width: 40px;
+        height: 40px;
+        font-size: 17px;
+        box-shadow:
+            0 6px 16px rgba(0, 0, 0, 0.18),
+            0 2px 4px rgba(0, 0, 0, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    }
+    .btn-dock-toggle.is-open {
+        box-shadow:
+            0 10px 22px rgba(34, 197, 94, 0.42),
+            0 2px 4px rgba(34, 197, 94, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+    /* Cuando el dock esta abierto, empujamos el boton un pelin mas arriba
+       para que no choque visualmente con la barra del dock. */
+    .action-dock.is-visible + .chat-input-area .chat-actions-right,
+    .chat-input-area:has(.action-dock.is-visible) .chat-actions-right {
+        bottom: calc(100% + 90px);
+    }
+}

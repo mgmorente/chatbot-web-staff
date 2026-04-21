@@ -106,7 +106,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sb) {
             sb.classList.remove('is-collapsed');
             try { localStorage.setItem('fichaSidebarCollapsed', '0'); } catch {}
-            if (window.innerWidth <= 992) sb.classList.add('is-open');
+            if (window.innerWidth <= 992) {
+                sb.classList.add('is-open');
+                // Evita que el handler global "click fuera = cerrar drawer"
+                // cierre la ficha en el mismo ciclo de click (p. ej. cuando
+                // se selecciona un cliente desde el modal).
+                window.__fcsJustOpenedAt = Date.now();
+            }
         }
         syncClienteBodyFlag();
 
@@ -1031,6 +1037,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (window.innerWidth > 992) return;
         if (sb.contains(e.target)) return;
         if (e.target.closest('#fcsFab')) return;
+        // Si la ficha se acaba de abrir en este mismo ciclo de click
+        // (p. ej. tras pulsar "Ver datos" en el action-dock, una sugerencia
+        // del autocomplete, o el botón "consultar_cliente" del sidebar nav),
+        // no la cerramos. Sin esto, el listener delegado de data-command
+        // abre la ficha y este handler la cierra inmediatamente después.
+        if (window.__fcsJustOpenedAt && (Date.now() - window.__fcsJustOpenedAt) < 350) return;
+        // Tampoco cerrar si el click es sobre un trigger que abre/refresca
+        // la ficha (defensa en profundidad por si el timestamp no llegara).
+        if (e.target.closest('[data-command="consultar_cliente"]')) return;
+        if (e.target.closest('[data-command="recargar_cliente"]')) return;
+        if (e.target.closest('[data-fcs-action="recargar"]')) return;
         sb.classList.remove('is-open');
     });
 

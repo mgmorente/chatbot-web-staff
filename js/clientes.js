@@ -223,7 +223,14 @@ export function renderFichaCliente() {
         // Desktop: expandir (quitar colapsado). Móvil: abrir drawer.
         sb.classList.remove('is-collapsed');
         try { localStorage.setItem('fichaSidebarCollapsed', '0'); } catch {}
-        if (window.innerWidth <= 992) sb.classList.add('is-open');
+        if (window.innerWidth <= 992) {
+            sb.classList.add('is-open');
+            // Marcar momento de apertura para que el handler global de
+            // "clic fuera = cerrar drawer" no cierre la ficha en el mismo
+            // ciclo de click que la acaba de abrir (p. ej. al pulsar un
+            // tile del action-dock o una sugerencia del autocomplete).
+            window.__fcsJustOpenedAt = Date.now();
+        }
 
         // Refrescar contenido para que refleje los datos actuales.
         if (typeof window.renderFichaClienteSidebar === 'function') {

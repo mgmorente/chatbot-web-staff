@@ -7,7 +7,15 @@ import { storeDescriptoresList } from './descriptores.js';
 export function storeUser(user) {
     if (user) {
         localStorage.setItem('user', user.name);
-        document.getElementById('user-name').innerHTML = user.name;
+        const el = document.getElementById('user-name');
+        if (el) el.innerHTML = user.name;
+        const dockEl = document.getElementById('action-dock-user-name');
+        if (dockEl) dockEl.textContent = user.name;
+        const dockBox = document.getElementById('action-dock-user');
+        if (dockBox) {
+            dockBox.classList.remove('is-hidden');
+            dockBox.setAttribute('aria-hidden', 'false');
+        }
     }
 }
 

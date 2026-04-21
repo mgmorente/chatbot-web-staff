@@ -8,8 +8,22 @@ export function updateHeaderClient() {
         addMessageToChat('bot', '¡Hola! Soy tu asistente virtual, <a href="#" class="change-client">selecciona un cliente</a> y pregúntame lo que necesites.');
     }
     // usuario
+    const user = getUser() || '';
     const userNameEl = document.getElementById('user-name');
-    if (userNameEl) userNameEl.textContent = getUser() || '';
+    if (userNameEl) userNameEl.textContent = user;
+    // Replicar el nombre en el chip del action-dock (menu flotante inferior)
+    const dockUserNameEl = document.getElementById('action-dock-user-name');
+    if (dockUserNameEl) dockUserNameEl.textContent = user;
+    const dockUserBox = document.getElementById('action-dock-user');
+    if (dockUserBox) {
+        if (user) {
+            dockUserBox.classList.remove('is-hidden');
+            dockUserBox.setAttribute('aria-hidden', 'false');
+        } else {
+            dockUserBox.classList.add('is-hidden');
+            dockUserBox.setAttribute('aria-hidden', 'true');
+        }
+    }
 
     // cliente
     const clienteNombre = getSelectedClient();

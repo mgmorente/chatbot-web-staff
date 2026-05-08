@@ -4697,6 +4697,12 @@ span.flatpickr-weekday {
         transform: translateY(8px) scale(0.85);
         pointer-events: none;
     }
+    /* En movil el FAB del menu flota por encima del input, asi que el boton
+       "Ir al final" se subia justo pegado a el. Lo elevamos para dejar aire
+       entre ambos botones. */
+    .btn-scroll-down {
+        bottom: 150px;
+    }
 }
 
 /* ============================================

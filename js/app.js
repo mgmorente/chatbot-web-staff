@@ -407,6 +407,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Autocomplete ---
     const chatInput = document.getElementById('chat-message');
+
+    // Ocultar el botón de micro mientras hay texto en el input.
+    // Reaparece al vaciarse (manual o tras submit, que dispara 'input').
+    const btnMicEl = document.getElementById('btn-mic');
+    const toggleMicVisibility = () => {
+        if (!btnMicEl) return;
+        // No tocar si está grabando: el micro debe permanecer visible y en estado recording.
+        if (btnMicEl.classList.contains('recording')) return;
+        const hasText = chatInput.value.trim().length > 0;
+        btnMicEl.classList.toggle('hidden', hasText);
+    };
+    chatInput.addEventListener('input', toggleMicVisibility);
+
     initAutocomplete(chatInput, (text, command) => {
         // Mostrar el texto como mensaje del usuario
         addMessageToChat('user', text);
@@ -436,6 +449,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         addMessageToChat('user', message);
         messageInput.value = '';
+        // Forzar reaparición del botón de micro tras vaciar el input
+        messageInput.dispatchEvent(new Event('input'));
 
         // Ocultar quick actions tras el primer mensaje
 

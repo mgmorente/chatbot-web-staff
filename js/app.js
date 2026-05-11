@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!el || !txt) return;
         const info = window.APP_VERSION || { version: '?', buildDate: '', full: 'v?' };
         txt.textContent = info.full;
-        el.title = `PACCMAN Staff ${info.full}\nClick para actualizar a la última versión`;
+        el.title = `PACCMAN Empleados ${info.full}\nClick para actualizar a la última versión`;
         el.addEventListener('click', async () => {
             el.classList.add('checking');
             try {
@@ -774,7 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.innerHTML = `
             <div style="display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #1a8d4f; padding-bottom:12px; margin-bottom:20px;">
                 <div>
-                    <div style="font-size:16px; font-weight:700; color:#1a8d4f;">PACCMAN STAFF</div>
+                    <div style="font-size:16px; font-weight:700; color:#1a8d4f;">PACCMAN EMPLEADOS</div>
                     ${clientName && clientName !== 'Sin seleccionar' ? `<div style="font-size:11px; color:#666; margin-top:2px;">Cliente: ${clientName}</div>` : ''}
                 </div>
                 <div style="text-align:right; font-size:10px; color:#999;">${dateStr} · ${timeStr}</div>
@@ -894,7 +894,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Pie de página
         const footer = document.createElement('div');
         footer.style.cssText = 'text-align:center; font-size:9px; color:#ccc; margin-top:20px; padding-top:10px; border-top:1px solid #f3f4f6;';
-        footer.textContent = 'Generado por PACCMAN STAFF';
+        footer.textContent = 'Generado por PACCMAN EMPLEADOS';
         wrapper.appendChild(footer);
 
         Swal.fire({ title: 'Generando PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });

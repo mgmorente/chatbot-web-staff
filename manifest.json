@@ -1,7 +1,7 @@
 {
-    "name": "PACCMAN STAFF - Asistente GRUPO PACC",
-    "short_name": "PACCMAN Staff",
-    "description": "Herramienta interna para empleados de GRUPO PACC. Gestiona clientes, polizas, siniestros y mas.",
+    "name": "PACCMAN EMPLEADOS - Asistente GRUPO PACC",
+    "short_name": "PACCMAN Empleados",
+    "description": "Herramienta interna para empleados de PACCMAN. Gestiona clientes, polizas, siniestros y mas.",
     "start_url": "./index.html",
     "display": "standalone",
     "orientation": "portrait",
